@@ -203,7 +203,7 @@ async def window_config_q(tip : str):
     retv = '';
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x90+200+200');
+    win.geometry('400x120+200+200');
     win.iconbitmap('../src/icon.ico');
     win.resizable(tk.FALSE, tk.FALSE);
     def showmessage():
@@ -211,6 +211,10 @@ async def window_config_q(tip : str):
         if tmp:
             global PID;
             os.kill(PID, 15);
+    def showHelp():
+        messagebox.showinfo(title='提示',
+                            message='提示:\n\n120\t4K\n116\t1080p60\n112\t1080p+\n80\t1080p\n72\t720p60\n64\t720p\n32\t480p\n16\t320p\n\n如果出现一直无法下载的情况可以稍微降低清晰度哦ლ(´ڡ`ლ)',
+                            parent=win);
     win.protocol('WM_DELETE_WINDOW', showmessage);
     f = font.Font(root=win, name='TkTextFont', exists=True);
     f['size'] = 11;
@@ -218,7 +222,7 @@ async def window_config_q(tip : str):
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S));
     win.columnconfigure(0, weight=1);
     win.rowconfigure(0, weight=1);
-    lab0 = ttk.Label(mainframe, text='请选择清晰度({}): '.format(tip), font=f);
+    lab0 = ttk.Label(mainframe, text='请选择清晰度(可选: {}): '.format(tip), font=f);
     lab0.grid(column=1, row=1, stick=(tk.N, tk.W));
     t0 = tk.Variable(win);
     t0.set(tip.split(', ', 1)[0]);
@@ -230,6 +234,8 @@ async def window_config_q(tip : str):
         win.destroy();
     btn0 = ttk.Button(mainframe, text='OK', command=callback);
     btn0.grid(column=1, row=3, sticky=(tk.W));
+    btn1 = ttk.Button(mainframe, text='提示', command=showHelp);
+    btn1.grid(column=1, row=4, sticky=(tk.W));
     win.mainloop();
     return retv;
 

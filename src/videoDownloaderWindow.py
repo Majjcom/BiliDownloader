@@ -5,6 +5,7 @@ from window import *
 import subprocess
 import aiohttp
 import asyncio
+import hashlib
 import time
 import sys
 import os
@@ -15,6 +16,14 @@ class ErrorCountsTooMuch(Exception):
         self.info : str = info;
     def __str__(self):
         return self.info;
+
+class ErrorDownloadHash(Exception):
+    def __init__(self, info : str = None):
+        Exception.__init__(self);
+        self.info = info;
+    def __str__(self):
+        return self.info;
+
 
 async def downloadVideo(Url : dict, id : int, v, name : str = 'video'):
     global mainprocess;
@@ -99,7 +108,6 @@ async def GetCredential():
 
 async def checkUpdate():
     url = 'http://d.majjcom.site:1288/text/ver';
-
     async with aiohttp.ClientSession() as sess:
         async with sess.get(url) as resp:
             ver = await resp.content.read(1024);
@@ -146,13 +154,43 @@ async def getUpdate(ver):
                     if count % 512 == 0:
                         arg[1].set(round(process / length * 100, 2));
                     f.write(chunk);
-                arg[0] = True;
-                time.sleep(0.3);
-                os.system(name);
-                time.sleep(0.2);
-                global PID;
-                os.kill(PID, 15);
+    fileHash = getFileHash(name);
+    realHash = await getUpdateHash(ver);
+    if fileHash.lower() != realHash.lower():
+        if os.path.exists(name):
+            os.remove(name);
+        raise ErrorDownloadHash('文件下载不完整...');
+    arg[0] = True;
+    time.sleep(0.3);
+    os.system(name);
+    time.sleep(0.2);
+    global PID;
+    os.kill(PID, 15);
 
+
+async def getUpdateHash(ver):
+    name = f'md5_{ver}';
+    url = f'http://d.majjcom.site:1288/file/{name}';
+    content = None;
+    async with aiohttp.ClientSession() as sess:
+        async with sess.get(url) as resp:
+            length = int(resp.headers.get('content-length'));
+            if length <= 32:
+                content = await resp.content.read(1024);
+            else:
+                await sess.close();
+                raise ErrorDownloadHash('文件校验错误...');
+            await sess.close();
+    return content.decode();
+
+
+def getFileHash(name):
+    f = open(name, 'rb');
+    Md5_buffer = hashlib.md5();
+    for buff in iter(lambda: f.read(1024), b''):
+        Md5_buffer.update(buff);
+    f.close();
+    return Md5_buffer.hexdigest();
 
 
 async def videoDown(vid_id : str, credential = None):
@@ -525,6 +563,9 @@ async def Main():
         if not ifuptodate(ver, ver_get):
             await window_showupdate();
             await getUpdate(ver_get);
+    except ErrorDownloadHash as e:
+        await window_warn('更新失败: {}'.format(str(e)));
+        return 1;
     except:
         pass;
     # Bilibili Account Credential
@@ -576,7 +617,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.8.4';
+    ver = '0.8.5';
     if not os.path.exists('./Download'):
         os.mkdir('./Download');
     os.chdir('./Download');
