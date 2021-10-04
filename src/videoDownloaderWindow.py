@@ -6,6 +6,7 @@ import subprocess
 import aiohttp
 import asyncio
 import hashlib
+import json
 import time
 import sys
 import os
@@ -115,9 +116,9 @@ async def checkUpdate():
             return ver.decode();
 
 
-def ifuptodate(a: str, b: str) -> bool:
-    a_s = a.split('.');
-    b_s = b.split('.');
+def ifuptodate(now: str, get: str) -> bool:
+    a_s = now.split('.');
+    b_s = get.split('.');
     for i in range(3):
         if int(a_s[i]) > int(b_s[i]):
             return True;
@@ -191,6 +192,37 @@ def getFileHash(name):
         Md5_buffer.update(buff);
     f.close();
     return Md5_buffer.hexdigest();
+
+
+def showUpdateInfo(ver : str):
+    try:
+        new_user : bool = False;
+        if not os.path.exists('../src/userdata.json'):
+            f = open('../src/userdata.json', 'w');
+            meta = {
+                'version': ver,
+                'userinfo': None
+            };
+            json.dump(meta, f);
+            f.close();
+            del f, meta;
+            new_user = True;
+        f = open('../src/userdata.json', 'r');
+        user_data = json.load(f);
+        f.close();
+        if not ifuptodate(user_data['version'], ver):
+            new_user = True;
+            user_data['version'] = ver;
+            f = open('../src/userdata.json', 'w');
+            json.dump(user_data, f);
+            f.close();
+        del f, user_data;
+        if new_user:
+            os.startfile(os.path.realpath('../src/CHANGELOG.txt'));
+    except:
+        pass;
+    finally:
+        del new_user;
 
 
 async def videoDown(vid_id : str, credential = None):
@@ -317,6 +349,7 @@ async def videoDown(vid_id : str, credential = None):
         retry = 0;
         while True:
             try:
+                arg[4].set(0.0);
                 arg[2].set('下载视频流');
                 arg[5]['mode'] = 'determinate';
                 await downloadVideo(urls[name], vid_quality, arg, name);
@@ -337,6 +370,7 @@ async def videoDown(vid_id : str, credential = None):
         retry = 0;
         while True:
             try:
+                arg[4].set(0.0);
                 arg[2].set('下载音频流');
                 arg[5]['mode'] = 'determinate';
                 await downloadAudio(urls[name], 0, arg, name);
@@ -371,11 +405,11 @@ async def videoDown(vid_id : str, credential = None):
         DEV_NULL.close();
         del DEV_NULL;
         arg[2].set('合并完成');
-        arg[5].stop();
         os.remove('{}_temp.mp4'.format(name));
         os.remove('{}_temp.m4a'.format(name));
         arg[1].set('{} 下载完成'.format(name));
         time.sleep(0.5);
+        arg[5].stop();
     arg[0] = True;
     time.sleep(0.5);
     del arg;
@@ -487,6 +521,7 @@ async def bangumiDown(vid_id : str, credential = None):
         retry = 0;
         while True:
             try:
+                arg[4].set(0.0);
                 arg[2].set('下载视频流');
                 arg[5]['mode'] = 'determinate';
                 await downloadVideo(i['url'], vid_quality, arg, name);
@@ -507,6 +542,7 @@ async def bangumiDown(vid_id : str, credential = None):
         retry = 0;
         while True:
             try:
+                arg[4].set(0.0);
                 arg[2].set('下载音频流');
                 arg[5]['mode'] = 'determinate';
                 await downloadAudio(i['url'], 0, arg, name);
@@ -541,11 +577,11 @@ async def bangumiDown(vid_id : str, credential = None):
         DEV_NULL.close();
         del DEV_NULL;
         arg[2].set('合并完成');
-        arg[5].stop();
         os.remove('{}_temp.mp4'.format(name));
         os.remove('{}_temp.m4a'.format(name));
         arg[1].set('{} 下载完成'.format(name));
         time.sleep(0.5);
+        arg[5].stop();
     arg[0] = True;
     time.sleep(0.5);
     del arg;
@@ -558,6 +594,7 @@ async def Main():
     global ver;
     global PID;
     available : tuple = ('bv', 'av', 'md');
+    showUpdateInfo(ver);
     try:
         ver_get = await checkUpdate();
         if not ifuptodate(ver, ver_get):
@@ -617,7 +654,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.8.5';
+    ver = '0.8.6';
     if not os.path.exists('./Download'):
         os.mkdir('./Download');
     os.chdir('./Download');

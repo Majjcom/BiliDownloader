@@ -213,8 +213,11 @@ async def window_config_q(tip : str):
             os.kill(PID, 15);
     def showHelp():
         messagebox.showinfo(title='提示',
-                            message='提示:\n\n120\t4K\n116\t1080p60\n112\t1080p+\n80\t1080p\n72\t720p60\n64\t720p\n32\t480p\n16\t320p\n\n如果出现一直无法下载的情况可以稍微降低清晰度哦ლ(´ڡ`ლ)',
-                            parent=win);
+                            parent=win,
+                            message='提示:\n\n'
+                                    '120\t4K\n116\t1080p60\n112\t1080p+\n80\t1080p\n72\t720p60\n64\t720p\n32\t480p\n16\t320p\n\n'
+                                    '如果出现一直无法下载的情况可以稍微降低清晰度哦ლ(´ڡ`ლ)\n\n'
+                                    'P.S.现已支持4k分辨率视频下载!!!');
     win.protocol('WM_DELETE_WINDOW', showmessage);
     f = font.Font(root=win, name='TkTextFont', exists=True);
     f['size'] = 11;
