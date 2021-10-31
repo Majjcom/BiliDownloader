@@ -27,7 +27,7 @@ class ErrorDownloadHash(Exception):
 
 
 async def downloadVideo(Url : dict, id : int, v, name : str = 'video'):
-    global mainprocess;
+    global mainprocess, programPath;
     async with aiohttp.ClientSession() as sess:
         video_url = Url['dash']['video'][0]['baseUrl'];
         for i in Url['dash']['video']:
@@ -90,21 +90,24 @@ async def downloadAudio(Url : dict, id : int, v, name : str = 'audio'):
 
 async def GetCredential():
     url = 'http://d.majjcom.site:1288/text/credential';
-    async with aiohttp.ClientSession() as sess:
-        async with sess.get(url) as resp:
-            got = b'';
-            while True:
-                chunk = await resp.content.read(1024);
-                if not chunk:
-                    await sess.close();
-                    break;
-                got += chunk;
-            got_d = got.decode('utf-8');
-            if len(got_d) == 0 or got_d == 'none':
-                return None;
-            got_cut = got.decode('utf-8').split('\n');
-            crd = Credential(sessdata=got_cut[0], bili_jct=got_cut[1], buvid3=got_cut[2]);
-            return crd;
+    try:
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(url) as resp:
+                got = b'';
+                while True:
+                    chunk = await resp.content.read(1024);
+                    if not chunk:
+                        await sess.close();
+                        break;
+                    got += chunk;
+                got_d = got.decode('utf-8');
+                if len(got_d) == 0 or got_d == 'none':
+                    return None;
+                got_cut = got.decode('utf-8').split('\n');
+                crd = Credential(sessdata=got_cut[0], bili_jct=got_cut[1], buvid3=got_cut[2]);
+                return crd;
+    except:
+        return None;
 
 
 async def checkUpdate():
@@ -137,24 +140,25 @@ async def getUpdate(ver):
     win = window_updating(arg);
     win.start();
     time.sleep(0.5);
-    async with aiohttp.ClientSession() as sess:
-        async with sess.get(url) as resp:
-            length = int(resp.headers.get('content-length'));
-            with open(name, 'w+b') as f:
-                process = 0;
-                count = 0;
-                while True:
-                    chunk = await resp.content.read(1024);
-                    process += len(chunk);
-                    count += 1;
-                    if not chunk:
-                        arg[1].set(100.0);
-                        f.close();
-                        await sess.close();
-                        break;
-                    if count % 512 == 0:
-                        arg[1].set(round(process / length * 100, 2));
-                    f.write(chunk);
+    if not os.path.exists(name):
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(url) as resp:
+                length = int(resp.headers.get('content-length'));
+                with open(name, 'w+b') as f:
+                    process = 0;
+                    count = 0;
+                    while True:
+                        chunk = await resp.content.read(1024);
+                        process += len(chunk);
+                        count += 1;
+                        if not chunk:
+                            arg[1].set(100.0);
+                            f.close();
+                            await sess.close();
+                            break;
+                        if count % 512 == 0:
+                            arg[1].set(round(process / length * 100, 2));
+                        f.write(chunk);
     fileHash = getFileHash(name);
     realHash = await getUpdateHash(ver);
     if fileHash.lower() != realHash.lower():
@@ -166,7 +170,7 @@ async def getUpdate(ver):
     os.system(name);
     time.sleep(0.2);
     global PID;
-    os.kill(PID, 15);
+    os.kill(PID, 9);
 
 
 async def getUpdateHash(ver):
@@ -194,38 +198,74 @@ def getFileHash(name):
     return Md5_buffer.hexdigest();
 
 
-def showUpdateInfo(ver : str):
-    try:
-        new_user : bool = False;
-        if not os.path.exists('../src/userdata.json'):
-            f = open('../src/userdata.json', 'w');
-            meta = {
-                'version': ver,
-                'userinfo': None
-            };
-            json.dump(meta, f);
-            f.close();
-            del f, meta;
-            new_user = True;
-        f = open('../src/userdata.json', 'r');
-        user_data = json.load(f);
+def setupUserData() -> bool:
+    global programPath;
+    if not os.path.exists(os.path.join(programPath, 'data')):
+        os.mkdir(os.path.join(programPath, 'data'));
+    if not os.path.exists(os.path.join(programPath, 'data/userdata.json')):
+        f = open(os.path.join(programPath, 'data/userdata.json'), 'w');
+        meta = {
+            'version': ver,
+            'isnew': True,
+            'userinfo': dict()
+        };
+        json.dump(meta, f);
         f.close();
-        if not ifuptodate(user_data['version'], ver):
+        del f, meta;
+        return False;
+
+
+def getUserData(key : str):
+    global programPath;
+    keywd = ('version', 'isnew');
+    setupUserData();
+    f = open(os.path.join(programPath, 'data/userdata.json'), 'r');
+    userdata = json.load(f);
+    f.close();
+    if key in keywd:
+        return userdata[key];
+    if key in userdata['userinfo']:
+        return userdata['userinfo'][key];
+    return None;
+
+
+def setUserData(key : str, value : {dict, list, int, float, str}) -> bool:
+    global programPath;
+    keywd = ('version', 'isnew');
+    setupUserData();
+    f = open(os.path.join(programPath, 'data/userdata.json'), 'r');
+    userdata = json.load(f);
+    f.close();
+    if key in keywd:
+        userdata[key] = value;
+    else:
+        userdata['userinfo'][key] = value;
+    f = open(os.path.join(programPath, 'data/userdata.json'), 'w');
+    json.dump(userdata, f);
+    f.close();
+    return True;
+
+
+def showUpdateInfo(ver : str):
+    global programPath;
+    try:
+        new_user = getUserData('isnew');
+        ver_get = getUserData('version');
+        if not ifuptodate(ver_get, ver):
             new_user = True;
-            user_data['version'] = ver;
-            f = open('../src/userdata.json', 'w');
-            json.dump(user_data, f);
-            f.close();
-        del f, user_data;
+            setUserData('version', ver);
         if new_user:
-            os.startfile(os.path.realpath('../src/CHANGELOG.txt'));
+            setUserData('isnew', False);
+            os.startfile(os.path.realpath(os.path.join(programPath, 'src/CHANGELOG.txt')));
     except:
+        raise;
         pass;
     finally:
         del new_user;
 
 
 async def videoDown(vid_id : str, credential = None):
+    global programPath;
     if credential is None:
         haveCred = False;
     else:
@@ -256,7 +296,7 @@ async def videoDown(vid_id : str, credential = None):
     vid_pages = await v.get_pages();
     del v;
     while True:
-        tmp = await window_confirm('请确认视频:\n\n标题: {}\nUP主: {}'.format(vid_info['title'], vid_info['owner']['name']));
+        tmp = await window_confirm('请确认视频:\n\n下载位置: {}\n标题: {}\nUP主: {}'.format(getUserData('downloadPath'), vid_info['title'], vid_info['owner']['name']), setUserData);
         if tmp:
             break;
         else:
@@ -284,7 +324,7 @@ async def videoDown(vid_id : str, credential = None):
             break;
         except:
             await window_warn('请输入正确的值...');
-    urls : dict = dict();
+    urls : list = list();
     arg = list();
     arg.append(False);
     tmp = window_geturl(arg);
@@ -310,17 +350,21 @@ async def videoDown(vid_id : str, credential = None):
             except:
                 pass;
         del v;
-        name = '{}_{}_{}'.format(vid_info['title'].replace(' ', '_'), vid_chose_c[key]['page'], vid_chose_c[key]['part'].replace(' ', '_'));
-        urls[name] = url;
+        data = {
+            'name': '{}_{}_{}'.format(vid_info['title'].replace(' ', '_'), vid_chose_c[key]['page'], vid_chose_c[key]['part'].replace(' ', '_')),
+            'url': url
+        }
+        urls.append(data)
     arg[0] = True;
     time.sleep(0.5);
     del tmp;
     del arg;
-
-    for name in urls:
-        vid_quality_list = urls[name]['accept_quality'];
-        break;
-
+    vid_quality_list : list = list()
+    for item in urls:
+        for i in item['url']['accept_quality']:
+            if not i in vid_quality_list:
+                vid_quality_list.append(i)
+    vid_quality_list.sort(reverse=True)
     tmp = str();
     for i in range(len(vid_quality_list)):
         tmp += str(vid_quality_list[i]);
@@ -344,7 +388,8 @@ async def videoDown(vid_id : str, credential = None):
     tmp.start();
     time.sleep(0.5);
     # 0: isRun, 1: t0, 2: t1, 3: t2, 4: t3, 5: bar
-    for name in urls:
+    for item in urls:
+        name = item['name']
         arg[1].set('开始下载 {}'.format(name));
         retry = 0;
         while True:
@@ -352,7 +397,7 @@ async def videoDown(vid_id : str, credential = None):
                 arg[4].set(0.0);
                 arg[2].set('下载视频流');
                 arg[5]['mode'] = 'determinate';
-                await downloadVideo(urls[name], vid_quality, arg, name);
+                await downloadVideo(item['url'], vid_quality, arg, name);
                 break;
             except:
                 retry += 1;
@@ -373,7 +418,7 @@ async def videoDown(vid_id : str, credential = None):
                 arg[4].set(0.0);
                 arg[2].set('下载音频流');
                 arg[5]['mode'] = 'determinate';
-                await downloadAudio(urls[name], 0, arg, name);
+                await downloadAudio(item['url'], 0, arg, name);
                 break;
             except:
                 retry += 1;
@@ -395,7 +440,7 @@ async def videoDown(vid_id : str, credential = None):
         if os.path.exists('{}.mp4'.format(name)):
             os.remove('{}.mp4'.format(name));
         DEV_NULL = open(os.devnull, 'w');
-        subprocess.run(('../ffmpeg/ffmpeg',
+        subprocess.run((os.path.join(programPath, 'ffmpeg/ffmpeg'),
                         '-i', '{}_temp.mp4'.format(name),
                         '-i', '{}_temp.m4a'.format(name),
                         '-vcodec', 'copy',
@@ -429,7 +474,7 @@ async def bangumiDown(vid_id : str, credential = None):
     else:
         vid_info = await bangumi.get_meta(int(vid_id[2:]), credential=credential);
     while True:
-        tmp = await window_confirm(f'请确认番剧:\n\n标题: {vid_info["media"]["title"]}\n评分: {vid_info["media"]["rating"]["score"]}');
+        tmp = await window_confirm(f'请确认番剧:\n\n下载位置: {getUserData("downloadPath")}\n标题: {vid_info["media"]["title"]}\n评分: {vid_info["media"]["rating"]["score"]}', setUserData);
         if tmp:
             break;
         else:
@@ -492,7 +537,12 @@ async def bangumiDown(vid_id : str, credential = None):
     time.sleep(0.5);
     del tmp;
     del arg;
-    vid_quality_list = vid_chose_c[0]['url']['accept_quality'];
+    vid_quality_list : list = list()
+    for item in vid_chose_c:
+        for i in item['url']['accept_quality']:
+            if not i in vid_quality_list:
+                vid_quality_list.append(i)
+    vid_quality_list.sort(reverse=True)
     tmp = str();
     for i in range(len(vid_quality_list)):
         tmp += str(vid_quality_list[i]);
@@ -567,7 +617,7 @@ async def bangumiDown(vid_id : str, credential = None):
         if os.path.exists('{}.mp4'.format(name)):
             os.remove('{}.mp4'.format(name));
         DEV_NULL = open(os.devnull, 'w');
-        subprocess.run(('../ffmpeg/ffmpeg',
+        subprocess.run((os.path.join(programPath, 'ffmpeg/ffmpeg'),
                         '-i', '{}_temp.mp4'.format(name),
                         '-i', '{}_temp.m4a'.format(name),
                         '-vcodec', 'copy',
@@ -595,8 +645,18 @@ async def Main():
     global PID;
     available : tuple = ('bv', 'av', 'md');
     showUpdateInfo(ver);
+    tmp = list();
+    tmp.append(False);
+    update_window = window_checkUpdate(tmp);
+    update_window.start();
     try:
         ver_get = await checkUpdate();
+    except:
+        await window_warn('网络错误...(如果你的网络正常，可能是作者的服务器挂了...)');
+        ver_get = ver;
+    tmp[0] = True;
+    time.sleep(0.2);
+    try:
         if not ifuptodate(ver, ver_get):
             await window_showupdate();
             await getUpdate(ver_get);
@@ -604,13 +664,11 @@ async def Main():
         await window_warn('更新失败: {}'.format(str(e)));
         return 1;
     except:
-        pass;
+        await window_warn('更新失败: {}'.format(sys.exc_info()[0]));
+        return 1;
+    del update_window, tmp;
     # Bilibili Account Credential
-    try:
-        credential = await GetCredential();
-    except:
-        await window_warn('网络错误...(如果你的网络正常，可能是作者的服务器挂了...)');
-        os.kill(PID, 15);
+    credential = await GetCredential();
     haveCred : bool = None;
     if credential:
         haveCred = True;
@@ -654,10 +712,16 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.8.6';
+    ver = '0.9.3';
     if not os.path.exists('./Download'):
         os.mkdir('./Download');
-    os.chdir('./Download');
+    programPath = os.getcwd();
+    path = getUserData('downloadPath');
+    if path is None:
+        os.chdir('./Download');
+    else:
+        os.chdir(path);
+    del path
     PID = os.getpid();
     asyncio.get_event_loop().run_until_complete(Main());
     os.kill(PID, 15);
