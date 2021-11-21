@@ -1,18 +1,19 @@
 from tkinter import ttk, messagebox, font, filedialog
 import tkinter as tk
+import webbrowser
 import threading
+import pyperclip
 import asyncio
 import time
 import os
 
-PID = os.getpid();
-programPath = os.getcwd();
 
-async def window_warn(text : str):
-    print('\a')
+async def window_warn(text : str, playSound : bool = True):
+    if playSound:
+        print('\a');
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x65+200+200');
+    win.geometry('395x65+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     win.resizable(tk.TRUE, tk.FALSE);
     f = font.Font(root=win, name='TkTextFont', exists=True);
@@ -33,11 +34,12 @@ async def window_warn(text : str):
     return;
 
 
-async def window_warn_big_2(text : str):
-    print('\a')
+async def window_warn_big_2(text : str, playSound : bool = True):
+    if playSound:
+        print('\a');
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x80+200+200');
+    win.geometry('395x80+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     f = font.Font(root=win, name='TkTextFont', exists=True);
     f['size'] = 11;
@@ -67,7 +69,7 @@ async def window_ask() -> str:
     retv = 'a';
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x110+200+200');
+    win.geometry('395x112+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     win.resizable(tk.FALSE, tk.FALSE);
     def showmessage():
@@ -85,22 +87,155 @@ async def window_ask() -> str:
     lab0 = ttk.Label(mainframe, text='请输入视频的BV号、AV号或MD号\n(包含开头的BV、AV和MD):', font=f);
     lab0.grid(column=1, row=1, sticky=(tk.N, tk.W));
     text = tk.Variable(win);
-    etr0 = ttk.Entry(mainframe, width=30, textvariable=text);
+    etr0 = ttk.Entry(mainframe, width=42, textvariable=text);
     etr0.grid(column=1, row=2, sticky=(tk.N, tk.W));
-    def callback():
+    def callback0():
         global retv;
-        retv = text.get().replace(' ', '');
+        retv = (0, text.get().replace(' ', ''));
         win.destroy();
-    btn0 = ttk.Button(mainframe, text='OK', command=callback);
-    btn0.grid(column=2, row=3, sticky=(tk.E, tk.S));
+    def callback1():
+        global retv;
+        retv = (1, 'set');
+        win.destroy();
+    def callback2(e):
+        text.set(pyperclip.paste());
+    etr0.bind('<Button-3>', callback2);
+    fra0 = ttk.Frame(mainframe);
+    fra0.grid(column=1, row=3, sticky=(tk.E), pady=1);
+    btn0 = ttk.Button(fra0, text='OK', command=callback0);
+    btn0.grid(column=2, row=1, sticky=(tk.E));
+    btn1 = ttk.Button(fra0, text='设置', command=callback1);
+    btn1.grid(column=1, row=1, sticky=(tk.E));
     win.mainloop();
     return retv;
+
+
+async def window_settings(downloadP : str, haveC : bool):
+    global retv;
+    retv = None;
+    win = tk.Tk();
+    win.title('BiliDownloader');
+    win.geometry('395x125+200+200');
+    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
+    win.resizable(tk.FALSE, tk.FALSE);
+    def showmessage():
+        tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno');
+        if tmp:
+            global PID;
+            os.kill(PID, 15);
+    win.protocol('WM_DELETE_WINDOW', showmessage);
+    f = font.Font(root=win, name='TkTextFont', exists=True);
+    f['size'] = 11;
+    mainframe = ttk.Frame(win, padding=5);
+    mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S));
+    win.columnconfigure(0, weight=1);
+    win.rowconfigure(0, weight=1);
+    labf0 = ttk.Labelframe(mainframe, text='设置');
+    labf0.grid(column=1, row=1, sticky=(tk.N, tk.W, tk.E));
+    def callback0():
+        global retv;
+        retv = (0, filedialog.askdirectory(parent=win, title='选择下载路径'));
+        win.destroy();
+    btn0 = ttk.Button(labf0, text='设置下载位置', command=callback0);
+    btn0.grid(column=1, row=1, sticky=(tk.W));
+    v0 = tk.Variable(win);
+    v0.set(downloadP);
+    etn0 = ttk.Entry(labf0, textvariable=v0, state='readonly', width=29, font=f);
+    etn0.grid(column=2, row=1, sticky=(tk.W));
+    def callback1():
+        global retv;
+        retv = (1,);
+        win.destroy();
+    btn1 = ttk.Button(labf0, text='设置通行证', command=callback1);
+    btn1.grid(column=1, row=2, sticky=(tk.W));
+    v1 = tk.Variable(win);
+    v1.set('已设置' if haveC else '未设置');
+    etn1 = ttk.Entry(labf0, textvariable=v1, state='readonly', width=29, font=f);
+    etn1.grid(column=2, row=2, sticky=(tk.W));
+    fra0 = ttk.Frame(mainframe);
+    fra0.grid(column=1, row=2, pady=1);
+    def callback2():
+        global retv
+        retv = None;
+        win.destroy();
+    btn2 = ttk.Button(fra0, text='返回', command=callback2);
+    btn2.grid(column=1, row=1);
+    win.mainloop();
+    return retv;
+
+
+async def window_settings_credential(dafult : dict = None):
+    global retv;
+    retv = None;
+    win = tk.Tk();
+    win.title('BiliDownloader');
+    win.geometry('395x142+200+200');
+    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
+    win.resizable(tk.FALSE, tk.FALSE);
+    def showmessage():
+        tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno');
+        if tmp:
+            global PID;
+            os.kill(PID, 15);
+    win.protocol('WM_DELETE_WINDOW', showmessage);
+    f = font.Font(root=win, name='TkTextFont', exists=True);
+    f['size'] = 11;
+    mainframe = ttk.Frame(win, padding=5);
+    mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S));
+    win.columnconfigure(0, weight=1);
+    win.rowconfigure(0, weight=1);
+    v0 = tk.Variable(win);
+    v1 = tk.Variable(win);
+    v2 = tk.Variable(win);
+    if dafult is not None:
+        v0.set(dafult['sessdata']);
+        v1.set(dafult['bili_jct']);
+        v2.set(dafult['buvid3']);
+    labf0 = ttk.Labelframe(mainframe, text='设置通行证');
+    labf0.grid(column=1, row=1, sticky=(tk.N, tk.W, tk.E));
+    lab0 = ttk.Label(labf0, text='sessdata:', font=f);
+    lab0.grid(column=1, row=1, sticky=(tk.W));
+    etr0 = ttk.Entry(labf0, textvariable=v0, width=34);
+    etr0.grid(column=2, row=1, sticky=(tk.W));
+    lab1 = ttk.Label(labf0, text='bili_jct:', font=f);
+    lab1.grid(column=1, row=2, sticky=(tk.W));
+    etr1 = ttk.Entry(labf0, textvariable=v1, width=34);
+    etr1.grid(column=2, row=2, sticky=(tk.W));
+    lab2 = ttk.Label(labf0, text='buvid3:', font=f);
+    lab2.grid(column=1, row=3, sticky=(tk.W));
+    etr2 = ttk.Entry(labf0, textvariable=v2, width=34);
+    etr2.grid(column=2, row=3, sticky=(tk.W));
+    fra1 = ttk.Frame(mainframe);
+    fra1.grid(column=1, row=2, pady=1);
+    def callback0():
+        global retv;
+        retv = None;
+        win.destroy();
+    btn0 = ttk.Button(fra1, text='返回', command=callback0);
+    btn0.grid(column=1, row=2, sticky=(tk.N));
+    def callback1():
+        webbrowser.open('http://www.majjcom.site:12568/?p=363');
+    btn1 = ttk.Button(fra1, text='帮助', command=callback1);
+    btn1.grid(column=2, row=2, sticky=(tk.N));
+    def callback2():
+        global retv;
+        retv = {
+            'sessdata': v0.get(),
+            'bili_jct': v1.get(),
+            'buvid3':   v2.get()
+        };
+        win.destroy();
+    btn2 = ttk.Button(fra1, text='确认', command=callback2);
+    btn2.grid(column=3, row=2, sticky=(tk.N));
+    win.mainloop();
+    return retv;
+
 
 
 async def window_showupdate():
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x85+200+200');
+    win.geometry('395x85+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     win.resizable(tk.TRUE, tk.FALSE);
     def showmessage():
@@ -124,13 +259,13 @@ async def window_showupdate():
     return;
 
 
-async def window_confirm(text : str, setCall):
+async def window_confirm(text : str):
     global retv, ifPathSet;
     ifPathSet = None;
     retv = False;
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x145+200+200');
+    win.geometry('395x145+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     win.resizable(tk.FALSE, tk.FALSE);
     def showmessage():
@@ -156,10 +291,11 @@ async def window_confirm(text : str, setCall):
     def callback1():
         win.destroy();
     def callback2():
-        global ifPathSet
+        global ifPathSet;
+        global setUserData;
         dir = filedialog.askdirectory(parent=win, title='选择下载路径');
         if os.path.exists(dir):
-            setCall('downloadPath', dir);
+            setUserData('downloadPath', dir);
             ifPathSet = 1;
             win.destroy();
         elif dir == '':
@@ -191,7 +327,7 @@ async def window_config_p(text : str):
     retv = '';
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x115+200+200');
+    win.geometry('395x115+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     win.resizable(tk.FALSE, tk.FALSE);
     def showmessage():
@@ -230,7 +366,7 @@ async def window_config_q(tip : str):
     retv = '';
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x92+200+200');
+    win.geometry('395x92+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     win.resizable(tk.FALSE, tk.FALSE);
     def showmessage():
@@ -275,7 +411,7 @@ async def window_config_q(tip : str):
 async def window_finish(text):
     win = tk.Tk();
     win.title('BiliDownloader');
-    win.geometry('400x90+200+200');
+    win.geometry('395x90+200+200');
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
     win.resizable(tk.FALSE, tk.FALSE);
     f = font.Font(root=win, name='TkTextFont', exists=True);
@@ -319,11 +455,14 @@ class window_geturl(threading.Thread):
     def run(self) -> None:
         win = tk.Tk();
         win.title('BiliDownloader');
-        win.geometry('400x35+200+200');
+        win.geometry('395x35+200+200');
         win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
         win.resizable(tk.FALSE, tk.FALSE);
         def showmessage():
-            messagebox.showwarning('警告', '请不要关闭这个窗口...', parent=win);
+            tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno');
+            if tmp:
+                global PID;
+                os.kill(PID, 15);
         win.protocol('WM_DELETE_WINDOW', showmessage);
         f = font.Font(root=win, name='TkTextFont', exists=True);
         f['size'] = 11;
@@ -350,7 +489,7 @@ class window_downloas(threading.Thread):
     def run(self) -> None:
         win = tk.Tk();
         win.title('BiliDownloader');
-        win.geometry('400x105+200+200');
+        win.geometry('395x105+200+200');
         win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
         win.resizable(tk.FALSE, tk.FALSE);
         def showmessage():
@@ -403,7 +542,7 @@ class window_updating(threading.Thread):
     def run(self):
         win = tk.Tk();
         win.title('BiliDownloader Update');
-        win.geometry('400x60+200+200');
+        win.geometry('395x60+200+200');
         win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
         win.resizable(tk.FALSE, tk.FALSE);
         def showmessage():
@@ -440,7 +579,7 @@ class window_checkUpdate(threading.Thread):
     def run(self):
         win = tk.Tk();
         win.title('BiliDownloader Update');
-        win.geometry('400x110+200+200');
+        win.geometry('395x112+200+200');
         win.iconbitmap(os.path.join(programPath, 'src/icon.ico'));
         win.resizable(tk.FALSE, tk.FALSE);
 
@@ -449,7 +588,7 @@ class window_checkUpdate(threading.Thread):
 
         win.protocol('WM_DELETE_WINDOW', showmessage);
         f = font.Font(root=win, name='TkTextFont', exists=True);
-        f['size'] = 16;
+        f['size'] = 12;
         mainframe = ttk.Frame(win, padding=5);
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S));
         win.columnconfigure(0, weight=1);
@@ -459,6 +598,15 @@ class window_checkUpdate(threading.Thread):
         tmp = window_interrupt(win, self._basket);
         tmp.start();
         win.mainloop();
+
+def window_setVar(PID_get, programPath_get, setUserData_get):
+    global PID;
+    global programPath;
+    global setUserData;
+    setUserData = setUserData_get;
+    PID = PID_get;
+    programPath = programPath_get;
+
 
 def window_main():
     print('Please Run As Module...');

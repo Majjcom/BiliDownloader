@@ -1,6 +1,7 @@
 # Copyright © 2021 BiliDownloader
 # Made by Majjcom
 from bilibili_api import Credential, video, bangumi, exceptions
+from bdnet import client
 from window import *
 import subprocess
 import aiohttp
@@ -19,6 +20,14 @@ class ErrorCountsTooMuch(Exception):
         return self.info;
 
 class ErrorDownloadHash(Exception):
+    def __init__(self, info : str = None):
+        Exception.__init__(self);
+        self.info = info;
+    def __str__(self):
+        return self.info;
+
+
+class ErrorCredential(Exception):
     def __init__(self, info : str = None):
         Exception.__init__(self);
         self.info = info;
@@ -88,35 +97,12 @@ async def downloadAudio(Url : dict, id : int, v, name : str = 'audio'):
                     f.write(chunk);
 
 
-async def GetCredential():
-    url = 'http://d.majjcom.site:1288/text/credential';
-    try:
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(url) as resp:
-                got = b'';
-                while True:
-                    chunk = await resp.content.read(1024);
-                    if not chunk:
-                        await sess.close();
-                        break;
-                    got += chunk;
-                got_d = got.decode('utf-8');
-                if len(got_d) == 0 or got_d == 'none':
-                    return None;
-                got_cut = got.decode('utf-8').split('\n');
-                crd = Credential(sessdata=got_cut[0], bili_jct=got_cut[1], buvid3=got_cut[2]);
-                return crd;
-    except:
-        return None;
-
-
 async def checkUpdate():
-    url = 'http://d.majjcom.site:1288/text/ver';
-    async with aiohttp.ClientSession() as sess:
-        async with sess.get(url) as resp:
-            ver = await resp.content.read(1024);
-            await sess.close();
-            return ver.decode();
+    c = client.connection('www.majjcom.site', 11288);
+    c.sendMsg({'action': 'version'});
+    get = c.recvMsg();
+    c.close();
+    return get['content'];
 
 
 def ifuptodate(now: str, get: str) -> bool:
@@ -296,11 +282,11 @@ async def videoDown(vid_id : str, credential = None):
     vid_pages = await v.get_pages();
     del v;
     while True:
-        tmp = await window_confirm('请确认视频:\n\n下载位置: {}\n标题: {}\nUP主: {}'.format(getUserData('downloadPath'), vid_info['title'], vid_info['owner']['name']), setUserData);
+        tmp = await window_confirm('请确认视频:\n\n下载位置: {}\n标题: {}\nUP主: {}'.format(getUserData('downloadPath'), vid_info['title'], vid_info['owner']['name']));
         if tmp:
             break;
         else:
-            await window_warn('退出...');
+            await window_warn('退出...', playSound=False);
             return;
         del tmp;
     vid_pages_count : int = len(vid_pages);
@@ -342,14 +328,20 @@ async def videoDown(vid_id : str, credential = None):
                 v = video.Video(aid=vid_ID, credential=credential);
             else:
                 v = video.Video(aid=vid_ID);
+        errtime = 0;
+        errinfo = None;
         while True:
             try:
-                time.sleep(0.3);
+                if errtime > 5:
+                    await window_warn("获取视频链接错误: {}".format(errinfo));
+                    return;
                 url = await v.get_download_url(cid=key);
                 break;
             except:
-                pass;
-        del v;
+                errtime += 1;
+                errinfo = sys.exc_info();
+                time.sleep(0.8);
+        del v, errtime, errinfo;
         data = {
             'name': '{}_{}_{}'.format(vid_info['title'].replace(' ', '_'), vid_chose_c[key]['page'], vid_chose_c[key]['part'].replace(' ', '_')),
             'url': url
@@ -474,11 +466,11 @@ async def bangumiDown(vid_id : str, credential = None):
     else:
         vid_info = await bangumi.get_meta(int(vid_id[2:]), credential=credential);
     while True:
-        tmp = await window_confirm(f'请确认番剧:\n\n下载位置: {getUserData("downloadPath")}\n标题: {vid_info["media"]["title"]}\n评分: {vid_info["media"]["rating"]["score"]}', setUserData);
+        tmp = await window_confirm(f'请确认番剧:\n\n下载位置: {getUserData("downloadPath")}\n标题: {vid_info["media"]["title"]}\n评分: {vid_info["media"]["rating"]["score"]}');
         if tmp:
             break;
         else:
-            await window_warn('退出...');
+            await window_warn('退出...', playSound=False);
             return;
     vid_list : dict = None;
     if haveCred:
@@ -526,13 +518,20 @@ async def bangumiDown(vid_id : str, credential = None):
             v = video.Video(aid=i['aid'], credential=credential);
         else:
             v = video.Video(aid=i['aid']);
+        errtime = 0;
+        errinfo = None;
         while True:
             try:
+                if errtime > 5:
+                    await window_warn("获取视频链接错误: {}".format(errinfo));
+                    return;
                 i['url'] = await v.get_download_url(cid=i['cid']);
                 break;
             except:
-                time.sleep(0.3);
-        del v;
+                errtime += 1;
+                errinfo = sys.exc_info();
+                time.sleep(0.8);
+        del v, errtime, errinfo;
     arg[0] = True;
     time.sleep(0.5);
     del tmp;
@@ -640,10 +639,77 @@ async def bangumiDown(vid_id : str, credential = None):
     return;
 
 
+async def start_download_video(id : str):
+    # Bilibili Account Credential
+    try:
+        cred = getUserData('credential');
+        if cred is not None:
+            credential = Credential(sessdata=cred['sessdata'], bili_jct=cred['bili_jct'], buvid3=cred['buvid3']);
+        else:
+            credential = None;
+        del cred;
+    except:
+        raise ErrorCredential('通行证错误，请重新设置...');
+    haveCred: bool = None;
+    if credential:
+        haveCred = True;
+    else:
+        haveCred = False
+    mode = 'none';
+    available: tuple = ('bv', 'av', 'md');
+    if id[:2].lower() in available:
+        if id[:2].lower() == 'md':
+            mode = 'bangumi';
+        elif id[:2].lower() == 'bv' or id[:2].lower() == 'av':
+            mode = 'video';
+    else:
+        await window_warn('请输入正确的值...');
+        return False;
+    if mode == 'bangumi':
+        if haveCred:
+            await bangumiDown(id, credential);
+        else:
+            await bangumiDown(id);
+    elif mode == 'video':
+        if haveCred:
+            await videoDown(id, credential);
+        else:
+            await videoDown(id);
+    return True;
+
+
+async def start_settings():
+    global programPath;
+    dafult = getUserData('credential');
+    tmp = await window_settings(getUserData('downloadPath'), True if dafult else False);
+    if tmp is None:
+        return False;
+    if tmp[0] == 0:
+        if os.path.exists(tmp[1]):
+            setUserData('downloadPath', tmp[1]);
+            await window_warn('下载目录更改成功，请重新启动程序...');
+            return True;
+        elif tmp[1] == '':
+            return False;
+        else:
+            await window_warn('目录无法设置');
+            return False;
+    if tmp[0] == 1:
+        cred_new = await window_settings_credential(dafult);
+        if cred_new is None:
+            return False;
+        for i in cred_new:
+            if cred_new[i] is '':
+                await window_warn('请输入完整信息...');
+                return False;
+        setUserData('credential', cred_new);
+        await window_warn('设置成功，请重新启动程序...', playSound=False);
+        return True;
+
+
 async def Main():
     global ver;
     global PID;
-    available : tuple = ('bv', 'av', 'md');
     showUpdateInfo(ver);
     tmp = list();
     tmp.append(False);
@@ -667,52 +733,37 @@ async def Main():
         await window_warn('更新失败: {}'.format(sys.exc_info()[0]));
         return 1;
     del update_window, tmp;
-    # Bilibili Account Credential
-    credential = await GetCredential();
-    haveCred : bool = None;
-    if credential:
-        haveCred = True;
-    else:
-        haveCred = False
-    mode = 'none';
+
     while True:
-        while True:
-            vid_id = await window_ask();
-            if vid_id[:2].lower() in available:
-                if vid_id[:2].lower() == 'md':
-                    mode = 'bangumi';
+        get = await window_ask();
+        if get[0] == 0:
+            try:
+                tmp = await start_download_video(get[1]);
+                if tmp:
                     break;
-                elif vid_id[:2].lower() == 'bv' or vid_id[:2].lower() == 'av':
-                    mode = 'video';
-                    break;
-            else:
-                await window_warn('请输入正确的值...');
-        try:
-            if mode == 'bangumi':
-                if haveCred:
-                    await bangumiDown(vid_id, credential);
-                else:
-                    await bangumiDown(vid_id);
-            elif mode == 'video':
-                if haveCred:
-                    await videoDown(vid_id, credential);
-                else:
-                    await videoDown(vid_id);
-            break;
-        except exceptions.ResponseCodeException:
-            await window_warn('404，未找到该资源');
-        except exceptions.ArgsException as message:
-            await window_warn_big_2(str(message));
-        except ErrorCountsTooMuch as e:
-            await window_warn(str(e));
-            break;
-        except:
-            await window_warn(f'错误: {sys.exc_info()[1]}');
-            break;
+                del tmp;
+            except exceptions.ResponseCodeException:
+                await window_warn('404，未找到该资源');
+            except exceptions.ArgsException as message:
+                await window_warn_big_2(str(message));
+            except ErrorCountsTooMuch as e:
+                await window_warn(str(e));
+                break;
+            except ErrorCredential as e:
+                await window_warn(str(e));
+                break;
+            except:
+                await window_warn(f'错误: {sys.exc_info()[0]}, {sys.exc_info()[1]}');
+                break;
+        elif get[0] == 1:
+            tmp = await start_settings();
+            if tmp:
+                break;
+            del tmp;
 
 
 if __name__ == '__main__':
-    ver = '0.9.3';
+    ver = '0.10.1';
     if not os.path.exists('./Download'):
         os.mkdir('./Download');
     programPath = os.getcwd();
@@ -723,5 +774,6 @@ if __name__ == '__main__':
         os.chdir(path);
     del path
     PID = os.getpid();
+    window_setVar(PID, programPath, setUserData);
     asyncio.get_event_loop().run_until_complete(Main());
     os.kill(PID, 15);
