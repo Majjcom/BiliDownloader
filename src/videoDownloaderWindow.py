@@ -1,9 +1,11 @@
-# Copyright © 2021 BiliDownloader
+# Copyright © 2022 BiliDownloader
 # Made by Majjcom
 from bilibili_api import Credential, video, bangumi, exceptions
+from threadDown.utils import sizefstr
 from bdnet import client
 from window import *
 import subprocess
+import threadDown
 import aiohttp
 import asyncio
 import hashlib
@@ -35,37 +37,19 @@ class ErrorCredential(Exception):
         return self.info;
 
 
-async def downloadVideo(Url : dict, id : int, v, name : str = 'video'):
+async def downloadVideo(Url : dict, qid : int, v, name : str = 'video'):
     global mainprocess, programPath;
     async with aiohttp.ClientSession() as sess:
         video_url = Url['dash']['video'][0]['baseUrl'];
         for i in Url['dash']['video']:
             if i['codecid'] == 7:
-                if i['id'] == id:
+                if i['id'] == qid:
                     video_url = i['baseUrl'];
         HEADERS = {
             'User-Agent': 'Mozilla/5.0',
             'Referer': 'https://www.bilibili.com/'
         };
-        async with sess.get(video_url, headers=HEADERS) as resp:
-            length = resp.headers.get('content-length');
-            with open(f'{name}_temp.mp4', 'wb') as f:
-                process = 0;
-                count = 0;
-                while True:
-                    chunk = await resp.content.read(1024);
-                    count += 1;
-                    process += len(chunk);
-                    if not chunk:
-                        v[4].set(round(process / int(length) * 100, 2));
-                        f.close();
-                        await sess.close();
-                        break;
-                    if count % 512 == 0:
-                        percent = round(process / int(length) * 100, 2);
-                        v[3].set(f'{process} / {length} {percent}%');
-                        v[4].set(percent);
-                    f.write(chunk);
+        await threadDown.download_with_threads(video_url, v, '{}_temp.mp4'.format(name), headers=HEADERS, piece_per_size=(128 * 1024 ** 2));
 
 
 async def downloadAudio(Url : dict, id : int, v, name : str = 'audio'):
@@ -76,30 +60,13 @@ async def downloadAudio(Url : dict, id : int, v, name : str = 'audio'):
             'User-Agent': 'Mozilla/5.0',
             'Referer': 'https://www.bilibili.com/'
         };
-        async with sess.get(audio_url, headers=HEADERS) as resp:
-            length = resp.headers.get('content-length');
-            with open(f'{name}_temp.m4a', 'wb') as f:
-                process = 0;
-                count = 0;
-                while True:
-                    chunk = await resp.content.read(1024);
-                    count += 1;
-                    process += len(chunk);
-                    if not chunk:
-                        v[4].set(round(process / int(length) * 100, 2));
-                        f.close();
-                        await sess.close();
-                        break;
-                    if count % 512 == 0 or process == length:
-                        percent = round(process / int(length) * 100, 2);
-                        v[3].set(f'{process} / {length} {percent}%');
-                        v[4].set(percent);
-                    f.write(chunk);
+        await threadDown.download_with_threads(audio_url, v, '{}_temp.m4a'.format(name), headers=HEADERS, piece_per_size=(64 * 1024 ** 2))
 
 
 async def checkUpdate():
-    c = client.connection('www.majjcom.site', 11288);
-    c.sendMsg({'action': 'version'});
+    global ver;
+    c = client.Connection('www.majjcom.site', 11288);
+    c.sendMsg({'action': 'version', 'after': True, 'bVersion': ver});
     get = c.recvMsg();
     c.close();
     return get['content'];
@@ -120,7 +87,10 @@ def ifuptodate(now: str, get: str) -> bool:
 
 async def getUpdate(ver):
     name = f'BiliDownloader{ver}_Installer.exe';
-    url = f'http://d.majjcom.site:1288/file/{name}';
+    info = getUpdateUrl();
+    # url = f'http://d.majjcom.site:1288/file/{name}';
+    url = info[0];
+    realHash = info[1]
     arg : list = list();
     arg.append(False);
     win = window_updating(arg);
@@ -146,7 +116,6 @@ async def getUpdate(ver):
                             arg[1].set(round(process / length * 100, 2));
                         f.write(chunk);
     fileHash = getFileHash(name);
-    realHash = await getUpdateHash(ver);
     if fileHash.lower() != realHash.lower():
         if os.path.exists(name):
             os.remove(name);
@@ -159,20 +128,12 @@ async def getUpdate(ver):
     os.kill(PID, 9);
 
 
-async def getUpdateHash(ver):
-    name = f'md5_{ver}';
-    url = f'http://d.majjcom.site:1288/file/{name}';
-    content = None;
-    async with aiohttp.ClientSession() as sess:
-        async with sess.get(url) as resp:
-            length = int(resp.headers.get('content-length'));
-            if length <= 32:
-                content = await resp.content.read(1024);
-            else:
-                await sess.close();
-                raise ErrorDownloadHash('文件校验错误...');
-            await sess.close();
-    return content.decode();
+def getUpdateUrl():
+    global ver;
+    s = client.Connection('www.majjcom.site', 11288);
+    s.sendMsg({'action': 'updateUrl', 'bVersion': ver});
+    get = s.recvMsg();
+    return (get['content']['url'], get['content']['hash']);
 
 
 def getFileHash(name):
@@ -184,30 +145,26 @@ def getFileHash(name):
     return Md5_buffer.hexdigest();
 
 
-def setupUserData() -> bool:
+def setupUserData(reset: bool = False) -> None:
     global programPath;
     if not os.path.exists(os.path.join(programPath, 'data')):
         os.mkdir(os.path.join(programPath, 'data'));
     if not os.path.exists(os.path.join(programPath, 'data/userdata.json')):
-        f = open(os.path.join(programPath, 'data/userdata.json'), 'w');
-        meta = {
-            'version': ver,
-            'isnew': True,
-            'userinfo': dict()
-        };
-        json.dump(meta, f);
-        f.close();
-        del f, meta;
-        return False;
+        with open(os.path.join(programPath, 'data/userdata.json'), 'w') as f:
+            meta = {
+                'version': ver,
+                'isnew': False if reset else True,
+                'userinfo': dict()
+            };
+            json.dump(meta, f);
 
 
 def getUserData(key : str):
     global programPath;
     keywd = ('version', 'isnew');
     setupUserData();
-    f = open(os.path.join(programPath, 'data/userdata.json'), 'r');
-    userdata = json.load(f);
-    f.close();
+    with open(os.path.join(programPath, 'data/userdata.json'), 'r') as f:
+        userdata = json.load(f);
     if key in keywd:
         return userdata[key];
     if key in userdata['userinfo']:
@@ -219,17 +176,22 @@ def setUserData(key : str, value : {dict, list, int, float, str}) -> bool:
     global programPath;
     keywd = ('version', 'isnew');
     setupUserData();
-    f = open(os.path.join(programPath, 'data/userdata.json'), 'r');
-    userdata = json.load(f);
-    f.close();
+    with open(os.path.join(programPath, 'data/userdata.json'), 'r') as f:
+        userdata = json.load(f);
     if key in keywd:
         userdata[key] = value;
     else:
         userdata['userinfo'][key] = value;
-    f = open(os.path.join(programPath, 'data/userdata.json'), 'w');
-    json.dump(userdata, f);
-    f.close();
+    with open(os.path.join(programPath, 'data/userdata.json'), 'w') as f:
+        json.dump(userdata, f);
     return True;
+
+
+def reSetUserData():
+    global programPath;
+    setupUserData();
+    os.remove(os.path.join(programPath, 'data/userdata.json'))
+    setupUserData(reset=True)
 
 
 def showUpdateInfo(ver : str):
@@ -269,15 +231,9 @@ async def videoDown(vid_id : str, credential = None):
         vid_ID = int(vid_id[2:]);
     v : video.Video() = None;
     if vid_id_isBV:
-        if haveCred:
-            v = video.Video(bvid=vid_ID, credential=credential);
-        else:
-            v = video.Video(bvid=vid_ID);
+        v = video.Video(bvid=vid_ID, credential=credential if haveCred else None)
     else:
-        if haveCred:
-            v = video.Video(aid=vid_ID, credential=credential);
-        else:
-            v = video.Video(aid=vid_ID);
+        v = video.Video(aid=vid_ID, credential=credential if haveCred else None)
     vid_info = await v.get_info();
     vid_pages = await v.get_pages();
     del v;
@@ -319,21 +275,19 @@ async def videoDown(vid_id : str, credential = None):
     for key in vid_chose_c:
         arg[1].set('正在获取 {} 的链接'.format(key));
         if vid_id_isBV:
-            if haveCred:
-                v = video.Video(bvid=vid_ID, credential=credential);
-            else:
-                v = video.Video(bvid=vid_ID);
+            v = video.Video(bvid=vid_ID, credential=credential if haveCred else None)
         else:
-            if haveCred:
-                v = video.Video(aid=vid_ID, credential=credential);
-            else:
-                v = video.Video(aid=vid_ID);
+            v = video.Video(aid=vid_ID, credential=credential if haveCred else None)
         errtime = 0;
         errinfo = None;
         while True:
             try:
                 if errtime > 5:
                     await window_warn("获取视频链接错误: {}".format(errinfo));
+                    return;
+                tmp_info = await v.get_info()
+                if tmp_info['copyright'] == 2 and credential is None:
+                    await window_warn('您正尝试下载会员资源，但您未设置通行证，请前往设置中设置...');
                     return;
                 url = await v.get_download_url(cid=key);
                 break;
@@ -525,6 +479,11 @@ async def bangumiDown(vid_id : str, credential = None):
                 if errtime > 5:
                     await window_warn("获取视频链接错误: {}".format(errinfo));
                     return;
+
+                tmp_info = await v.get_info()
+                if tmp_info['copyright'] == 2 and credential is None:
+                    await window_warn('您正尝试下载会员资源，但您未设置通行证，请前往设置中设置...');
+                    return;
                 i['url'] = await v.get_download_url(cid=i['cid']);
                 break;
             except:
@@ -694,17 +653,21 @@ async def start_settings():
         else:
             await window_warn('目录无法设置');
             return False;
-    if tmp[0] == 1:
+    elif tmp[0] == 1:
         cred_new = await window_settings_credential(dafult);
         if cred_new is None:
             return False;
         for i in cred_new:
-            if cred_new[i] is '':
+            if cred_new[i] == '':
                 await window_warn('请输入完整信息...');
                 return False;
         setUserData('credential', cred_new);
         await window_warn('设置成功，请重新启动程序...', playSound=False);
         return True;
+    elif tmp[0] == 2:
+        reSetUserData()
+        await window_warn('设置重置成功，请重新启动程序...', playSound=False);
+        return True
 
 
 async def Main():
@@ -730,7 +693,7 @@ async def Main():
         await window_warn('更新失败: {}'.format(str(e)));
         return 1;
     except:
-        await window_warn('更新失败: {}'.format(sys.exc_info()[0]));
+        await window_warn('更新失败: {} {}'.format(sys.exc_info()[0], sys.exc_info()[1]));
         return 1;
     del update_window, tmp;
 
@@ -763,7 +726,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.10.1';
+    ver = '0.10.4';
     if not os.path.exists('./Download'):
         os.mkdir('./Download');
     programPath = os.getcwd();
@@ -774,6 +737,6 @@ if __name__ == '__main__':
         os.chdir(path);
     del path
     PID = os.getpid();
-    window_setVar(PID, programPath, setUserData);
+    window_setVar(PID, programPath);
     asyncio.get_event_loop().run_until_complete(Main());
     os.kill(PID, 15);

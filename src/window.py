@@ -3,6 +3,7 @@ import tkinter as tk
 import webbrowser
 import threading
 import pyperclip
+import winsound
 import asyncio
 import time
 import os
@@ -10,7 +11,7 @@ import os
 
 async def window_warn(text : str, playSound : bool = True):
     if playSound:
-        print('\a');
+        winsound.PlaySound('SystemAsterisk', winsound.SND_ASYNC);
     win = tk.Tk();
     win.title('BiliDownloader');
     win.geometry('395x65+200+200');
@@ -36,7 +37,7 @@ async def window_warn(text : str, playSound : bool = True):
 
 async def window_warn_big_2(text : str, playSound : bool = True):
     if playSound:
-        print('\a');
+        winsound.PlaySound('SystemAsterisk', winsound.SND_ASYNC);
     win = tk.Tk();
     win.title('BiliDownloader');
     win.geometry('395x80+200+200');
@@ -160,6 +161,14 @@ async def window_settings(downloadP : str, haveC : bool):
         win.destroy();
     btn2 = ttk.Button(fra0, text='返回', command=callback2);
     btn2.grid(column=1, row=1);
+    def callback3():
+        tmp = messagebox.askyesno(title='确认', message='确认重置?', parent=win, type='yesno');
+        if tmp:
+            global retv;
+            retv = (2,);
+            win.destroy();
+    btn3 = ttk.Button(fra0, text='重置', command=callback3);
+    btn3.grid(column=2, row=1);
     win.mainloop();
     return retv;
 
@@ -214,7 +223,7 @@ async def window_settings_credential(dafult : dict = None):
     btn0 = ttk.Button(fra1, text='返回', command=callback0);
     btn0.grid(column=1, row=2, sticky=(tk.N));
     def callback1():
-        webbrowser.open('http://www.majjcom.site:12568/?p=363');
+        webbrowser.open('https://gitee.com/majjcom/bili-downloader/wikis/');
     btn1 = ttk.Button(fra1, text='帮助', command=callback1);
     btn1.grid(column=2, row=2, sticky=(tk.N));
     def callback2():
@@ -290,35 +299,13 @@ async def window_confirm(text : str):
         win.destroy();
     def callback1():
         win.destroy();
-    def callback2():
-        global ifPathSet;
-        global setUserData;
-        dir = filedialog.askdirectory(parent=win, title='选择下载路径');
-        if os.path.exists(dir):
-            setUserData('downloadPath', dir);
-            ifPathSet = 1;
-            win.destroy();
-        elif dir == '':
-            ifPathSet = None;
-        else:
-            ifPathSet = -1;
-            win.destroy();
     fra0 = ttk.Frame(mainframe);
     fra0.grid(column=1, row=2, sticky=(tk.W));
     btn0 = ttk.Button(fra0, text='YES', command=callback0);
     btn0.grid(column=1, row=1, sticky=(tk.W));
     btn1 = ttk.Button(fra0, text='NO', command=callback1);
     btn1.grid(column=2, row=1, sticky=(tk.W));
-    btn2 = ttk.Button(fra0, text='设置下载位置', command=callback2);
-    btn2.grid(column=3, row=1, sticky=(tk.W));
     win.mainloop();
-    if ifPathSet:
-        if ifPathSet < 0:
-            await window_warn('目录无法设置');
-        else:
-            await window_warn('下载目录更改成功，请重新启动程序...');
-            global PID;
-        os.kill(PID, 15)
     return retv;
 
 
@@ -379,8 +366,9 @@ async def window_config_q(tip : str):
                             parent=win,
                             message='提示:\n\n'
                                     '120\t4K\n116\t1080p60\n112\t1080p+\n80\t1080p\n72\t720p60\n64\t720p\n32\t480p\n16\t320p\n\n'
-                                    '如果出现一直无法下载的情况可以稍微降低清晰度哦ლ(´ڡ`ლ)\n\n'
-                                    'P.S.现已支持4k分辨率视频下载!!! (似乎可以直接下，无需大会员哦!)');
+                                    '如果出现一直无法下载的情况可以稍微降低清晰度哦ლ(´ڡ`ლ)\n'
+                                    '部分会员资源下载需要设置通行证，请自行到设置中进行设置\n\n'
+                                    'P.S.现已支持4k分辨率视频下载!!!');
     win.protocol('WM_DELETE_WINDOW', showmessage);
     f = font.Font(root=win, name='TkTextFont', exists=True);
     f['size'] = 11;
@@ -599,11 +587,9 @@ class window_checkUpdate(threading.Thread):
         tmp.start();
         win.mainloop();
 
-def window_setVar(PID_get, programPath_get, setUserData_get):
+def window_setVar(PID_get, programPath_get):
     global PID;
     global programPath;
-    global setUserData;
-    setUserData = setUserData_get;
     PID = PID_get;
     programPath = programPath_get;
 
