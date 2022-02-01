@@ -1,4 +1,2 @@
-Pillow==9.0.0
 aiohttp==3.8.1
-qrcode==7.3.1
 pyperclip==1.8.2
