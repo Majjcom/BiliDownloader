@@ -1,4 +1,5 @@
 from tkinter import ttk, messagebox, font, filedialog
+from typing import Union
 import tkinter as tk
 import webbrowser
 import threading
@@ -63,7 +64,7 @@ async def window_ask() -> str:
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
     win.rowconfigure(0, weight=1)
-    lab0 = ttk.Label(mainframe, text='请输入视频的BV号、AV号或MD号\n(包含开头的BV、AV和MD):', font=f)
+    lab0 = ttk.Label(mainframe, text='请输入视频的BV号、AV号、MD号或EP号\n(包含开头的BV、AV、MD和EP):', font=f)
     lab0.grid(column=1, row=1, sticky=(tk.N, tk.W))
     text = tk.Variable(win)
     etr0 = ttk.Entry(mainframe, width=42, textvariable=text)
@@ -90,7 +91,7 @@ async def window_ask() -> str:
     return retv
 
 
-async def window_settings(downloadP : str, haveC : bool):
+async def window_settings(downloadP : str, haveC : Union[int, None]):
     global retv
     retv = None
     win = tk.Tk()
@@ -129,7 +130,7 @@ async def window_settings(downloadP : str, haveC : bool):
     btn1 = ttk.Button(labf0, text='登录b站', command=callback1)
     btn1.grid(column=1, row=2, sticky=(tk.W))
     v1 = tk.Variable(win)
-    v1.set('已登录' if haveC else '未登录')
+    v1.set('未登录' if haveC is None else '已登录' if haveC > 0 else '已登录-登录已过期')
     etn1 = ttk.Entry(labf0, textvariable=v1, state='readonly', width=29, font=f)
     etn1.grid(column=2, row=2, sticky=(tk.W))
     fra0 = ttk.Frame(mainframe)
@@ -148,6 +149,10 @@ async def window_settings(downloadP : str, haveC : bool):
             win.destroy()
     btn3 = ttk.Button(fra0, text='重置', command=callback3)
     btn3.grid(column=2, row=1)
+    def callback4():
+        webbrowser.open('https://gitee.com/majjcom/bili-downloader/blob/master/README.md')
+    btn4 = ttk.Button(fra0, text='帮助', command=callback4)
+    btn4.grid(column=3, row=1)
     win.mainloop()
     return retv
 
@@ -362,10 +367,16 @@ async def window_finish(text):
     t0.set(text)
     etr0 = ttk.Entry(mainframe, textvariable=t0, state='readonly', width=30)
     etr0.grid(column=1, row=2, sticky=(tk.W))
-    def callback():
+    def callback0():
         win.destroy()
-    btn0 = ttk.Button(mainframe, text='OK', command=callback)
-    btn0.grid(column=1, row=3, sticky=(tk.S, tk.W))
+    btnFrame = ttk.Frame(mainframe)
+    btnFrame.grid(column=1, row=3, sticky=(tk.S, tk.W))
+    btn0 = ttk.Button(btnFrame, text='OK', command=callback0)
+    btn0.grid(column=1, row=1)
+    def callback1():
+        os.startfile(text, 'explore')
+    btn1 = ttk.Button(btnFrame, text='打开目录', command=callback1)
+    btn1.grid(column=2, row=1)
     win.mainloop()
     return
 
@@ -535,16 +546,17 @@ class window_checkUpdate(threading.Thread):
 
 
 class Window_login(threading.Thread):
-    def __init__(self, picPath: str, e0:threading.Event, e1: threading.Event, e2:threading.Event):
+    def __init__(self, picPath: str, e0:threading.Event, e1: threading.Event, e2:threading.Event, e3:threading.Event):
         super().__init__()
         self._picPath = picPath
         self._e0 = e0
         self._e1 = e1
         self._e2 = e2
+        self._e3 = e3
 
     def run(self) -> None:
         basket = list()
-        win = Window_login_window(self._picPath, basket)
+        win = Window_login_window(self._picPath, basket, self._e3)
         win.start()
         time.sleep(0.2)
         while not basket[1]:
@@ -552,22 +564,21 @@ class Window_login(threading.Thread):
             if self._e2.is_set():
                 basket[2].set('登录失败，请重新尝试...')
                 time.sleep(1)
-                basket[0].destroy()
                 break
             if self._e0.is_set() and not self._e1.is_set():
                 basket[2].set('扫描成功，请确认...')
                 continue
-            if self._e1.is_set():
-                basket[2].set('登录成功!!')
-                time.sleep(1)
-                basket[0].destroy()
+            if self._e1.is_set() or self._e3.is_set():
                 break
+        basket[0].destroy()
+
 
 class Window_login_window(threading.Thread):
-    def __init__(self, picPath: str, basket: list):
+    def __init__(self, picPath: str, basket: list, e3: threading.Event):
         super().__init__()
         self._picPath = picPath
         self._basket = basket
+        self._e3 = e3
 
     def run(self) -> None:
         win = tk.Tk()
@@ -580,8 +591,8 @@ class Window_login_window(threading.Thread):
         def showmessage():
             tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
             if tmp:
+                self._e3.set()
                 self._basket[1] = True
-                win.destroy()
         win.protocol('WM_DELETE_WINDOW', showmessage)
         f = font.Font(root=win, name='TkTextFont', exists=True)
         f['size'] = 11

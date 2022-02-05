@@ -2,6 +2,7 @@ from .exceptions.BiliVideoIdException import BiliVideoIdException
 from .exceptions.NetWorkException import NetWorkException
 from urllib.parse import urlsplit
 from . import utils
+import copy
 
 
 API = utils.get_api(('video',))
@@ -16,9 +17,10 @@ def __check_bvid(bvid: str) -> None:
 
 
 def get_video_info(aid: int=None, bvid: str=None):
-    url = urlsplit(API['info']['url'])
+    api = copy.deepcopy(API['info'])
+    url = urlsplit(api['url'])
     get: dict = None
-    params: dict = API['info']['params']
+    params: dict = api['params']
     if bvid is not None:
         __check_bvid(bvid)
         params.pop('aid')
@@ -32,14 +34,14 @@ def get_video_info(aid: int=None, bvid: str=None):
     get = utils.network.get_data(
         scheme=url.scheme,
         host=url.netloc,
-        method=API['info']['method'],
+        method=api['method'],
         path=url.path,
         query=params
     )
     if get['code'] != 0:
-        raise NetWorkException('视频信息获取错误: {0};{1};{2}'.format(
+        raise NetWorkException('视频信息获取错误: {0}; {1}; {2}'.format(
             get['code'],
-            API['info']['return']['code'].get(str(get['code']), '未知错误'),
+            api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
         ))
     return get['data']
@@ -48,9 +50,10 @@ def get_video_info(aid: int=None, bvid: str=None):
 def get_video_url(avid: int=None, bvid: str=None, cid: int=None, passport: utils.BiliPassport=None):
     if cid is None:
         raise BiliVideoIdException('你必须提供视频 cid')
-    url = urlsplit(API['get_download_url']['url'])
+    api = copy.deepcopy(API['get_download_url'])
+    url = urlsplit(api['url'])
     get: dict = None
-    params: dict = API['get_download_url']['params']
+    params: dict = api['params']
     params.pop('qn')
     params.pop('fnver')
     params['cid'] = cid
@@ -72,16 +75,16 @@ def get_video_url(avid: int=None, bvid: str=None, cid: int=None, passport: utils
     get = utils.network.get_data(
         scheme=url.scheme,
         host=url.netloc,
-        method=API['get_download_url']['method'],
+        method=api['method'],
         path=url.path,
         query=params,
         header=header
     )
 
     if get['code'] != 0:
-        raise NetWorkException('视频链接获取错误: {0};{1};{2}'.format(
+        raise NetWorkException('视频链接获取错误: {0}; {1}; {2}'.format(
             get['code'],
-            API['info']['return']['code'].get(str(get['code']), '未知错误'),
+            api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
         ))
     return get['data']

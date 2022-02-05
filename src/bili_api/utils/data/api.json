@@ -1,7 +1,7 @@
 {
   "video": {
     "info": {
-      "url": "http://api.bilibili.com/x/web-interface/view",
+      "url": "https://api.bilibili.com/x/web-interface/view",
       "method": "GET",
       "verify": false,
       "params": {
@@ -22,7 +22,7 @@
       }
     },
     "get_download_url": {
-      "url": "http://api.bilibili.com/x/player/playurl",
+      "url": "https://api.bilibili.com/x/player/playurl",
       "method": "GET",
       "verify": true,
       "params": {
@@ -48,7 +48,7 @@
   },
   "bangumi": {
     "info": {
-      "url": "http://api.bilibili.com/pgc/review/user",
+      "url": "https://api.bilibili.com/pgc/review/user",
       "method": "GET",
       "verify": true,
       "params": {
@@ -65,7 +65,7 @@
       }
     },
     "detailed_info": {
-      "url": "http://api.bilibili.com/pgc/view/web/season",
+      "url": "https://api.bilibili.com/pgc/view/web/season",
       "method": "GET",
       "verify": false,
       "params": {
@@ -85,7 +85,7 @@
   },
   "user": {
     "get_login_url": {
-      "url": "http://passport.bilibili.com/qrcode/getLoginUrl",
+      "url": "https://passport.bilibili.com/qrcode/getLoginUrl",
       "method": "GET",
       "verify": false,
       "params": null,
@@ -102,7 +102,7 @@
       }
     },
     "get_login_data": {
-      "url": "http://passport.bilibili.com/qrcode/getLoginInfo",
+      "url": "https://passport.bilibili.com/qrcode/getLoginInfo",
       "method": "POST",
       "verify": false,
       "params": {

@@ -1,12 +1,13 @@
 from urllib.parse import urlsplit
 from . import utils
+import copy
 
 
 API = utils.get_api(('user',))
 
 
 def get_login_url():
-    api = API['get_login_url']
+    api = copy.deepcopy(API['get_login_url'])
     url = urlsplit(api['url'])
     params = api['params']
     get = utils.network.get_data(
@@ -20,7 +21,7 @@ def get_login_url():
 
 class Get_login_info(utils.network.Data_getter):
     def __init__(self, oauthKey: str):
-        api = API['get_login_data']
+        api = copy.deepcopy(API['get_login_data'])
         url = urlsplit(api['url'])
         params = api['params']
         params.pop('gourl')

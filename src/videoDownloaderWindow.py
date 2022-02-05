@@ -7,10 +7,12 @@ from bdnet import client
 from window import *
 import subprocess
 import threadDown
+import traceback
 import bili_api
 import aiohttp
 import asyncio
 import hashlib
+import qrcode
 import json
 import time
 import sys
@@ -224,13 +226,15 @@ def showUpdateInfo(ver : str):
 def user_login():
     try:
         login_info = bili_api.user.get_login_url()
-        subprocess.run((
-            os.path.join(programPath, 'bin/qrMaker.exe'),
-            '--in={}'.format(login_info['data']['url']),
-            '--out={}'.format(os.path.join(programPath, 'data/qrcode.png'))
-        ))
-        e0, e1, e2 = Event(), Event(), Event()
-        Window_login(os.path.join(programPath, 'data/qrcode.png'), e0, e1, e2).start()
+        qr = qrcode.QRCode()
+        qr.add_data(login_info['data']['url'])
+        qr.make()
+        img = qr.make_image()
+        with open(os.path.join(programPath, 'data/qrcode.png'), 'wb') as f:
+            img.save(f)
+        del qr, img
+        e0, e1, e2, e3 = Event(), Event(), Event(), Event()
+        Window_login(os.path.join(programPath, 'data/qrcode.png'), e0, e1, e2, e3).start()
         ret = None
         with bili_api.user.Get_login_info(login_info['data']['oauthKey']) as getter:
             while True:
@@ -241,7 +245,7 @@ def user_login():
                     e1.set()
                     ret = {'ts': login_info['ts'], 'data': cookieTools.get_cookie(tmp['data']['url'])}
                     break
-                elif e2.is_set():
+                elif e3.is_set():
                     break
                 else:
                     if tmp['data'] < -4:
@@ -250,11 +254,12 @@ def user_login():
                         e2.set()
                         break
                 time.sleep(0.5)
-        if os.path.exists(os.path.join(programPath, 'data/qrcode.png')):
-            os.remove(os.path.join(programPath, 'data/qrcode.png'))
         return ret
     except:
         return None
+    finally:
+        if os.path.exists(os.path.join(programPath, 'data/qrcode.png')):
+            os.remove(os.path.join(programPath, 'data/qrcode.png'))
 
 
 async def videoDown(vid_id : str, passport: BiliPassport = None):
@@ -366,7 +371,7 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
     # 0: isRun, 1: t0, 2: t1, 3: t2, 4: t3, 5: bar
     for item in urls:
         name = item['name'].replace('/', '').replace('\\', '')
-        arg[1].set('开始下载 {}'.format(name))
+        arg[1].set('正在下载 {}'.format(name))
         retry = 0
         while True:
             try:
@@ -428,7 +433,7 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
         arg[2].set('合并完成')
         os.remove('{}_temp.mp4'.format(name))
         os.remove('{}_temp.m4a'.format(name))
-        arg[1].set('{} 下载完成'.format(name))
+        arg[1].set('下载完成 {}'.format(name))
         time.sleep(0.5)
         arg[5].stop()
     arg[0] = True
@@ -542,7 +547,7 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
     time.sleep(0.5)
     for i in vid_chose_c:
         name = f'{i["name"]}_第{i["title"]}话_{i["long_title"]}'.replace('/', '').replace('\\', '')
-        arg[1].set(f'开始下载 {name}')
+        arg[1].set(f'正在下载 {name}')
         retry = 0
         while True:
             try:
@@ -604,7 +609,7 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
         arg[2].set('合并完成')
         os.remove('{}_temp.mp4'.format(name))
         os.remove('{}_temp.m4a'.format(name))
-        arg[1].set('{} 下载完成'.format(name))
+        arg[1].set('下载完成 {}'.format(name))
         time.sleep(0.5)
         arg[5].stop()
     arg[0] = True
@@ -642,7 +647,9 @@ async def start_download_video(id_get : str):
 async def start_settings():
     global programPath
     dafult = getUserData('passport')
-    tmp = await window_settings(getUserData('downloadPath'), True if dafult else False)
+    if dafult is not None:
+        dafult = dafult['ts'] + int(dafult['data']['Expires']) - time.time()
+    tmp = await window_settings(getUserData('downloadPath'), dafult)
     if tmp is None:
         return False
     if tmp[0] == 0:
@@ -714,8 +721,8 @@ async def Main():
                 del tmp
             except exceptions.BiliVideoIdException as e:
                 await window_warn('输入错误: {}'.format(e), level='错误')
-            except exceptions.NetWorkException as message:
-                await window_warn('网络错误: {}'.format(message), level='错误')
+            except exceptions.NetWorkException as e:
+                await window_warn('网络错误: {}'.format(e), level='错误')
             except ErrorCountsTooMuch as e:
                 await window_warn(str(e), level='错误')
                 break
@@ -723,7 +730,7 @@ async def Main():
                 await window_warn(str(e), level='错误')
                 break
             except:
-                await window_warn(f'错误: {sys.exc_info()[0]}, {sys.exc_info()[1]}, {sys.exc_info()[2]}', level='错误')
+                await window_warn(f'错误: {sys.exc_info()[0]}, {sys.exc_info()[1]}, {sys.exc_info()[2]}\n{traceback.format_exc()}', level='错误')
                 break
         elif get[0] == 1:
             tmp = await start_settings()
@@ -733,7 +740,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.11.0'
+    ver = '0.11.1'
     if not os.path.exists('./Download'):
         os.mkdir('./Download')
     programPath = os.getcwd()

@@ -2,13 +2,14 @@ from .exceptions.BiliVideoIdException import BiliVideoIdException
 from .exceptions.NetWorkException import NetWorkException
 from urllib.parse import urlsplit
 from . import utils
+import copy
 
 
 API = utils.get_api(('bangumi',))
 
 
 def get_bangumi_info(media_id: int):
-    api = API['info']
+    api = copy.deepcopy(API['info'])
     url = urlsplit(api['url'])
     params = api['params']
     params['media_id'] = media_id
@@ -21,16 +22,16 @@ def get_bangumi_info(media_id: int):
         query=params
     )
     if get['code'] != 0:
-        raise NetWorkException('番剧信息获取错误: {0};{1};{2}'.format(
+        raise NetWorkException('番剧信息获取错误: {0}; {1}; {2}'.format(
             get['code'],
-            api['info']['return']['code'].get(str(get['code']), '未知错误'),
+            api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
         ))
     return get['result']
 
 
 def get_bangumi_detailed_info(season_id: int=None, ep_id: int=None, media_id: int=None):
-    api = API['detailed_info']
+    api = copy.deepcopy(API['detailed_info'])
     url = urlsplit(api['url'])
     params = api['params']
     if media_id is not None and season_id is None and ep_id is None:
@@ -53,9 +54,9 @@ def get_bangumi_detailed_info(season_id: int=None, ep_id: int=None, media_id: in
         query=params
     )
     if get['code'] != 0:
-        raise NetWorkException('番剧详细信息获取错误: {0};{1};{2}'.format(
+        raise NetWorkException('番剧详细信息获取错误: {0}; {1}; {2}'.format(
             get['code'],
-            api['info']['return']['code'].get(str(get['code']), '未知错误'),
+            api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
         ))
     info = get_bangumi_info(get['result']['media_id']) if media_id is None else info
