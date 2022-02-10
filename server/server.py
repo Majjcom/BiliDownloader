@@ -28,11 +28,11 @@ class Runner(thr.Thread):
             time.sleep(0.2)
             self._l.close()
         except:
-            print('[Expection][{}]'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')), sys.exc_info()[0], sys.exc_info()[1])
+            print('[{}][Expection]'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')), sys.exc_info()[0], sys.exc_info()[1])
             try:
                 self._l.close()
             except:
-                print('[Expection][{}]'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')), 'Close Error...')
+                print('[{}][Expection]'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')), 'Close Error...')
 
 
 def getVersion():
@@ -75,7 +75,7 @@ def main():
             run = Runner(l)
             run.start()
         except:
-            print('[Expection][{}]'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')), sys.exc_info()[0], sys.exc_info()[1])
+            print('[{}][Expection]'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')), sys.exc_info()[0], sys.exc_info()[1])
 
 
 if __name__ == '__main__':

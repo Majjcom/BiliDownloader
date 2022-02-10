@@ -168,7 +168,7 @@ def setupUserData(reset: bool = False) -> None:
                 'isnew': False if reset else True,
                 'userinfo': dict()
             }
-            json.dump(meta, f, sort_keys=True, indent=4)
+            json.dump(meta, f, sort_keys=True, indent=2)
 
 
 def getUserData(key : str):
@@ -195,7 +195,7 @@ def setUserData(key : str, value : {dict, list, int, float, str}) -> bool:
     else:
         userdata['userinfo'][key] = value
     with open(os.path.join(programPath, 'data/userdata.json'), 'w') as f:
-        json.dump(userdata, f, sort_keys=True, indent=4)
+        json.dump(userdata, f, sort_keys=True, indent=2)
     return True
 
 
@@ -204,6 +204,18 @@ def reSetUserData():
     setupUserData()
     os.remove(os.path.join(programPath, 'data/userdata.json'))
     setupUserData(reset=True)
+
+
+def removeUserData(key: str):
+    global programPath
+    setupUserData()
+    with open(os.path.join(programPath, 'data/userdata.json'), 'r') as f:
+        userdata: dict = json.load(f)
+    if key in userdata['userinfo'].keys():
+        userdata['userinfo'].pop(key)
+    with open(os.path.join(programPath, 'data/userdata.json'), 'w') as f:
+        json.dump(userdata, f, sort_keys=True, indent=2)
+    return
 
 
 def showUpdateInfo(ver : str):
@@ -370,7 +382,7 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
     time.sleep(0.5)
     # 0: isRun, 1: t0, 2: t1, 3: t2, 4: t3, 5: bar
     for item in urls:
-        name = item['name'].replace('/', '').replace('\\', '')
+        name = item['name'].replace('/', '').replace('\\', '').replace('|', '')
         arg[1].set('正在下载 {}'.format(name))
         retry = 0
         while True:
@@ -546,7 +558,7 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
     tmp.start()
     time.sleep(0.5)
     for i in vid_chose_c:
-        name = f'{i["name"]}_第{i["title"]}话_{i["long_title"]}'.replace('/', '').replace('\\', '')
+        name = f'{i["name"]}_第{i["title"]}话_{i["long_title"]}'.replace('/', '').replace('\\', '').replace('|', '')
         arg[1].set(f'正在下载 {name}')
         retry = 0
         while True:
@@ -718,7 +730,6 @@ async def Main():
                 tmp = await start_download_video(get[1])
                 if tmp:
                     break
-                del tmp
             except exceptions.BiliVideoIdException as e:
                 await window_warn('输入错误: {}'.format(e), level='错误')
             except exceptions.NetWorkException as e:
@@ -736,11 +747,10 @@ async def Main():
             tmp = await start_settings()
             if tmp:
                 break
-            del tmp
 
 
 if __name__ == '__main__':
-    ver = '0.11.1'
+    ver = '0.11.2'
     if not os.path.exists('./Download'):
         os.mkdir('./Download')
     programPath = os.getcwd()
@@ -748,7 +758,11 @@ if __name__ == '__main__':
     if path is None:
         os.chdir('./Download')
     else:
-        os.chdir(path)
+        if os.path.exists(path):
+            os.chdir(path)
+        else:
+            removeUserData('downloadPath')
+            os.chdir('./Download')
     del path
     PID = os.getpid()
     window_setVar(PID, programPath)
