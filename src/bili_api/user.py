@@ -9,7 +9,6 @@ API = utils.get_api(('user',))
 def get_login_url():
     api = copy.deepcopy(API['get_login_url'])
     url = urlsplit(api['url'])
-    params = api['params']
     get = utils.network.get_data(
         scheme=url.scheme,
         host=url.netloc,

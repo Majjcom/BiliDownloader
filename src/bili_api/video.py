@@ -6,6 +6,10 @@ import copy
 
 
 API = utils.get_api(('video',))
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0',
+    'Referer': 'https://www.bilibili.com/'
+}
 
 
 def __check_bvid(bvid: str) -> None:
@@ -15,11 +19,9 @@ def __check_bvid(bvid: str) -> None:
         raise BiliVideoIdException('bvid 格式错误: bvid 必须是一个由BV开头的字符串')
 
 
-
-def get_video_info(aid: int=None, bvid: str=None):
+def get_video_info(aid: int = None, bvid: str = None):
     api = copy.deepcopy(API['info'])
     url = urlsplit(api['url'])
-    get: dict = None
     params: dict = api['params']
     if bvid is not None:
         __check_bvid(bvid)
@@ -47,12 +49,41 @@ def get_video_info(aid: int=None, bvid: str=None):
     return get['data']
 
 
-def get_video_url(avid: int=None, bvid: str=None, cid: int=None, passport: utils.BiliPassport=None):
+def get_video_pages(aid: int = None, bvid: str = None):
+    api = copy.deepcopy(API['pages'])
+    url = urlsplit(api['url'])
+    params: dict = api['params']
+    if bvid is not None:
+        __check_bvid(bvid)
+        params.pop('aid')
+        params['bvid'] = bvid
+    elif aid is not None:
+        params.pop('bvid')
+        params['aid'] = aid
+    else:
+        raise BiliVideoIdException('你必须输入 aid, bvid 中的任意一个')
+
+    get = utils.network.get_data(
+        scheme=url.scheme,
+        host=url.netloc,
+        method=api['method'],
+        path=url.path,
+        query=params
+    )
+    if get['code'] != 0:
+        raise NetWorkException('视频信息获取错误: {0}; {1}; {2}'.format(
+            get['code'],
+            api['return']['code'].get(str(get['code']), '未知错误'),
+            get['message']
+        ))
+    return get['data']
+
+
+def get_video_url(avid: int = None, bvid: str = None, cid: int = None, passport: utils.BiliPassport = None):
     if cid is None:
         raise BiliVideoIdException('你必须提供视频 cid')
     api = copy.deepcopy(API['get_download_url'])
     url = urlsplit(api['url'])
-    get: dict = None
     params: dict = api['params']
     params.pop('qn')
     params.pop('fnver')
@@ -71,8 +102,7 @@ def get_video_url(avid: int=None, bvid: str=None, cid: int=None, passport: utils
     header = {}
     if passport is not None:
         header['cookie'] = passport.get_cookie()
-
-    get = utils.network.get_data(
+    get: dict = utils.network.get_data(
         scheme=url.scheme,
         host=url.netloc,
         method=api['method'],
@@ -87,4 +117,37 @@ def get_video_url(avid: int=None, bvid: str=None, cid: int=None, passport: utils
             api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
         ))
+    return get['data']
+
+
+def get_video_online_count(cid: int, aid: int = None, bvid: str = None):
+    api = copy.deepcopy(API['online_count'])
+    url = urlsplit(api['url'])
+    params: dict = api['params']
+    params['cid'] = cid
+    if bvid is not None:
+        __check_bvid(bvid)
+        params.pop('aid')
+        params['bvid'] = bvid
+    elif aid is not None:
+        params.pop('bvid')
+        params['aid'] = aid
+    else:
+        raise BiliVideoIdException('你必须输入 aid, bvid 中的任意一个')
+
+    get: dict = utils.network.get_data(
+        scheme=url.scheme,
+        host=url.netloc,
+        method=api['method'],
+        path=url.path,
+        query=params
+    )
+
+    if get['code'] != 0:
+        raise NetWorkException('视频在线人数获取错误: {0}; {1}; {2}'.format(
+            get['code'],
+            api['return']['code'].get(str(get['code']), '未知错误'),
+            get['message']
+        ))
+
     return get['data']

@@ -1,6 +1,7 @@
-# Copyright © 2022 BiliDownloader
-# Made by Majjcom
-from bili_api.utils import BiliPassport, cookieTools
+# Copyright (c) 2022 Majjcom
+# BiliDownloader
+# With MIT License
+from bili_api.utils import BiliPassport, cookieTools, matchFomat
 from bili_api import exceptions
 from threading import Event
 from bdnet import client
@@ -12,6 +13,7 @@ import bili_api
 import aiohttp
 import asyncio
 import hashlib
+import xml2ass
 import qrcode
 import json
 import time
@@ -41,6 +43,34 @@ class ErrorCredential(Exception):
         return self.info
 
 
+class ErrorGetVidioUrl(Exception):
+    def __init__(self, info : str = None):
+        Exception.__init__(self)
+        self.info = info
+    def __str__(self):
+        return self.info
+
+
+def removeSpecialCharacter(original: str) -> str:
+    spe = r'~!@#$%^&*()+-*/<>,.[]\| '
+    ret = original[:]
+    for c in spe:
+        if c in ret:
+            count = ret.count(c)
+            for i in range(count):
+                index = ret.index(c)
+                ret = ret[:index] + '_' + ret[index + 1:]
+    return ret
+
+
+def downloadDanmaku(path: str, cid: int) -> None:
+    danmakuXml = bili_api.danmaku.get_danmaku_xml(cid)
+    danmakuAss = xml2ass.convertMain(danmakuXml, 852, 480, text_opacity=0.6)
+    with open(path, 'w', encoding='utf_8') as f:
+        f.write(danmakuAss)
+    return
+
+
 async def downloadVideo(Url : dict, qid : int, v, name : str = 'video'):
     global mainprocess, programPath
     async with aiohttp.ClientSession() as sess:
@@ -53,7 +83,7 @@ async def downloadVideo(Url : dict, qid : int, v, name : str = 'video'):
             'User-Agent': 'Mozilla/5.0',
             'Referer': 'https://www.bilibili.com/'
         }
-        await threadDown.download_with_threads(video_url, v, '{}_temp.mp4'.format(name), headers=HEADERS, piece_per_size=(64 * 1024 ** 2))
+        await threadDown.download_with_threads(video_url, v, '{}_temp.mp4'.format(name), headers=HEADERS, piece_per_size=(32 * 1024 ** 2))
 
 
 async def downloadAudio(Url : dict, id : int, v, name : str = 'audio'):
@@ -64,7 +94,7 @@ async def downloadAudio(Url : dict, id : int, v, name : str = 'audio'):
             'User-Agent': 'Mozilla/5.0',
             'Referer': 'https://www.bilibili.com/'
         }
-        await threadDown.download_with_threads(audio_url, v, '{}_temp.m4a'.format(name), headers=HEADERS, piece_per_size=(64 * 1024 ** 2))
+        await threadDown.download_with_threads(audio_url, v, '{}_temp.m4a'.format(name), headers=HEADERS, piece_per_size=(16 * 1024 ** 2))
 
 
 async def checkUpdate():
@@ -137,7 +167,7 @@ def getUpdateUrl():
     s.sendMsg({'action': 'updateUrl', 'bVersion': ver})
     get = s.recvMsg()
     s.close()
-    return (get['content']['url'], get['content']['hash'])
+    return get['content']['url'], get['content']['hash']
 
 
 def getUpdateInfo():
@@ -159,6 +189,7 @@ def getFileHash(name):
 
 def setupUserData(reset: bool = False) -> None:
     global programPath
+    global ver
     if not os.path.exists(os.path.join(programPath, 'data')):
         os.mkdir(os.path.join(programPath, 'data'))
     if not os.path.exists(os.path.join(programPath, 'data/userdata.json')):
@@ -218,14 +249,14 @@ def removeUserData(key: str):
     return
 
 
-def showUpdateInfo(ver : str):
+def showUpdateInfo(VER : str):
     global programPath
     try:
         new_user = getUserData('isnew')
         ver_get = getUserData('version')
-        if not ifuptodate(ver_get, ver):
+        if not ifuptodate(ver_get, VER):
             new_user = True
-            setUserData('version', ver)
+            setUserData('version', VER)
         if new_user:
             setUserData('isnew', False)
             os.startfile(os.path.realpath(os.path.join(programPath, 'src/CHANGELOG.txt')))
@@ -274,8 +305,11 @@ def user_login():
             os.remove(os.path.join(programPath, 'data/qrcode.png'))
 
 
-async def videoDown(vid_id : str, passport: BiliPassport = None):
+async def videoDown(vid_id: str, passport: BiliPassport = None):
     global programPath
+    isReserveAudio: Union[None, bool] = getUserData('reserveAudio')
+    if isReserveAudio is None:
+        isReserveAudio = False
     vid_id_isBV : bool = None
     if len(vid_id) <= 2:
         pass
@@ -288,12 +322,22 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
     else:
         vid_ID = int(vid_id[2:])
     vid_info = None
+    online_count = None
     if vid_id_isBV:
         vid_info = bili_api.video.get_video_info(bvid=vid_ID)
+        online_count = bili_api.video.get_video_online_count(vid_info['cid'], bvid=vid_ID)
     else:
         vid_info = bili_api.video.get_video_info(aid=vid_ID)
+        online_count = bili_api.video.get_video_online_count(vid_info['cid'], aid=vid_ID)
     vid_pages = vid_info['pages']
-    tmp = await window_confirm('请确认视频:\n\n下载位置: {}\n标题: {}\nUP主: {}'.format(getUserData('downloadPath'), vid_info['title'], vid_info['owner']['name']))
+    tmp = await window_confirm(
+        '请确认视频:\n\n下载位置: {}\n标题: {}\nUP主: {}\n当前在线: {}'.format(
+            getUserData('downloadPath'),
+            vid_info['title'],
+            vid_info['owner']['name'],
+            online_count['total']
+        )
+    )
     if not tmp:
         await window_warn('退出...', playSound=False, level='信息')
         return
@@ -340,12 +384,13 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
                 break
             except:
                 errtime += 1
-                errinfo = sys.exc_info()
+                errinfo = traceback.format_exc()
                 time.sleep(0.8)
         del errtime, errinfo
         data = {
-            'name': '{}_{}_{}'.format(vid_info['title'].replace(' ', '_'), vid_chose_c[key]['page'], vid_chose_c[key]['part'].replace(' ', '_')),
-            'url': url
+            'name': 'p_{}_{}'.format(vid_chose_c[key]['page'], removeSpecialCharacter(vid_chose_c[key]['part'])),
+            'url': url,
+            'cid': key
         }
         urls.append(data)
     arg[0] = True
@@ -381,8 +426,11 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
     tmp.start()
     time.sleep(0.5)
     # 0: isRun, 1: t0, 2: t1, 3: t2, 4: t3, 5: bar
+    if not os.path.exists('./{}'.format(removeSpecialCharacter(vid_info['title']))):
+        os.mkdir('./{}'.format(removeSpecialCharacter(vid_info['title'])))
+    os.chdir('./{}'.format(removeSpecialCharacter(vid_info['title'])))
     for item in urls:
-        name = item['name'].replace('/', '').replace('\\', '').replace('|', '')
+        name = removeSpecialCharacter(item['name'])
         arg[1].set('正在下载 {}'.format(name))
         retry = 0
         while True:
@@ -444,7 +492,24 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
         del DEV_NULL
         arg[2].set('合并完成')
         os.remove('{}_temp.mp4'.format(name))
-        os.remove('{}_temp.m4a'.format(name))
+        if isReserveAudio:
+            if os.path.exists('{}.m4a'.format(name)):
+                os.remove('{}.m4a'.format(name))
+            os.rename('{}_temp.m4a'.format(name), '{}.m4a'.format(name))
+        else:
+            os.remove('{}_temp.m4a'.format(name))
+        dodanmaku = getUserData('saveDanmaku')
+        if dodanmaku:
+            arg[2].set('下载弹幕')
+            arg[3].set('正在获取弹幕...')
+            dan = bili_api.danmaku.get_danmaku_xml(item['cid'])
+            time.sleep(0.2)
+            arg[3].set('正在解析弹幕...')
+            dan = xml2ass.convertMain(dan, 852, 480, text_opacity=0.6)
+            time.sleep(0.25)
+            with open('{}.ass'.format(name), 'w', encoding='utf_8') as assf:
+                assf.write(dan)
+            arg[3].set('弹幕下载完成...')
         arg[1].set('下载完成 {}'.format(name))
         time.sleep(0.5)
         arg[5].stop()
@@ -456,7 +521,11 @@ async def videoDown(vid_id : str, passport: BiliPassport = None):
     return
 
 
-async def bangumiDown(vid_id : str, passport: BiliPassport = None):
+async def bangumiDown(vid_id: str, passport: BiliPassport = None):
+    global programPath
+    isReserveAudio: Union[None, bool] = getUserData('reserveAudio')
+    if isReserveAudio is None:
+        isReserveAudio = False
     if vid_id[:2].lower() == 'md':
         vid_ID_type = 'md'
     else:
@@ -467,7 +536,7 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
     else:
         vid_info = bili_api.bangumi.get_bangumi_detailed_info(ep_id=vid_ID)
     while True:
-        tmp = await window_confirm(f'请确认番剧:\n\n下载位置: {getUserData("downloadPath")}\n标题: {vid_info["info"]["media"]["title"]}\n评分: {vid_info["info"]["media"]["rating"]["score"]}')
+        tmp = await window_confirm(f'请确认番剧:\n\n下载位置: {getUserData("downloadPath")}\n标题: {vid_info["info"]["media"]["title"]}\n评分: {vid_info["info"]["media"]["rating"]["score"]}\n')
         if tmp:
             break
         else:
@@ -478,9 +547,9 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
     for i in vid_list['episodes']:
         tmp = {'aid': i['aid'],
                'cid': i['cid'],
-               'name': vid_info['info']['media']['title'].replace(' ', '_'),
-               'title': i['title'],
-               'long_title': i['long_title'].replace(' ', '_')
+               'name': removeSpecialCharacter(vid_info['info']['media']['title']),
+               'title': removeSpecialCharacter(i['title']),
+               'long_title': removeSpecialCharacter(i['long_title'])
                }
         vid_episodes.append(tmp)
     vid_episodes_count : int = len(vid_episodes)
@@ -509,6 +578,9 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
     tmp = window_geturl(arg)
     tmp.start()
     time.sleep(0.5)
+    if not os.path.exists('./{}'.format(removeSpecialCharacter(vid_info['info']['media']['title']))):
+        os.mkdir('./{}'.format(removeSpecialCharacter(vid_info['info']['media']['title'])))
+    os.chdir('./{}'.format(removeSpecialCharacter(vid_info['info']['media']['title'])))
     for i in vid_chose_c:
         arg[1].set(f'正在获取 {i["cid"]} 的链接...')
         errtime = 0
@@ -558,7 +630,7 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
     tmp.start()
     time.sleep(0.5)
     for i in vid_chose_c:
-        name = f'{i["name"]}_第{i["title"]}话_{i["long_title"]}'.replace('/', '').replace('\\', '').replace('|', '')
+        name = removeSpecialCharacter(f'{i["name"]}_第{i["title"]}话_{i["long_title"]}')
         arg[1].set(f'正在下载 {name}')
         retry = 0
         while True:
@@ -620,7 +692,24 @@ async def bangumiDown(vid_id : str, passport: BiliPassport = None):
         del DEV_NULL
         arg[2].set('合并完成')
         os.remove('{}_temp.mp4'.format(name))
-        os.remove('{}_temp.m4a'.format(name))
+        if isReserveAudio:
+            if os.path.exists('{}.m4a'.format(name)):
+                os.remove('{}.m4a'.format(name))
+            os.rename('{}_temp.m4a'.format(name), '{}.m4a'.format(name))
+        else:
+            os.remove('{}_temp.m4a'.format(name))
+        dodanmaku = getUserData('saveDanmaku')
+        if dodanmaku:
+            arg[2].set('下载弹幕')
+            arg[3].set('正在获取弹幕...')
+            dan = bili_api.danmaku.get_danmaku_xml(i['cid'])
+            time.sleep(0.2)
+            arg[3].set('正在解析弹幕...')
+            dan = xml2ass.convertMain(dan, 852, 480, text_opacity=0.6)
+            time.sleep(0.25)
+            with open('{}.ass'.format(name), 'w', encoding='utf_8') as assf:
+                assf.write(dan)
+            arg[3].set('弹幕下载完成...')
         arg[1].set('下载完成 {}'.format(name))
         time.sleep(0.5)
         arg[5].stop()
@@ -640,28 +729,46 @@ async def start_download_video(id_get : str):
         passportRaw.pop('Expires')
         passport = BiliPassport(passportRaw)
     mode = 'none'
+    id_out = ''
     available: tuple = ('bv', 'av', 'md', 'ep')
-    if id_get[:2].lower() in available:
-        if id_get[:2].lower() == 'md' or id_get[:2].lower() == 'ep':
-            mode = 'bangumi'
-        elif id_get[:2].lower() == 'bv' or id_get[:2].lower() == 'av':
-            mode = 'video'
+    matchMode = matchFomat.matchAll(id_get)
+    if matchMode is None:
+        await window_warn('请输入正确的值...')
+        return False
+    if matchMode == 'MD' or matchMode == 'EP':
+        mode = 'bangumi'
+        if matchMode == 'MD':
+            id_out = matchFomat.getMdid(id_get)
+        else:
+            id_out = matchFomat.getEpid(id_get)
+    elif matchMode == 'BV' or matchMode == 'AV':
+        mode = 'video'
+        if matchMode == 'BV':
+            id_out = matchFomat.getBvid(id_get)
+        else:
+            id_out = matchFomat.getAvid(id_get)
     else:
         await window_warn('请输入正确的值...')
         return False
     if mode == 'bangumi':
-        await bangumiDown(id_get, passport)
+        await bangumiDown(id_out, passport)
     elif mode == 'video':
-        await videoDown(id_get, passport)
+        await videoDown(id_out, passport)
     return True
 
 
 async def start_settings():
     global programPath
     dafult = getUserData('passport')
+    isReserveAudio: Union[None, bool] = getUserData('reserveAudio')
+    isSaveDanmaku: Union[None, bool] = getUserData('saveDanmaku')
     if dafult is not None:
         dafult = dafult['ts'] + int(dafult['data']['Expires']) - time.time()
-    tmp = await window_settings(getUserData('downloadPath'), dafult)
+    if isReserveAudio is None:
+        isReserveAudio = False
+    if isSaveDanmaku is None:
+        isSaveDanmaku = False
+    tmp = await window_settings(getUserData('downloadPath'), dafult, isReserveAudio, isSaveDanmaku)
     if tmp is None:
         return False
     if tmp[0] == 0:
@@ -688,6 +795,10 @@ async def start_settings():
         reSetUserData()
         await window_warn('设置重置成功，请重新启动程序...', playSound=False, level='信息')
         return True
+    elif tmp[0] == 3:
+        setUserData('reserveAudio', tmp[1])
+        setUserData('saveDanmaku', tmp[2])
+        return False
 
 
 async def Main():
@@ -717,6 +828,7 @@ async def Main():
         await window_warn('更新失败: {} {}'.format(sys.exc_info()[0], sys.exc_info()[1]), level='错误')
         return 1
     del update_window, tmp
+
 
     passCheck = getUserData('passport')
     if passCheck is not None:
@@ -750,7 +862,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.11.2'
+    ver = '0.12.1'
     if not os.path.exists('./Download'):
         os.mkdir('./Download')
     programPath = os.getcwd()

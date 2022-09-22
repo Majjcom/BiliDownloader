@@ -17,8 +17,11 @@ async def window_warn(text : str, playSound : bool = True, level : str = '警告
     win.geometry('395x122+200+200')
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    #f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
@@ -37,14 +40,14 @@ async def window_warn(text : str, playSound : bool = True, level : str = '警告
     btnframe.grid(column=0, row=1)
     def btn0Callback(e=None):
         win.destroy()
-    btn0 = ttk.Button(btnframe, text='确认', command=btn0Callback)
+    btn0 = ttk.Button(btnframe, text='确认', command=btn0Callback, style='TButton')
     btn0.pack(side=tk.TOP)
     win.bind('<Key-Return>', btn0Callback)
     win.mainloop()
     return
 
 
-async def window_ask() -> str:
+async def window_ask() -> tuple:
     global retv
     retv = 'a'
     win = tk.Tk()
@@ -58,20 +61,22 @@ async def window_ask() -> str:
             global PID
             os.kill(PID, 15)
     win.protocol('WM_DELETE_WINDOW', showmessage)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
     win.rowconfigure(0, weight=1)
-    lab0 = ttk.Label(mainframe, text='请输入视频的BV号、AV号、MD号或EP号\n(包含开头的BV、AV、MD和EP):', font=f)
+    lab0 = ttk.Label(mainframe, text='请输入视频链接或视频的BV号、AV号、MD号、EP号\n(包含开头的BV、AV、MD和EP):', font=f)
     lab0.grid(column=1, row=1, sticky=(tk.N, tk.W))
     text = tk.Variable(win)
-    etr0 = ttk.Entry(mainframe, width=42, textvariable=text)
+    etr0 = ttk.Entry(mainframe, width=42, textvariable=text, font=f)
     etr0.grid(column=1, row=2, sticky=(tk.N, tk.W))
     def callback0(e=None):
         global retv
-        retv = (0, text.get().replace(' ', ''))
+        retv = (0, text.get())
         win.destroy()
     def callback1():
         global retv
@@ -83,20 +88,20 @@ async def window_ask() -> str:
     etr0.bind('<Key-Return>', callback0)
     fra0 = ttk.Frame(mainframe)
     fra0.grid(column=1, row=3, sticky=(tk.E), pady=1)
-    btn0 = ttk.Button(fra0, text='OK', command=callback0)
+    btn0 = ttk.Button(fra0, text='OK', command=callback0, style='TButton')
     btn0.grid(column=2, row=1, sticky=(tk.E))
-    btn1 = ttk.Button(fra0, text='设置', command=callback1)
+    btn1 = ttk.Button(fra0, text='设置', command=callback1, style='TButton')
     btn1.grid(column=1, row=1, sticky=(tk.E))
     win.mainloop()
     return retv
 
 
-async def window_settings(downloadP : str, haveC : Union[int, None]):
+async def window_settings(downloadP: str, haveC: Union[int, None], isReserveAudio: bool, isSaveDanmaku: bool):
     global retv
     retv = None
     win = tk.Tk()
     win.title('BiliDownloader')
-    win.geometry('395x125+200+200')
+    win.geometry('395x174+200+200')
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     def showmessage():
@@ -105,8 +110,12 @@ async def window_settings(downloadP : str, haveC : Union[int, None]):
             global PID
             os.kill(PID, 15)
     win.protocol('WM_DELETE_WINDOW', showmessage)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
+    chkStyle = ttk.Style(win)
+    chkStyle.configure('TCheckbutton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
@@ -117,7 +126,7 @@ async def window_settings(downloadP : str, haveC : Union[int, None]):
         global retv
         retv = (0, filedialog.askdirectory(parent=win, title='选择下载路径'))
         win.destroy()
-    btn0 = ttk.Button(labf0, text='设置下载位置', command=callback0)
+    btn0 = ttk.Button(labf0, text='设置下载位置', command=callback0, style='TButton')
     btn0.grid(column=1, row=1, sticky=(tk.W))
     v0 = tk.Variable(win)
     v0.set(downloadP)
@@ -127,19 +136,25 @@ async def window_settings(downloadP : str, haveC : Union[int, None]):
         global retv
         retv = (1,)
         win.destroy()
-    btn1 = ttk.Button(labf0, text='登录b站', command=callback1)
+    btn1 = ttk.Button(labf0, text='登录b站', command=callback1, style='TButton')
     btn1.grid(column=1, row=2, sticky=(tk.W))
     v1 = tk.Variable(win)
     v1.set('未登录' if haveC is None else '已登录' if haveC > 0 else '已登录-登录已过期')
     etn1 = ttk.Entry(labf0, textvariable=v1, state='readonly', width=29, font=f)
     etn1.grid(column=2, row=2, sticky=(tk.W))
+    v2 = tk.BooleanVar(win, value=isReserveAudio)
+    chk0 = ttk.Checkbutton(labf0, text='保留下载的音频文件', variable=v2, style='TCheckbutton')
+    chk0.grid(column=2, row=3, sticky=(tk.W))
+    v3 = tk.BooleanVar(win, value=isSaveDanmaku)
+    chk1 = ttk.Checkbutton(labf0, text='下载弹幕', variable=v3, style='TCheckbutton')
+    chk1.grid(column=2, row=4, sticky=(tk.W))
     fra0 = ttk.Frame(mainframe)
     fra0.grid(column=1, row=2, pady=1)
     def callback2():
         global retv
-        retv = None
+        retv = (3,v2.get(), v3.get())
         win.destroy()
-    btn2 = ttk.Button(fra0, text='返回', command=callback2)
+    btn2 = ttk.Button(fra0, text='返回', command=callback2, style='TButton')
     btn2.grid(column=1, row=1)
     def callback3():
         tmp = messagebox.askyesno(title='确认', message='确认重置?', parent=win, type='yesno')
@@ -147,11 +162,11 @@ async def window_settings(downloadP : str, haveC : Union[int, None]):
             global retv
             retv = (2,)
             win.destroy()
-    btn3 = ttk.Button(fra0, text='重置', command=callback3)
+    btn3 = ttk.Button(fra0, text='重置', command=callback3, style='TButton')
     btn3.grid(column=2, row=1)
     def callback4():
         webbrowser.open('https://gitee.com/majjcom/bili-downloader/blob/master/README.md')
-    btn4 = ttk.Button(fra0, text='帮助', command=callback4)
+    btn4 = ttk.Button(fra0, text='帮助', command=callback4, style='TButton')
     btn4.grid(column=3, row=1)
     win.mainloop()
     return retv
@@ -163,8 +178,10 @@ async def window_showupdate_detal(info: str):
     win.geometry('395x302+200+200')
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
@@ -183,7 +200,7 @@ async def window_showupdate_detal(info: str):
     btnframe.grid(column=0, row=1)
     def btn0Callback(e=None):
         win.destroy()
-    btn0 = ttk.Button(btnframe, text='确认', command=btn0Callback)
+    btn0 = ttk.Button(btnframe, text='确认', command=btn0Callback, style='TButton')
     btn0.pack(side=tk.TOP)
     win.bind('<Key-Return>', btn0Callback)
     win.mainloop()
@@ -201,8 +218,10 @@ async def window_showupdate():
         if tmp:
             win.destroy()
     win.protocol('WM_DELETE_WINDOW', showmessage)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
@@ -212,7 +231,7 @@ async def window_showupdate():
     def callback(e=None):
         win.destroy()
     win.bind('<Key-Return>', callback)
-    btn0 = ttk.Button(mainframe, text='OK', command=callback)
+    btn0 = ttk.Button(mainframe, text='OK', command=callback, style='TButton')
     btn0.grid(column=1, row=2, sticky=(tk.S, tk.W))
     win.mainloop()
     return
@@ -224,7 +243,7 @@ async def window_confirm(text : str):
     retv = False
     win = tk.Tk()
     win.title('BiliDownloader')
-    win.geometry('395x145+200+200')
+    win.geometry('395x164+200+200')
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     def showmessage():
@@ -233,8 +252,10 @@ async def window_confirm(text : str):
             global PID
             os.kill(PID, 15)
     win.protocol('WM_DELETE_WINDOW', showmessage)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.S, tk.W))
     win.columnconfigure(0, weight=1)
@@ -252,9 +273,9 @@ async def window_confirm(text : str):
     win.bind('<Key-Return>', callback0)
     fra0 = ttk.Frame(mainframe)
     fra0.grid(column=1, row=2, sticky=(tk.W))
-    btn0 = ttk.Button(fra0, text='YES', command=callback0)
+    btn0 = ttk.Button(fra0, text='YES', command=callback0, style='TButton')
     btn0.grid(column=1, row=1, sticky=(tk.W))
-    btn1 = ttk.Button(fra0, text='NO', command=callback1)
+    btn1 = ttk.Button(fra0, text='NO', command=callback1, style='TButton')
     btn1.grid(column=2, row=1, sticky=(tk.W))
     win.mainloop()
     return retv
@@ -274,8 +295,10 @@ async def window_config_p(text : str):
             global PID
             os.kill(PID, 15)
     win.protocol('WM_DELETE_WINDOW', showmessage)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.S, tk.W))
     win.columnconfigure(0, weight=1)
@@ -287,14 +310,14 @@ async def window_config_p(text : str):
     lab1 = ttk.Label(mainframe, text='请选择下载范围, 用","分隔(如1-1或1-5或1-1, 3-5): ', font=f)
     lab1.grid(column=1, row=2, sticky=(tk.W))
     t1 = tk.Variable(win)
-    etr0 = ttk.Entry(mainframe, textvariable=t1)
+    etr0 = ttk.Entry(mainframe, textvariable=t1, font=f)
     etr0.grid(column=1, row=3, sticky=(tk.W))
     def callback(e=None):
         global retv
         retv = t1.get()
         win.destroy()
     etr0.bind('<Key-Return>', callback)
-    btn0 = ttk.Button(mainframe, text='OK', command=callback)
+    btn0 = ttk.Button(mainframe, text='OK', command=callback, style='TButton')
     btn0.grid(column=1, row=4, sticky=(tk.W, tk.S))
     win.mainloop()
     return retv
@@ -322,8 +345,10 @@ async def window_config_q(tip : str):
                                     '部分会员资源下载需要设置通行证，请自行到设置中进行设置\n\n'
                                     'P.S.现已支持4k分辨率视频下载!!!')
     win.protocol('WM_DELETE_WINDOW', showmessage)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
@@ -332,7 +357,7 @@ async def window_config_q(tip : str):
     lab0.grid(column=1, row=1, stick=(tk.N, tk.W))
     t0 = tk.Variable(win)
     t0.set(tip.split(', ', 1)[0])
-    etr0 = ttk.Entry(mainframe, textvariable=t0, width=10)
+    etr0 = ttk.Entry(mainframe, textvariable=t0, width=10, font=f)
     etr0.grid(column=1, row=2, sticky=(tk.W))
     def callback(e=None):
         global retv
@@ -341,9 +366,9 @@ async def window_config_q(tip : str):
     etr0.bind('<Key-Return>', callback)
     fra0 = ttk.Frame(mainframe)
     fra0.grid(column=1, row=3, sticky=(tk.W), pady=2)
-    btn0 = ttk.Button(fra0, text='OK', command=callback)
+    btn0 = ttk.Button(fra0, text='OK', command=callback, style='TButton')
     btn0.grid(column=1, row=1, sticky=(tk.W))
-    btn1 = ttk.Button(fra0, text='提示', command=showHelp)
+    btn1 = ttk.Button(fra0, text='提示', command=showHelp, style='TButton')
     btn1.grid(column=2, row=1, sticky=(tk.W))
     win.mainloop()
     return retv
@@ -355,8 +380,10 @@ async def window_finish(text):
     win.geometry('395x90+200+200')
     win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
-    f = font.Font(root=win, name='TkTextFont', exists=True)
+    f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
+    btnStyle = ttk.Style(win)
+    btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
     mainframe = ttk.Frame(win, padding=5)
     mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
     win.columnconfigure(0, weight=1)
@@ -365,17 +392,17 @@ async def window_finish(text):
     lab0.grid(column=1, row=1, sticky=(tk.N, tk.W))
     t0 = tk.Variable(win)
     t0.set(text)
-    etr0 = ttk.Entry(mainframe, textvariable=t0, state='readonly', width=30)
+    etr0 = ttk.Entry(mainframe, textvariable=t0, state='readonly', width=30, font=f)
     etr0.grid(column=1, row=2, sticky=(tk.W))
     def callback0():
         win.destroy()
     btnFrame = ttk.Frame(mainframe)
     btnFrame.grid(column=1, row=3, sticky=(tk.S, tk.W))
-    btn0 = ttk.Button(btnFrame, text='OK', command=callback0)
+    btn0 = ttk.Button(btnFrame, text='OK', command=callback0, style='TButton')
     btn0.grid(column=1, row=1)
     def callback1():
         os.startfile(text, 'explore')
-    btn1 = ttk.Button(btnFrame, text='打开目录', command=callback1)
+    btn1 = ttk.Button(btnFrame, text='打开目录', command=callback1, style='TButton')
     btn1.grid(column=2, row=1)
     win.mainloop()
     return
@@ -411,8 +438,10 @@ class window_geturl(threading.Thread):
                 global PID
                 os.kill(PID, 15)
         win.protocol('WM_DELETE_WINDOW', showmessage)
-        f = font.Font(root=win, name='TkTextFont', exists=True)
+        f = font.Font(root=win, family='HarmonyOS Sans SC')
         f['size'] = 11
+        btnStyle = ttk.Style(win)
+        btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
         mainframe = ttk.Frame(win, padding=5)
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
         win.columnconfigure(0, weight=1)
@@ -442,8 +471,10 @@ class window_downloas(threading.Thread):
         def showmessage():
             messagebox.showwarning('警告', '请不要关闭这个窗口...', parent=win)
         win.protocol('WM_DELETE_WINDOW', showmessage)
-        f = font.Font(root=win, name='TkTextFont', exists=True)
+        f = font.Font(root=win, family='HarmonyOS Sans SC')
         f['size'] = 11
+        btnStyle = ttk.Style(win)
+        btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
         mainframe = ttk.Frame(win, padding=5)
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
         win.columnconfigure(0, weight=1)
@@ -495,8 +526,10 @@ class window_updating(threading.Thread):
         def showmessage():
             messagebox.showwarning('警告', '请不要关闭这个窗口...', parent=win)
         win.protocol('WM_DELETE_WINDOW', showmessage)
-        f = font.Font(root=win, name='TkTextFont', exists=True)
+        f = font.Font(root=win, family='HarmonyOS Sans SC')
         f['size'] = 11
+        btnStyle = ttk.Style(win)
+        btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
         mainframe = ttk.Frame(win, padding=5)
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
         win.columnconfigure(0, weight=1)
@@ -524,6 +557,7 @@ class window_checkUpdate(threading.Thread):
         self._basket = basket
 
     def run(self):
+        global haveFont
         win = tk.Tk()
         win.title('BiliDownloader Update')
         win.geometry('395x112+200+200')
@@ -532,7 +566,7 @@ class window_checkUpdate(threading.Thread):
         def showmessage():
             messagebox.showwarning('警告', '请不要关闭这个窗口...', parent=win)
         win.protocol('WM_DELETE_WINDOW', showmessage)
-        f = font.Font(root=win, name='TkTextFont', exists=True)
+        f = font.Font(root=win, family='HarmonyOS Sans SC')
         f['size'] = 12
         mainframe = ttk.Frame(win, padding=5)
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
@@ -594,8 +628,10 @@ class Window_login_window(threading.Thread):
                 self._e3.set()
                 self._basket[1] = True
         win.protocol('WM_DELETE_WINDOW', showmessage)
-        f = font.Font(root=win, name='TkTextFont', exists=True)
+        f = font.Font(root=win, family='HarmonyOS Sans SC')
         f['size'] = 11
+        btnStyle = ttk.Style(win)
+        btnStyle.configure('TButton', font=('HarmonyOS Sans SC', 11))
         mainframe = ttk.Frame(win)
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.E, tk.W, tk.S))
         win.columnconfigure(0, weight=1)

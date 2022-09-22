@@ -3,6 +3,7 @@ from typing import Union
 import urllib.parse
 import http.client
 import json
+import copy
 
 
 DEFAULT_HEADERS = {"Referer": "https://www.bilibili.com",
@@ -11,12 +12,19 @@ DEFAULT_HEADERS = {"Referer": "https://www.bilibili.com",
 
 def get_data(scheme: str, host: str, method: str, path: str, query: dict = None, header: dict = None):
     c = http.client.HTTPSConnection(host) if scheme == 'https' else http.client.HTTPConnection(host)
-    qu = '' if query is None else '?{}'.format(urllib.parse.urlencode(query))
-    head = DEFAULT_HEADERS
+    if method.upper() == 'GET':
+        qu = '' if query is None else '?{}'.format(urllib.parse.urlencode(query))
+    else:
+        qu = urllib.parse.urlencode(query)
+    head = copy.deepcopy(DEFAULT_HEADERS)
     if header is not None:
         for i in header:
             head[i] = header[i]
-    c.request(method, path + qu, headers=head)
+    if method == 'GET':
+        c.request(method, path + qu, headers=head)
+    else:
+        head['Content-Type'] = 'application/x-www-form-urlencoded'
+        c.request(method, path, body=qu, headers=head)
     r = c.getresponse()
     ret = json.loads(r.read())
     r.close()
@@ -33,8 +41,11 @@ class Data_getter:
         self._query = query
         self._header = header
         self._c: Union[http.client.HTTPConnection, http.client.HTTPSConnection] = None
-        self._qu = '' if self._query is None else '?{}'.format(urllib.parse.urlencode(self._query))
-        self._head = DEFAULT_HEADERS
+        if method == 'GET':
+            self._qu = '' if self._query is None else '?{}'.format(urllib.parse.urlencode(self._query))
+        else:
+            self._qu = urllib.parse.urlencode(self._query)
+        self._head = copy.deepcopy(DEFAULT_HEADERS)
         if header is not None:
             for i in header:
                 self._head[i] = header[i]
@@ -47,7 +58,12 @@ class Data_getter:
     def request(self) -> dict:
         if not self._linked:
             raise NetWorkException('Not Linked...')
-        self._c.request(self._method, self._path + self._qu, headers=self._head)
+        if self._method == 'GET':
+            self._c.request(self._method, self._path + self._qu, headers=self._head)
+        else:
+            data = self._qu.encode('utf_8')
+            self._head['Content-Type'] = 'application/x-www-form-urlencoded'
+            self._c.request(self._method, self._path, body=data, headers=self._head)
         r = self._c.getresponse()
         get = json.loads(r.read())
         r.close()

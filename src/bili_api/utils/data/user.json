@@ -1,0 +1,41 @@
+{
+  "get_login_url": {
+    "url": "https://passport.bilibili.com/qrcode/getLoginUrl",
+    "method": "GET",
+    "verify": false,
+    "params": null,
+    "return": {
+      "code": {
+        "0": "成功"
+      },
+      "status": true,
+      "ts": "请求时间 num",
+      "data": {
+        "url": "二维码内容url string",
+        "oauthKey": "扫码登录秘钥 string"
+      }
+    }
+  },
+  "get_login_data": {
+    "url": "https://passport.bilibili.com/qrcode/getLoginInfo",
+    "method": "POST",
+    "verify": false,
+    "params": {
+      "oauthKey": "扫码登陆密钥 string",
+      "gourl": "跳转url string (非必要)"
+    },
+    "return": {
+      "code": "返回值 num",
+      "message": "错误信息",
+      "ts": "扫码时间",
+      "status": "扫码登录是否成功 bool",
+      "data": {
+        "obj": "成功",
+        "-1": "密钥错误",
+        "-2": "密钥超时",
+        "-4": "未扫描",
+        "-5": "未确认"
+      }
+    }
+  }
+}

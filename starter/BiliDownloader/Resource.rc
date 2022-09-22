@@ -61,8 +61,8 @@ IDI_ICON1               ICON                    ".\\icon.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,10,8,0
- PRODUCTVERSION 0,10,8,0
+ FILEVERSION 0,11,8,0
+ PRODUCTVERSION 0,11,8,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -79,12 +79,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Majjcom"
             VALUE "FileDescription", "bilibili ”∆µœ¬‘ÿ∆˜"
-            VALUE "FileVersion", "0.10.8.0"
+            VALUE "FileVersion", "0.11.8.0"
             VALUE "InternalName", "BiliDown.exe"
             VALUE "LegalCopyright", "Copyright (C) 2022 Majjcom"
             VALUE "OriginalFilename", "BiliDown.exe"
             VALUE "ProductName", "BiliDownloader"
-            VALUE "ProductVersion", "0.10.8.0"
+            VALUE "ProductVersion", "0.11.8.0"
         END
     END
     BLOCK "VarFileInfo"
