@@ -1,5 +1,5 @@
 # BiliDownloader
-### Copyright © 2022 Majjcom
+### Copyright © 2023 Majjcom
 
 - 0.12.3	2023/1/10
   - 更新 python 核心组件至 3.8.16
