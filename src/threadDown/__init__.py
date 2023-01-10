@@ -82,6 +82,7 @@ class Copyer(threading.Thread):
                     runFinished = True
             time.sleep(0.1)
         self._basket.copyfinish()
+        self._fp.close()
 
 
 async def download_with_threads(url: str, v, name: str = 'Download', headers: dict = None, max_thread_count: int = cpu_count(), piece_per_size: int = 512 * 1024 ** 2):

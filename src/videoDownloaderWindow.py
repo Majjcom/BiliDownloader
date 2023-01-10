@@ -52,7 +52,7 @@ class ErrorGetVidioUrl(Exception):
 
 
 def removeSpecialCharacter(original: str) -> str:
-    spe = r'~!@#$%^&*()+-*/<>,.[]\| '
+    spe = '~!@#$%^&*()+-*/<>,.[]\\|\"\' '
     ret = original[:]
     for c in spe:
         if c in ret:
@@ -343,7 +343,7 @@ async def videoDown(vid_id: str, passport: BiliPassport = None):
         return
     vid_pages_count : int = len(vid_pages)
     while True:
-        vid_chose : str = await window_config_p('分P列表中共有{}个视频'.format(vid_pages_count))
+        vid_chose : str = await window_config_p(vid_pages_count)
         vid_chose = vid_chose.replace(' ', '')
         try:
             vid_chose_a = vid_chose.split(',')
@@ -554,7 +554,7 @@ async def bangumiDown(vid_id: str, passport: BiliPassport = None):
         vid_episodes.append(tmp)
     vid_episodes_count : int = len(vid_episodes)
     while True:
-        vid_chose : str = await window_config_p('分P列表中共有{}个视频'.format(vid_episodes_count))
+        vid_chose : str = await window_config_p(vid_episodes_count)
         vid_chose = vid_chose.replace(' ', '')
         try:
             vid_chose_a = vid_chose.split(',')
@@ -862,7 +862,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.12.1'
+    ver = '0.12.3'
     if not os.path.exists('./Download'):
         os.mkdir('./Download')
     programPath = os.getcwd()

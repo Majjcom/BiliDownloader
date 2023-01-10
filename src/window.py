@@ -281,7 +281,7 @@ async def window_confirm(text : str):
     return retv
 
 
-async def window_config_p(text : str):
+async def window_config_p(count : int):
     global retv
     retv = ''
     win = tk.Tk()
@@ -304,12 +304,13 @@ async def window_config_p(text : str):
     win.columnconfigure(0, weight=1)
     win.rowconfigure(0, weight=1)
     t0 = tk.Variable(win)
-    t0.set(text)
+    t0.set('分P列表中共有{}个视频'.format(count))
     lab0 = ttk.Label(mainframe, textvariable=t0, font=f)
     lab0.grid(column=1, row=1, sticky=(tk.N, tk.W))
     lab1 = ttk.Label(mainframe, text='请选择下载范围, 用","分隔(如1-1或1-5或1-1, 3-5): ', font=f)
     lab1.grid(column=1, row=2, sticky=(tk.W))
     t1 = tk.Variable(win)
+    t1.set('1-{}'.format(count))
     etr0 = ttk.Entry(mainframe, textvariable=t1, font=f)
     etr0.grid(column=1, row=3, sticky=(tk.W))
     def callback(e=None):
