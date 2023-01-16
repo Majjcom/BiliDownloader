@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Majjcom
+# Copyright (c) 2023 Majjcom
 # BiliDownloader
 # With MIT License
 from bili_api.utils import BiliPassport, cookieTools, matchFomat
@@ -268,16 +268,17 @@ def showUpdateInfo(VER : str):
 
 def user_login():
     try:
+        img_path = os.path.join(programPath, 'data/qrcode' + str(int(time.time())) + '.png')
         login_info = bili_api.user.get_login_url()
         qr = qrcode.QRCode()
         qr.add_data(login_info['data']['url'])
         qr.make()
         img = qr.make_image()
-        with open(os.path.join(programPath, 'data/qrcode.png'), 'wb') as f:
+        with open(img_path, 'wb') as f:
             img.save(f)
         del qr, img
         e0, e1, e2, e3 = Event(), Event(), Event(), Event()
-        Window_login(os.path.join(programPath, 'data/qrcode.png'), e0, e1, e2, e3).start()
+        Window_login(img_path, e0, e1, e2, e3).start()
         ret = None
         with bili_api.user.Get_login_info(login_info['data']['oauthKey']) as getter:
             while True:
@@ -301,8 +302,8 @@ def user_login():
     except:
         return None
     finally:
-        if os.path.exists(os.path.join(programPath, 'data/qrcode.png')):
-            os.remove(os.path.join(programPath, 'data/qrcode.png'))
+        if os.path.exists(img_path):
+            os.remove(img_path)
 
 
 async def videoDown(vid_id: str, passport: BiliPassport = None):
@@ -336,7 +337,8 @@ async def videoDown(vid_id: str, passport: BiliPassport = None):
             vid_info['title'],
             vid_info['owner']['name'],
             online_count['total']
-        )
+        ),
+        vid_info['pic']
     )
     if not tmp:
         await window_warn('退出...', playSound=False, level='信息')
@@ -536,7 +538,13 @@ async def bangumiDown(vid_id: str, passport: BiliPassport = None):
     else:
         vid_info = bili_api.bangumi.get_bangumi_detailed_info(ep_id=vid_ID)
     while True:
-        tmp = await window_confirm(f'请确认番剧:\n\n下载位置: {getUserData("downloadPath")}\n标题: {vid_info["info"]["media"]["title"]}\n评分: {vid_info["info"]["media"]["rating"]["score"]}\n')
+        tmp = await window_confirm(
+            f'请确认番剧:\n\n下载位置: '
+            f'{getUserData("downloadPath")}\n'
+            f'标题: {vid_info["info"]["media"]["title"]}\n'
+            f'评分: {vid_info["info"]["media"]["rating"]["score"]}\n',
+            vid_info['info']['media']['cover']
+        )
         if tmp:
             break
         else:
@@ -862,7 +870,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.12.3'
+    ver = '0.12.4'
     if not os.path.exists('./Download'):
         os.mkdir('./Download')
     programPath = os.getcwd()

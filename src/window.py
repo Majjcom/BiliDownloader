@@ -1,5 +1,8 @@
 from tkinter import ttk, messagebox, font, filedialog
+from PIL import Image, ImageTk
+import http.client as hcl
 from typing import Union
+from urllib import parse
 import tkinter as tk
 import webbrowser
 import threading
@@ -237,7 +240,7 @@ async def window_showupdate():
     return
 
 
-async def window_confirm(text : str):
+async def window_confirm(text : str, cover_url: str):
     global retv, ifPathSet
     ifPathSet = None
     retv = False
@@ -270,6 +273,39 @@ async def window_confirm(text : str):
         win.destroy()
     def callback1():
         win.destroy()
+    def callback2():
+        global programPath
+        subwin = tk.Toplevel(master=win)
+        subwin.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+        subwin.resizable(tk.FALSE, tk.FALSE)
+        url = parse.urlsplit(cover_url)
+        extion_name = os.path.splitext(url.path)[1]
+        con = hcl.HTTPSConnection(url.hostname)
+        con.request('GET', url.path)
+        resp = con.getresponse()
+        readed = resp.read()
+        img_path = os.path.join(programPath, 'data/cover' + str(int(time.time())) + extion_name)
+        fp = open(img_path, 'wb')
+        fp.write(readed)
+        resp.close()
+        con.close()
+        fp.close()
+        img0 = Image.open(img_path)
+        if img0.size[0] > 720:
+            precent = 720 / img0.size[0]
+            img0 = img0.resize((720, int(float(img0.size[1]) * precent)), Image.ANTIALIAS)
+        pic0 = ImageTk.PhotoImage(master=subwin, image=img0)
+        fra0 = ttk.Frame(master=subwin)
+        fra0.grid(column=1, row=1, sticky=(tk.N, tk.E, tk.S, tk.W))
+        lab0 = tk.Label(master=fra0, image=pic0)
+        lab0.pack(fill=tk.BOTH, side=tk.TOP)
+        def close():
+            img0.close()
+            if os.path.exists(img_path):
+                os.remove(img_path)
+            subwin.destroy()
+        subwin.protocol('WM_DELETE_WINDOW', close)
+        subwin.mainloop()
     win.bind('<Key-Return>', callback0)
     fra0 = ttk.Frame(mainframe)
     fra0.grid(column=1, row=2, sticky=(tk.W))
@@ -277,6 +313,8 @@ async def window_confirm(text : str):
     btn0.grid(column=1, row=1, sticky=(tk.W))
     btn1 = ttk.Button(fra0, text='NO', command=callback1, style='TButton')
     btn1.grid(column=2, row=1, sticky=(tk.W))
+    btn2 = ttk.Button(fra0, text='查看封面', command=callback2, style='TButton')
+    btn2.grid(column=3, row=1, sticky=(tk.W))
     win.mainloop()
     return retv
 
