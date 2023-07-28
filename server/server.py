@@ -15,18 +15,20 @@ def logstr(*st):
     for i in st:
         sts.append(str(i))
     ret = ' '.join(sts)
+    return ret
 
 
 def log(s: str, level: str = 'info'):
     global logcount
-    if logcount == 0 or logcount > 700:
+    if logcount == 0 or logcount > 10000:
         global logfile
         if logfile:
             logfile.close()
         logfile = open('./logs/{}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')), 'w', buffering=1)
         sys.stdout = logfile
         logcount = 0
-    prstr = '[{}][{}] '.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), level) + s
+    prstr = '[{}][{}] '.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), level)
+    prstr += s
     print(prstr)
     logcount += 1
 
