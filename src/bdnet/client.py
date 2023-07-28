@@ -10,7 +10,7 @@ class Connection:
     def __init__(self, ip: str, port: int):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((socket.gethostbyname(ip), port))
-        s.settimeout(10)
+        s.settimeout(5)
         self._s = s
         get = json.loads(self._recvBuff(5.0).decode('utf-8'))
         key = get['key']

@@ -64,7 +64,7 @@
     }
   },
   "online_count": {
-    "url": "http://api.bilibili.com/x/player/online/total",
+    "url": "https://api.bilibili.com/x/player/online/total",
     "method": "GET",
     "verify": false,
     "params": {

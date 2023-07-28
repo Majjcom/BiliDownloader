@@ -88,7 +88,7 @@ def get_video_url(avid: int = None, bvid: str = None, cid: int = None, passport:
     params.pop('qn')
     params.pop('fnver')
     params['cid'] = cid
-    params['fnval'] = 16
+    params['fnval'] = 16 | 128 | 2048   # Dash 4K AV1_Codec
     params['fourk'] = 1
     if bvid is not None:
         __check_bvid(bvid)

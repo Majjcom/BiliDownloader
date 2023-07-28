@@ -12,13 +12,17 @@ import time
 import os
 
 
+icon_path = 'src/icon.ico'
+
+
 async def window_warn(text : str, playSound : bool = True, level : str = '警告'):
     if playSound:
         winsound.PlaySound('SystemAsterisk', winsound.SND_ASYNC)
     win = tk.Tk()
     win.title('BiliDownloader-{}'.format(level))
     win.geometry('395x122+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     #f = font.Font(root=win, name='TkTextFont', exists=True)
     f = font.Font(root=win, family='HarmonyOS Sans SC')
@@ -56,7 +60,8 @@ async def window_ask() -> tuple:
     win = tk.Tk()
     win.title('BiliDownloader')
     win.geometry('395x112+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     def showmessage():
         tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -99,13 +104,48 @@ async def window_ask() -> tuple:
     return retv
 
 
-async def window_settings(downloadP: str, haveC: Union[int, None], isReserveAudio: bool, isSaveDanmaku: bool):
+# codec
+video_codec_id = {
+    7:  'h.264 尺寸大，兼容性最佳',
+    12: 'h.265 尺寸较小，兼容性一般',
+    13: 'av1   尺寸小，老机型兼容差'
+}
+
+video_codec_match = {}
+for i in video_codec_id:
+    video_codec_match[video_codec_id[i]] = i
+
+
+class Window_settings_config:
+    download_path: str = ""
+    have_login: Union[int, None] = None
+    reserve_audio: bool = False
+    save_danmaku: bool = False
+    video_codec: int = 7
+
+    def __init__(
+            self,
+            download_path: str,
+            have_login: Union[int, None],
+            reserve_audio: bool,
+            save_danmaku: bool,
+            video_codec: int
+    ):
+        self.download_path = download_path
+        self.have_login = have_login
+        self.reserve_audio = reserve_audio
+        self.save_danmaku = save_danmaku
+        self.video_codec = video_codec
+
+# async def window_settings(downloadP: str, haveC: Union[int, None], isReserveAudio: bool, isSaveDanmaku: bool):
+async def window_settings(config: Window_settings_config):
     global retv
     retv = None
     win = tk.Tk()
     win.title('BiliDownloader')
-    win.geometry('395x174+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    win.geometry('395x200+200+200')
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     def showmessage():
         tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -132,7 +172,7 @@ async def window_settings(downloadP: str, haveC: Union[int, None], isReserveAudi
     btn0 = ttk.Button(labf0, text='设置下载位置', command=callback0, style='TButton')
     btn0.grid(column=1, row=1, sticky=(tk.W))
     v0 = tk.Variable(win)
-    v0.set(downloadP)
+    v0.set(config.download_path)
     etn0 = ttk.Entry(labf0, textvariable=v0, state='readonly', width=29, font=f)
     etn0.grid(column=2, row=1, sticky=(tk.W))
     def callback1():
@@ -142,20 +182,28 @@ async def window_settings(downloadP: str, haveC: Union[int, None], isReserveAudi
     btn1 = ttk.Button(labf0, text='登录b站', command=callback1, style='TButton')
     btn1.grid(column=1, row=2, sticky=(tk.W))
     v1 = tk.Variable(win)
-    v1.set('未登录' if haveC is None else '已登录' if haveC > 0 else '已登录-登录已过期')
+    v1.set('未登录' if config.have_login is None else '已登录' if config.have_login > 0 else '已登录-登录已过期')
     etn1 = ttk.Entry(labf0, textvariable=v1, state='readonly', width=29, font=f)
     etn1.grid(column=2, row=2, sticky=(tk.W))
-    v2 = tk.BooleanVar(win, value=isReserveAudio)
+    lab0 = tk.Label(labf0, text='下载编码格式', font=f)
+    lab0.grid(column=1, row=3)
+    codec_str = []
+    for i in video_codec_id:
+        codec_str.append(video_codec_id[i])
+    cmb0 = ttk.Combobox(labf0, justify='left', width=27, state='readonly', values=codec_str, font=f)
+    cmb0.set(video_codec_id[config.video_codec])
+    cmb0.grid(column=2, row=3)
+    v2 = tk.BooleanVar(win, value=config.reserve_audio)
     chk0 = ttk.Checkbutton(labf0, text='保留下载的音频文件', variable=v2, style='TCheckbutton')
-    chk0.grid(column=2, row=3, sticky=(tk.W))
-    v3 = tk.BooleanVar(win, value=isSaveDanmaku)
+    chk0.grid(column=2, row=4, sticky=(tk.W))
+    v3 = tk.BooleanVar(win, value=config.save_danmaku)
     chk1 = ttk.Checkbutton(labf0, text='下载弹幕', variable=v3, style='TCheckbutton')
-    chk1.grid(column=2, row=4, sticky=(tk.W))
+    chk1.grid(column=2, row=5, sticky=(tk.W))
     fra0 = ttk.Frame(mainframe)
     fra0.grid(column=1, row=2, pady=1)
     def callback2():
         global retv
-        retv = (3,v2.get(), v3.get())
+        retv = (3, v2.get(), v3.get(), video_codec_match[cmb0.get()])
         win.destroy()
     btn2 = ttk.Button(fra0, text='返回', command=callback2, style='TButton')
     btn2.grid(column=1, row=1)
@@ -179,7 +227,8 @@ async def window_showupdate_detal(info: str):
     win = tk.Tk()
     win.title('BiliDownloader-更新信息')
     win.geometry('395x302+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
@@ -214,7 +263,8 @@ async def window_showupdate():
     win = tk.Tk()
     win.title('BiliDownloader')
     win.geometry('395x85+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.TRUE, tk.FALSE)
     def showmessage():
         tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -247,7 +297,8 @@ async def window_confirm(text : str, cover_url: str):
     win = tk.Tk()
     win.title('BiliDownloader')
     win.geometry('395x164+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     def showmessage():
         tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -276,7 +327,8 @@ async def window_confirm(text : str, cover_url: str):
     def callback2():
         global programPath
         subwin = tk.Toplevel(master=win)
-        subwin.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+        if icon_path is not None:
+            subwin.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
         subwin.resizable(tk.FALSE, tk.FALSE)
         url = parse.urlsplit(cover_url)
         extion_name = os.path.splitext(url.path)[1]
@@ -325,7 +377,8 @@ async def window_config_p(count : int):
     win = tk.Tk()
     win.title('BiliDownloader')
     win.geometry('395x115+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     def showmessage():
         tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -368,7 +421,8 @@ async def window_config_q(tip : str):
     win = tk.Tk()
     win.title('BiliDownloader')
     win.geometry('395x92+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     def showmessage():
         tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -417,7 +471,8 @@ async def window_finish(text):
     win = tk.Tk()
     win.title('BiliDownloader')
     win.geometry('395x90+200+200')
-    win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+    if icon_path is not None:
+        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
     win.resizable(tk.FALSE, tk.FALSE)
     f = font.Font(root=win, family='HarmonyOS Sans SC')
     f['size'] = 11
@@ -469,7 +524,8 @@ class window_geturl(threading.Thread):
         win = tk.Tk()
         win.title('BiliDownloader')
         win.geometry('395x35+200+200')
-        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+        if icon_path is not None:
+            win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
         win.resizable(tk.FALSE, tk.FALSE)
         def showmessage():
             tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -505,7 +561,8 @@ class window_downloas(threading.Thread):
         win = tk.Tk()
         win.title('BiliDownloader')
         win.geometry('395x105+200+200')
-        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+        if icon_path is not None:
+            win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
         win.resizable(tk.FALSE, tk.FALSE)
         def showmessage():
             messagebox.showwarning('警告', '请不要关闭这个窗口...', parent=win)
@@ -560,7 +617,8 @@ class window_updating(threading.Thread):
         win = tk.Tk()
         win.title('BiliDownloader Update')
         win.geometry('395x60+200+200')
-        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+        if icon_path is not None:
+            win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
         win.resizable(tk.FALSE, tk.FALSE)
         def showmessage():
             messagebox.showwarning('警告', '请不要关闭这个窗口...', parent=win)
@@ -600,7 +658,8 @@ class window_checkUpdate(threading.Thread):
         win = tk.Tk()
         win.title('BiliDownloader Update')
         win.geometry('395x112+200+200')
-        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+        if icon_path is not None:
+            win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
         win.resizable(tk.FALSE, tk.FALSE)
         def showmessage():
             messagebox.showwarning('警告', '请不要关闭这个窗口...', parent=win)
@@ -659,7 +718,8 @@ class Window_login_window(threading.Thread):
         self._basket.append(False)
         win.title('BiliDownloader-登录')
         win.geometry('+200+200')
-        win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
+        if icon_path is not None:
+            win.iconbitmap(os.path.join(programPath, 'src/icon.ico'))
         win.resizable(tk.FALSE, tk.FALSE)
         def showmessage():
             tmp = messagebox.askyesno(title='确认', message='确认关闭?', parent=win, type='yesno')
@@ -691,6 +751,11 @@ def window_setVar(PID_get, programPath_get):
     global programPath
     PID = PID_get
     programPath = programPath_get
+
+
+def set_icon(path: str):
+    global icon_path
+    icon_path = path
 
 
 def window_main():

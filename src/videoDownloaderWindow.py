@@ -52,14 +52,10 @@ class ErrorGetVidioUrl(Exception):
 
 
 def removeSpecialCharacter(original: str) -> str:
-    spe = '~!@#$%^&*()+-*/<>,.[]\\|\"\' '
+    spe = ':~!@#$%^&*()+-*/<>,.[]\\|\"\' '
     ret = original[:]
-    for c in spe:
-        if c in ret:
-            count = ret.count(c)
-            for i in range(count):
-                index = ret.index(c)
-                ret = ret[:index] + '_' + ret[index + 1:]
+    for ch in spe:
+        ret = ret.replace(ch, '_')
     return ret
 
 
@@ -71,30 +67,37 @@ def downloadDanmaku(path: str, cid: int) -> None:
     return
 
 
-async def downloadVideo(Url : dict, qid : int, v, name : str = 'video'):
+async def downloadVideo(Url: dict, qid: int, codec: int, v, name: str = 'video'):
     global mainprocess, programPath
-    async with aiohttp.ClientSession() as sess:
-        video_url = Url['dash']['video'][0]['baseUrl']
-        for i in Url['dash']['video']:
-            if i['codecid'] == 7:
-                if i['id'] == qid:
-                    video_url = i['baseUrl']
-        HEADERS = {
-            'User-Agent': 'Mozilla/5.0',
-            'Referer': 'https://www.bilibili.com/'
-        }
-        await threadDown.download_with_threads(video_url, v, '{}_temp.mp4'.format(name), headers=HEADERS, piece_per_size=(32 * 1024 ** 2))
+    video_urls: list = Url['dash']['video']
+    video_urls.sort(key=lambda x: x['id'], reverse=True)
+    if qid > video_urls[0]['id']:
+        qid = video_urls[0]['id']
+    qid_match = []
+    for i in video_urls:
+        if i['id'] == qid:
+            qid_match.append(i)
+    qid_match.sort(key=lambda x: x['codecid'])
+    video_url = qid_match[0]['baseUrl']
+    for i in qid_match:
+        if i['codecid'] == codec:
+            video_url = i['baseUrl']
+
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0',
+        'Referer': 'https://www.bilibili.com/'
+    }
+    await threadDown.download_with_threads(video_url, v, '{}_temp.mp4'.format(name), headers=HEADERS, piece_per_size=(32 * 1024 ** 2))
 
 
 async def downloadAudio(Url : dict, id : int, v, name : str = 'audio'):
     global mainprocess
-    async with aiohttp.ClientSession() as sess:
-        audio_url = Url['dash']['audio'][0]['baseUrl']
-        HEADERS = {
-            'User-Agent': 'Mozilla/5.0',
-            'Referer': 'https://www.bilibili.com/'
-        }
-        await threadDown.download_with_threads(audio_url, v, '{}_temp.m4a'.format(name), headers=HEADERS, piece_per_size=(16 * 1024 ** 2))
+    audio_url = Url['dash']['audio'][0]['baseUrl']
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0',
+        'Referer': 'https://www.bilibili.com/'
+    }
+    await threadDown.download_with_threads(audio_url, v, '{}_temp.m4a'.format(name), headers=HEADERS, piece_per_size=(16 * 1024 ** 2))
 
 
 async def checkUpdate():
@@ -422,6 +425,9 @@ async def videoDown(vid_id: str, passport: BiliPassport = None):
             raise
         except:
             await window_warn('请输入正确的值...')
+    video_codec = getUserData('video_codec')
+    if video_codec is None:
+        video_codec = 7
     arg = list()
     arg.append(False)
     tmp = window_downloas(arg)
@@ -440,7 +446,7 @@ async def videoDown(vid_id: str, passport: BiliPassport = None):
                 arg[4].set(0.0)
                 arg[2].set('下载视频流')
                 arg[5]['mode'] = 'determinate'
-                await downloadVideo(item['url'], vid_quality, arg, name)
+                await downloadVideo(item['url'], vid_quality, video_codec, arg, name)
                 break
             except:
                 retry += 1
@@ -631,6 +637,9 @@ async def bangumiDown(vid_id: str, passport: BiliPassport = None):
             raise
         except:
             await window_warn('请输入正确的值...')
+    video_codec = getUserData('video_codec')
+    if video_codec is None:
+        video_codec = 7
     # 0: isRun, 1: t0, 2: t1, 3: t2, 4: t3, 5: bar
     arg : list = list()
     arg.append(False)
@@ -646,7 +655,7 @@ async def bangumiDown(vid_id: str, passport: BiliPassport = None):
                 arg[4].set(0.0)
                 arg[2].set('下载视频流')
                 arg[5]['mode'] = 'determinate'
-                await downloadVideo(i['url'], vid_quality, arg, name)
+                await downloadVideo(i['url'], vid_quality, video_codec, arg, name)
                 break
             except:
                 retry += 1
@@ -770,13 +779,17 @@ async def start_settings():
     dafult = getUserData('passport')
     isReserveAudio: Union[None, bool] = getUserData('reserveAudio')
     isSaveDanmaku: Union[None, bool] = getUserData('saveDanmaku')
+    getVCodec: Union[None, int] = getUserData('video_codec')
     if dafult is not None:
         dafult = dafult['ts'] + int(dafult['data']['Expires']) - time.time()
     if isReserveAudio is None:
         isReserveAudio = False
     if isSaveDanmaku is None:
         isSaveDanmaku = False
-    tmp = await window_settings(getUserData('downloadPath'), dafult, isReserveAudio, isSaveDanmaku)
+    if getVCodec is None:
+        getVCodec = 7
+    config = Window_settings_config(getUserData('downloadPath'), dafult, isReserveAudio, isSaveDanmaku, getVCodec)
+    tmp = await window_settings(config)
     if tmp is None:
         return False
     if tmp[0] == 0:
@@ -806,6 +819,7 @@ async def start_settings():
     elif tmp[0] == 3:
         setUserData('reserveAudio', tmp[1])
         setUserData('saveDanmaku', tmp[2])
+        setUserData('video_codec', tmp[3])
         return False
 
 
@@ -870,7 +884,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.12.4'
+    ver = '0.12.6'
     if not os.path.exists('./Download'):
         os.mkdir('./Download')
     programPath = os.getcwd()
@@ -886,5 +900,7 @@ if __name__ == '__main__':
     del path
     PID = os.getpid()
     window_setVar(PID, programPath)
+    # debug
+    # window.set_icon(None)
     asyncio.get_event_loop().run_until_complete(Main())
     os.kill(PID, 15)
