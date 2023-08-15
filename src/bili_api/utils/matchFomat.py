@@ -9,7 +9,7 @@ _matchers = [re.compile(r'(BV|bv)[\d,a-zA-z]{10}'), re.compile(r'(AV|av)\d+'), r
 
 
 def matchAll(in_: str) -> Union[str, None]:
-    matches: List[re.Match] = []
+    matches: List[Union[re.Match,None]] = []
     for i in _fmatchers:
         matches.append(i.search(in_))
     noneCount = 0
@@ -19,7 +19,12 @@ def matchAll(in_: str) -> Union[str, None]:
     if noneCount >= len(matches):
         return None
     if noneCount < len(_fmatchers) - 1:
-        return None
+        if matches[0] is not None:
+            matches[1] = None
+            matches[2] = None
+            matches[3] = None
+        else:
+            return None
     for i in matches:
         if i is not None:
             return i.group().upper()

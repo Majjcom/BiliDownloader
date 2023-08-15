@@ -748,9 +748,6 @@ async def start_download_video(id_get : str):
         passportRaw = passportRaw['data']
         passportRaw.pop('Expires')
         passport = BiliPassport(passportRaw)
-    mode = 'none'
-    id_out = ''
-    available: tuple = ('bv', 'av', 'md', 'ep')
     matchMode = matchFomat.matchAll(id_get)
     if matchMode is None:
         await window_warn('请输入正确的值...')
