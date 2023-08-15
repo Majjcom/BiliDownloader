@@ -1,6 +1,6 @@
 {
   "xml": {
-    "url": "http://api.bilibili.com/x/v1/dm/list.so",
+    "url": "https://api.bilibili.com/x/v1/dm/list.so",
     "method": "GET",
     "verify": false,
     "params": {

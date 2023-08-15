@@ -508,16 +508,19 @@ async def videoDown(vid_id: str, passport: BiliPassport = None):
             os.remove('{}_temp.m4a'.format(name))
         dodanmaku = getUserData('saveDanmaku')
         if dodanmaku:
-            arg[2].set('下载弹幕')
-            arg[3].set('正在获取弹幕...')
-            dan = bili_api.danmaku.get_danmaku_xml(item['cid'])
-            time.sleep(0.2)
-            arg[3].set('正在解析弹幕...')
-            dan = xml2ass.convertMain(dan, 852, 480, text_opacity=0.6)
-            time.sleep(0.25)
-            with open('{}.ass'.format(name), 'w', encoding='utf_8') as assf:
-                assf.write(dan)
-            arg[3].set('弹幕下载完成...')
+            try:
+                arg[2].set('下载弹幕')
+                arg[3].set('正在获取弹幕...')
+                dan = bili_api.danmaku.get_danmaku_xml(item['cid'])
+                time.sleep(0.2)
+                arg[3].set('正在解析弹幕...')
+                dan = xml2ass.convertMain(dan, 852, 480, text_opacity=0.6)
+                time.sleep(0.25)
+                with open('{}.ass'.format(name), 'w', encoding='utf_8') as assf:
+                    assf.write(dan)
+                arg[3].set('弹幕下载完成...')
+            except:
+                arg[3].set('弹幕下载失败...')
         arg[1].set('下载完成 {}'.format(name))
         time.sleep(0.5)
         arg[5].stop()
@@ -884,7 +887,7 @@ async def Main():
 
 
 if __name__ == '__main__':
-    ver = '0.12.6'
+    ver = '0.13.0'
     if not os.path.exists('./Download'):
         os.mkdir('./Download')
     programPath = os.getcwd()
