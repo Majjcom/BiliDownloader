@@ -18,3 +18,4 @@ def init():
         if os.path.exists("CHANGELOG.txt"):
             os.startfile("CHANGELOG.txt")
         configUtils.setUserData("isnew", False)
+        configUtils.setUserData("version", version.__version__)
