@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/">
+    <file>res/Placeholde.png</file>
+    <file>res/icon/icon.png</file>
+  </qresource>
+</RCC>

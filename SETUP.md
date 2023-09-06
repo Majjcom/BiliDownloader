@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ### 运行
 在`src/../`目录中使用以下命令
 ```shell
-pythonw ./src/videoDownloaderWindow.py
+python ./src/main.py
 ```
 当然，也可以写 shell 文件来快速启动，这里不再讲解，参照此处的 shell 即可
 
