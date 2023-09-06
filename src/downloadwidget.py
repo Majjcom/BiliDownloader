@@ -304,17 +304,18 @@ class DownloadTask(QtCore.QThread):
         devnull.close()
 
         # Download and parse Xml Danmaku
-        danmaku_file_name = "{}.ass".format(self.task["name"])
-        try:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载弹幕")
-            download_danmaku(
-                root_dir.absoluteFilePath(danmaku_file_name), self.task["cid"]
-            )
-        except Exception as e:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "弹幕下载失败，已跳过")
-            if root_dir.exists(danmaku_file_name):
-                root_dir.remove(danmaku_file_name)
-            time.sleep(1)
+        if self.task["saveDanmaku"]:
+            danmaku_file_name = "{}.ass".format(self.task["name"])
+            try:
+                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载弹幕")
+                download_danmaku(
+                    root_dir.absoluteFilePath(danmaku_file_name), self.task["cid"]
+                )
+            except Exception as e:
+                self.emit(QtCore.SIGNAL("update_status(QString)"), "弹幕下载失败，已跳过")
+                if root_dir.exists(danmaku_file_name):
+                    root_dir.remove(danmaku_file_name)
+                time.sleep(1)
 
         # Cleanup
         self.emit(QtCore.SIGNAL("update_status(QString)"), "正在清理")
