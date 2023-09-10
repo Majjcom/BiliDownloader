@@ -1,11 +1,10 @@
 from ui_settingswidget import Ui_SettingsWidget
+from PySide2.QtWidgets import QMessageBox
 from PySide2 import QtWidgets, QtCore
 from dialoglogin import DialogLogin
 from utils import configUtils
 import style
 import os
-
-
 
 _CURRENT_INDEX = 2
 
@@ -106,8 +105,12 @@ class SettingsWidget(QtWidgets.QWidget):
 
     # Slot
     def on_reset_button_clicked(self):
-        configUtils.reSetUserData()
-        self.load_settings()
+        dialog = QMessageBox.question(self, "提示", "确定要重置所有设置吗？", buttons=QMessageBox.Yes | QMessageBox.No,
+                                      defaultButton=QMessageBox.Yes)
+        if dialog == QMessageBox.Yes:
+            configUtils.reSetUserData()
+            self.load_settings()
+            QMessageBox.information(self, "信息", "设置已重置")
 
     # Slot
     def on_login_button_clicked(self):

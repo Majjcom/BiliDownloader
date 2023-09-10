@@ -1,13 +1,13 @@
+import pickle
+import traceback
+from urllib.request import urlopen
+
+from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import SIGNAL, Signal, QByteArray
+
+from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException
 from ui_confirmwidget import Ui_ConfirmWidget
-from PySide2 import QtWidgets, QtGui, QtCore
-from Lib.bili_api import video, bangumi
-from urllib.request import urlopen
-import traceback
-import pickle
-
-from pprint import pprint
 
 
 class ConfirmWidget(QtWidgets.QWidget):
@@ -23,21 +23,17 @@ class ConfirmWidget(QtWidgets.QWidget):
         )
         self.ui.cover_label.setPixmap(QtGui.QPixmap.fromImage(img))
 
-    @QtCore.Slot(str, bool)
     def update_info(self, data: str, err: bool):
         self.ui.text_info.setText(data)
         self.err = err
 
-    @QtCore.Slot(QtGui.QImage)
     def update_image(self, img: QtGui.QImage):
         self.img = img
         self.on_size_change()
 
-    @QtCore.Slot(QByteArray)
     def update_meta(self, data: QByteArray):
         self.meta = data
 
-    @QtCore.Slot()
     def load_end(self):
         self.disconnect(self.load_thread)
         del self.load_thread

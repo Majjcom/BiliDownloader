@@ -1,4 +1,3 @@
-import PySide2.QtWidgets
 from ui_dialogupdateinfo import Ui_DialogUpdateInfo
 from PySide2 import QtWidgets
 

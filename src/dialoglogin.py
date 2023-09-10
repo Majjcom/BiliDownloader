@@ -2,13 +2,11 @@ from PySide2 import QtWidgets, QtGui, QtCore
 from Lib.bili_api.utils import cookieTools
 from ui_dialoglogin import Ui_DialogLogin
 from Lib.bili_api import user
+from utils import configUtils
 from io import BytesIO
 import qrcode
 import pickle
 import time
-
-from utils import configUtils
-from pprint import pprint
 
 
 class DialogLogin(QtWidgets.QDialog):

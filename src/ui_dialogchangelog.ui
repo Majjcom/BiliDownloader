@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DialogUpdateInfo</class>
- <widget class="QDialog" name="DialogUpdateInfo">
+ <class>DialogChangeLog</class>
+ <widget class="QDialog" name="DialogChangeLog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>671</width>
-    <height>501</height>
+    <width>704</width>
+    <height>839</height>
    </rect>
   </property>
   <property name="font">
@@ -17,30 +17,18 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>BiliDownloader - 新版本</string>
+   <string>更新信息</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="leftMargin">
-    <number>5</number>
-   </property>
-   <property name="topMargin">
-    <number>5</number>
-   </property>
-   <property name="rightMargin">
-    <number>5</number>
-   </property>
-   <property name="bottomMargin">
-    <number>5</number>
-   </property>
    <item>
-    <widget class="QLabel" name="label_version">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string/>
+      <string>版本信息：</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QTextEdit" name="text_info">
+    <widget class="QTextEdit" name="textEdit">
      <property name="readOnly">
       <bool>true</bool>
      </property>
@@ -52,7 +40,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Close</set>
      </property>
     </widget>
    </item>
@@ -63,12 +51,12 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>DialogUpdateInfo</receiver>
+   <receiver>DialogChangeLog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>223</x>
-     <y>281</y>
+     <x>248</x>
+     <y>254</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -79,12 +67,12 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>DialogUpdateInfo</receiver>
+   <receiver>DialogChangeLog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>291</x>
-     <y>287</y>
+     <x>316</x>
+     <y>260</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

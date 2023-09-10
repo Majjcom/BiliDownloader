@@ -10,7 +10,6 @@ import subprocess
 import time
 import os
 
-
 _DEFAULT_HEADERS = {
     "Referer": "https://www.bilibili.com",
     "User-Agent": "Mozilla/5.0",
@@ -55,7 +54,6 @@ class DownloadWidget(QtWidgets.QWidget):
 
     def on_clean_button_clicked(self):
         for i in self.finished:
-            # self.ui.listWidget.removeItemWidget(i["item"])
             self.ui.listWidget.takeItem(self.ui.listWidget.row(i["item"]))
             i.pop("item")
             i.pop("widget")
@@ -92,8 +90,10 @@ class DownloadWidget(QtWidgets.QWidget):
             )
             thread.start()
         if len(self.running_tasks) > 0:
-            if self.running_tasks[0]["finished"]:
-                self.finished.append(self.running_tasks.pop(0))
+            for i in range(len(self.running_tasks)):
+                if self.running_tasks[i]["finished"]:
+                    self.finished.append(self.running_tasks.pop(i))
+                    break
 
 
 def download_danmaku(path, cid):
@@ -300,6 +300,7 @@ class DownloadTask(QtCore.QThread):
             ],
             stdout=devnull,
             stderr=devnull,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         devnull.close()
 

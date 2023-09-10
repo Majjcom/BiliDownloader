@@ -1,16 +1,15 @@
-from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
-from ui_configwidget import Ui_ConfigWidget
-from PySide2 import QtWidgets, QtCore
-from os.path import isdir
-import traceback
 import pickle
+import traceback
+from os.path import isdir
+
+from PySide2 import QtWidgets, QtCore
+from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
+
 import style
-
-
 from Lib.bili_api import video, exceptions
+from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
 from utils.removeSpecialChars import removeSpecialChars
-from pprint import pprint
 
 # codec
 video_codec_id = {
@@ -149,7 +148,6 @@ class ConfigWidget(QtWidgets.QWidget):
             self.load_finish,
         )
         self.load_thread.start()
-        # self.ui.combo_quality.addItems(["Low", "Medium", "High"])
 
 
 class GetVideoInfo(QtCore.QThread):
@@ -169,7 +167,7 @@ class GetVideoInfo(QtCore.QThread):
             if self.isbvid:
                 data = video.get_video_url(bvid=self.vid, cid=self.cid)
             else:
-                data = video.get_video_url(aid=self.vid, cid=self.cid)
+                data = video.get_video_url(avid=self.vid, cid=self.cid)
             quality = []
             for i in range(len(data["accept_quality"])):
                 quality.append(

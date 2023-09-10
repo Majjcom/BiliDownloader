@@ -1,4 +1,3 @@
-import PySide2.QtGui
 from ui_dialogdownloadupdate import Ui_DialogDownloadUpdate
 from PySide2 import QtWidgets, QtGui
 

@@ -15,7 +15,7 @@ def init():
         or status
     )
     if status:
-        if os.path.exists("CHANGELOG.txt"):
-            os.startfile("CHANGELOG.txt")
         configUtils.setUserData("isnew", False)
         configUtils.setUserData("version", version.__version__)
+        return True
+    return False
