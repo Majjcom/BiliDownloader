@@ -1,6 +1,6 @@
 # BiliDownloader
 
-[![tag](https://img.shields.io/badge/Homepage-Majjcom-blue.svg)](http://www.majjcom.site:12568/) ![tag](https://img.shields.io/badge/Language-Python3,_C++-orange.svg) ![tag](https://img.shields.io/badge/License-MIT-green.svg)
+[![tag](https://img.shields.io/badge/Homepage-Majjcom-blue.svg)](http://www.majjcom.site/) ![tag](https://img.shields.io/badge/Language-Python3,_C++-orange.svg) ![tag](https://img.shields.io/badge/License-MIT-green.svg)
 
 ## 介绍
 

@@ -25,7 +25,20 @@ python3 -m venv ./venv
 pip install -r requirements.txt
 ```
 ### 运行前准备
-将`icon`目录下的`icon.ico`复制到`src`中
+下载支持AV1的[ffmpeg](https://majjcom.lanzouy.com/iX5kY18c1dhi)可执行文件，并将`ffmpeg`文件夹解压至`main.py`所在的目录下
+
+目录结构大概是这样：
+
+```
+/--main.py
+ |-requirments.txt
+ |-ffmpeg/--ffmpeg.exe
+ |        |-xxx.dll
+ |        |-...
+ |-...
+```
+
+
 
 ### 运行
 在`src/../`目录中使用以下命令
