@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 
 ### 运行
-在`src/../`目录中使用以下命令
+在当前目录下运行以下命令
 ```shell
 pythonw main.py
 ```
