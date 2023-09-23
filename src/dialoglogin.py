@@ -1,12 +1,14 @@
-from PySide2 import QtWidgets, QtGui, QtCore
-from Lib.bili_api.utils import cookieTools
-from ui_dialoglogin import Ui_DialogLogin
-from Lib.bili_api import user
-from utils import configUtils
-from io import BytesIO
-import qrcode
 import pickle
 import time
+from io import BytesIO
+
+import qrcode
+from PySide2 import QtWidgets, QtGui, QtCore
+
+from Lib.bili_api import user
+from Lib.bili_api.utils import cookieTools
+from ui_dialoglogin import Ui_DialogLogin
+from utils import configUtils
 
 
 class DialogLogin(QtWidgets.QDialog):
@@ -91,7 +93,7 @@ class LoginDataThread(QtCore.QThread):
                     break
                 elif str(status["data"]) == "-4":
                     self.emit(
-                        QtCore.SIGNAL("update_status(QString)"), "请扫描二维码登录Bilibili"
+                        QtCore.SIGNAL("update_status(QString)"), "请扫描二维码登录bilibili"
                     )
                 elif str(status["data"]) == "-5":
                     self.emit(QtCore.SIGNAL("update_status(QString)"), "扫描成功，请确认")

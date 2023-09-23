@@ -4,10 +4,10 @@ from urllib.request import urlopen
 
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import SIGNAL, Signal, QByteArray
+from ui_confirmwidget import Ui_ConfirmWidget
 
 from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException
-from ui_confirmwidget import Ui_ConfirmWidget
 
 
 class ConfirmWidget(QtWidgets.QWidget):
@@ -99,18 +99,20 @@ class LaodInfoAV(LoadInfoBase):
 
     def load_data(self):
         data = video.get_video_info(aid=self.content[2:])
+        online = video.get_video_online_count(cid=data["cid"], aid=self.content[2:])
         pic_url = data["pic"]
         show: str = data["title"]
         show += "\n\nBV号: " + data["bvid"]
         show += "\nAV号: AV" + str(data["aid"])
         show += "\nUP主: " + data["owner"]["name"]
+        show += "\n在线人数: " + online["total"]
         show += "\n\n简介:\n" + data["desc"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
         page_data = []
         for i in data["pages"]:
             part = {
                 "isbvid": self.format == "BV",
-                "id": self.content,
+                "id": self.content[2:],
                 "cid": i["cid"],
                 "page": i["page"],
                 "name": i["part"],
@@ -134,11 +136,13 @@ class LoadInfoBV(LoadInfoBase):
 
     def load_data(self):
         data = video.get_video_info(bvid=self.content)
+        online = video.get_video_online_count(cid=data["cid"], bvid=self.content)
         pic_url = data["pic"]
         show: str = data["title"]
         show += "\n\nBV号: " + data["bvid"]
         show += "\nAV号: AV" + str(data["aid"])
         show += "\nUP主: " + data["owner"]["name"]
+        show += "\n在线人数: " + online["total"]
         show += "\n\n简介:\n" + data["desc"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
         page_data = []

@@ -1,12 +1,14 @@
-from dialogdownloadupdate import DialogDownloadUpdate
-from update import UpdateChecker, UpdateDownloader
-from dialogupdateinfo import DialogUpdateInfo
-from dialogchangelog import DialogChangeLog
-from ui_mainwindow import Ui_MainWindow
-from PySide2 import QtWidgets, QtCore
-from utils import init, configUtils
-import subprocess
 import os
+import subprocess
+
+from PySide2 import QtWidgets, QtCore
+
+from dialogchangelog import DialogChangeLog
+from dialogdownloadupdate import DialogDownloadUpdate
+from dialogupdateinfo import DialogUpdateInfo
+from ui_mainwindow import Ui_MainWindow
+from update import UpdateChecker, UpdateDownloader
+from utils import init, configUtils
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -18,6 +20,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tabWidget.setTabText(0, "输入")
         self.ui.tabWidget.setTabText(1, "下载")
         self.ui.tabWidget.setTabText(2, "设置")
+        self.ui.tabWidget.setTabText(3, "关于")
 
         self.tabs = []
         self.tab_now = 0

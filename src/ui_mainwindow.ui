@@ -72,6 +72,16 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_about">
+       <attribute name="title">
+        <string>页</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="AboutWidget" name="widget" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -104,6 +114,12 @@
    <class>DownloadWidget</class>
    <extends>QWidget</extends>
    <header>downloadwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>AboutWidget</class>
+   <extends>QWidget</extends>
+   <header>aboutwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

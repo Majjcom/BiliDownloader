@@ -4,10 +4,11 @@ from os.path import isdir
 
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
+from ui_configwidget import Ui_ConfigWidget
 
 import style
 from Lib.bili_api import video, exceptions
-from ui_configwidget import Ui_ConfigWidget
+from centralcheckbox import CentralCheckBox
 from utils import configUtils
 from utils.removeSpecialChars import removeSpecialChars
 
@@ -68,6 +69,7 @@ class ConfigWidget(QtWidgets.QWidget):
         reserveAudio = configUtils.getUserData("reserveAudio", False)
         saveDanmaku = configUtils.getUserData("saveDanmaku", False)
         for i in self.data["download_data"]:
+            box: CentralCheckBox = i["box_danmaku"]
             push = {
                 "path": self.ui.line_path.text(),
                 "quality": quality,
@@ -78,7 +80,7 @@ class ConfigWidget(QtWidgets.QWidget):
                 "isbvid": i["isbvid"],
                 "cid": i["cid"],
                 "reserveAudio": reserveAudio,
-                "saveDanmaku": saveDanmaku,
+                "saveDanmaku": box.get_box().isChecked(),
             }
             self.parent().download.push_task(push)
         self.parent().input_finished()
@@ -126,13 +128,19 @@ class ConfigWidget(QtWidgets.QWidget):
                 "downloadPath", QtCore.QDir("Download").absolutePath()
             )
         )
+        download_danmaku = configUtils.getUserData(configUtils.Configs.SAVE_DANMAKU, False)
         self.data["download_data"] = []
         for i in self.data["page_data"]:
             if not i["box"].get_box().isChecked():
                 continue
             self.ui.table_downloads.setRowCount(self.ui.table_downloads.rowCount() + 1)
+            i["box_danmaku"] = CentralCheckBox()
+            i["box_danmaku"].get_box().setChecked(download_danmaku)
+            self.ui.table_downloads.setCellWidget(
+                self.ui.table_downloads.rowCount() - 1, 0, i["box_danmaku"]
+            )
             self.ui.table_downloads.setItem(
-                self.ui.table_downloads.rowCount() - 1, 0, QTableWidgetItem(i["name"])
+                self.ui.table_downloads.rowCount() - 1, 1, QTableWidgetItem(i["name"])
             )
             self.data["download_data"].append(i)
         page = self.data["page_data"][0]

@@ -1,6 +1,16 @@
-from . import version
 import json
 import os
+
+from . import version
+
+
+class Configs:
+    VIDEO_CODEC = "video_codec"
+    DOWNLOAD_PATH = "downloadPath"
+    RESERVE_AUDIO = "reserveAudio"
+    SAVE_DANMAKU = "saveDanmaku"
+    MAX_THREAD_COUNT = "max_thread_count"
+    PASSPORT = "passport"
 
 
 def setupUserData(reset: bool = False) -> None:
