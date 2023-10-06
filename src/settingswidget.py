@@ -1,10 +1,12 @@
-from ui_settingswidget import Ui_SettingsWidget
-from PySide2.QtWidgets import QMessageBox
-from PySide2 import QtWidgets, QtCore
-from dialoglogin import DialogLogin
-from utils import configUtils
-import style
 import os
+
+from PySide2 import QtWidgets, QtCore
+from PySide2.QtWidgets import QMessageBox
+
+import style
+from dialoglogin import DialogLogin
+from ui_settingswidget import Ui_SettingsWidget
+from utils import configUtils
 
 _CURRENT_INDEX = 2
 
@@ -55,13 +57,13 @@ class SettingsWidget(QtWidgets.QWidget):
 
     def load_settings(self):
         path = configUtils.getUserData(
-            "downloadPath", QtCore.QDir("Download").absolutePath()
+            configUtils.Configs.DOWNLOAD_PATH, QtCore.QDir("Download").absolutePath()
         )
-        audio = configUtils.getUserData("reserveAudio", False)
-        passport = configUtils.getUserData("passport")
-        danmaku = configUtils.getUserData("saveDanmaku", False)
-        codec = configUtils.getUserData("video_codec", 7)
-        max_thread_count = configUtils.getUserData("max_thread_count", 4)
+        audio = configUtils.getUserData(configUtils.Configs.RESERVE_AUDIO, False)
+        passport = configUtils.getUserData(configUtils.Configs.PASSPORT)
+        danmaku = configUtils.getUserData(configUtils.Configs.SAVE_DANMAKU, False)
+        codec = configUtils.getUserData(configUtils.Configs.VIDEO_CODEC, 7)
+        max_thread_count = configUtils.getUserData(configUtils.Configs.MAX_THREAD_COUNT, 4)
         self.ui.spin_threads.setValue(max_thread_count)
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.ui.line_path.setText(path)
@@ -75,11 +77,11 @@ class SettingsWidget(QtWidgets.QWidget):
         danmaku = self.ui.check_danmaku.isChecked()
         codec = video_codec_match[self.ui.combo_codec.currentText()]
         max_thread_count = self.ui.spin_threads.value()
-        configUtils.setUserData("video_codec", codec)
-        configUtils.setUserData("downloadPath", path)
-        configUtils.setUserData("reserveAudio", audio)
-        configUtils.setUserData("saveDanmaku", danmaku)
-        configUtils.setUserData("max_thread_count", max_thread_count)
+        configUtils.setUserData(configUtils.Configs.VIDEO_CODEC, codec)
+        configUtils.setUserData(configUtils.Configs.DOWNLOAD_PATH, path)
+        configUtils.setUserData(configUtils.Configs.RESERVE_AUDIO, audio)
+        configUtils.setUserData(configUtils.Configs.SAVE_DANMAKU, danmaku)
+        configUtils.setUserData(configUtils.Configs.MAX_THREAD_COUNT, max_thread_count)
 
     def update_tab_changes(self, old, now):
         if old == _CURRENT_INDEX:

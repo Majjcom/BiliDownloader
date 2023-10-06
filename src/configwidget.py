@@ -4,11 +4,11 @@ from os.path import isdir
 
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
-from ui_configwidget import Ui_ConfigWidget
 
 import style
 from Lib.bili_api import video, exceptions
 from centralcheckbox import CentralCheckBox
+from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
 from utils.removeSpecialChars import removeSpecialChars
 
@@ -66,10 +66,10 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.button_submit.setDisabled(True)
         quality = self.quality_match[self.ui.combo_quality.currentText()]
         codec = video_codec_match[self.ui.combo_codec.currentText()]
-        reserveAudio = configUtils.getUserData("reserveAudio", False)
-        saveDanmaku = configUtils.getUserData("saveDanmaku", False)
+        reserveAudio = configUtils.getUserData(configUtils.Configs.RESERVE_AUDIO, False)
+        # saveDanmaku = configUtils.getUserData("saveDanmaku", False)
         for i in self.data["download_data"]:
-            box: CentralCheckBox = i["box_danmaku"]
+            box_danmaku: CentralCheckBox = i["box_danmaku"]
             push = {
                 "path": self.ui.line_path.text(),
                 "quality": quality,
@@ -80,7 +80,7 @@ class ConfigWidget(QtWidgets.QWidget):
                 "isbvid": i["isbvid"],
                 "cid": i["cid"],
                 "reserveAudio": reserveAudio,
-                "saveDanmaku": box.get_box().isChecked(),
+                "saveDanmaku": box_danmaku.get_box().isChecked(),
             }
             self.parent().download.push_task(push)
         self.parent().input_finished()
@@ -120,12 +120,12 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.button_submit.setEnabled(False)
         self.ui.combo_quality.clear()
         self.ui.table_downloads.setRowCount(0)
-        codec = configUtils.getUserData("video_codec", 7)
+        codec = configUtils.getUserData(configUtils.Configs.VIDEO_CODEC, 7)
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.data = self.parent().input_pages[2].data
         self.ui.line_path.setText(
             configUtils.getUserData(
-                "downloadPath", QtCore.QDir("Download").absolutePath()
+                configUtils.Configs.DOWNLOAD_PATH, QtCore.QDir("Download").absolutePath()
             )
         )
         download_danmaku = configUtils.getUserData(configUtils.Configs.SAVE_DANMAKU, False)

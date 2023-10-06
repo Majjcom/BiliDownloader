@@ -11,8 +11,6 @@ for i in dirs:
         f.write(tgt + "\n")
         print(i + " => " + tgt)
         subprocess.call(["pyside2-uic", i, "-o", tgt])
-
-for i in dirs:
     if i.endswith(".qrc"):
         tgt = i[:-4] + "_rc.py"
         f.write(tgt + "\n")

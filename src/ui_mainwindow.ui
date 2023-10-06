@@ -78,7 +78,7 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
-         <widget class="AboutWidget" name="widget" native="true"/>
+         <widget class="AboutWidget" name="widget_about" native="true"/>
         </item>
        </layout>
       </widget>

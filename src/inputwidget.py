@@ -1,11 +1,13 @@
+from typing import List
+
+from PySide2.QtCore import SIGNAL
 from PySide2.QtWidgets import QWidget, QMainWindow
+
+from configwidget import ConfigWidget
+from confirmwidget import ConfirmWidget
 from inputsetupwidget import InputSetupWidget
 from selectionwidget import SelectionWidget
 from ui_inputwidget import Ui_InputWidget
-from confirmwidget import ConfirmWidget
-from configwidget import ConfigWidget
-from PySide2.QtCore import SIGNAL
-from typing import List
 
 
 class InputWidget(QWidget):

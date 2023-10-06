@@ -1,10 +1,12 @@
-from urllib.request import Request, urlopen
-from Lib.bdnet import client
-from PySide2 import QtCore
-from utils import version
-import traceback
 import hashlib
 import time
+import traceback
+from urllib.request import Request, urlopen
+
+from PySide2 import QtCore
+
+from Lib.bdnet import client
+from utils import version
 
 
 class UpdateChecker(QtCore.QThread):

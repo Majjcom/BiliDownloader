@@ -1,9 +1,8 @@
-import os
 import subprocess
 
 from PySide2 import QtWidgets, QtCore
 
-from dialogchangelog import DialogChangeLog
+from dialogchangelog import show_changelog
 from dialogdownloadupdate import DialogDownloadUpdate
 from dialogupdateinfo import DialogUpdateInfo
 from ui_mainwindow import Ui_MainWindow
@@ -27,6 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.append(self.ui.widget_input)
         self.tabs.append(self.ui.widget_download)
         self.tabs.append(self.ui.widget_settings)
+        self.tabs.append(self.ui.widget_about)
 
         self.ui.widget_input.setup_mainwindow(self)
         self.ui.widget_input.setup_download(self.ui.widget_download)
@@ -38,11 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         if init.init():
-            if os.path.exists("CHANGELOG.txt"):
-                with open("CHANGELOG.txt", "r", encoding="utf_8") as f:
-                    changelog = f.read()
-                dialog = DialogChangeLog(changelog, self)
-                dialog.exec_()
+            show_changelog(self)
 
         self.update_thread = UpdateChecker(self)
         self.connect(

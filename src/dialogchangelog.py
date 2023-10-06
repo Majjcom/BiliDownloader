@@ -1,5 +1,16 @@
-from ui_dialogchangelog import Ui_DialogChangeLog
+import os
+
 from PySide2 import QtWidgets
+
+from ui_dialogchangelog import Ui_DialogChangeLog
+
+
+def show_changelog(parent: QtWidgets.QWidget):
+    if os.path.exists("CHANGELOG.txt"):
+        with open("CHANGELOG.txt", "r", encoding="utf_8") as f:
+            changelog = f.read()
+        dialog = DialogChangeLog(changelog, parent)
+        dialog.exec_()
 
 
 class DialogChangeLog(QtWidgets.QDialog):

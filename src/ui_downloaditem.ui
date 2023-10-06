@@ -121,7 +121,7 @@
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>打开文件夹</string>
+        <string>重新下载</string>
        </property>
       </widget>
      </item>
