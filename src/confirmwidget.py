@@ -4,10 +4,10 @@ from urllib.request import urlopen
 
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import SIGNAL, Signal, QByteArray
-from ui_confirmwidget import Ui_ConfirmWidget
 
 from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException
+from ui_confirmwidget import Ui_ConfirmWidget
 
 
 class ConfirmWidget(QtWidgets.QWidget):

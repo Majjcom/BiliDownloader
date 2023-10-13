@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>266</width>
-    <height>275</height>
+    <width>332</width>
+    <height>317</height>
    </rect>
   </property>
   <property name="font">
@@ -38,6 +38,37 @@
       <string>选集：</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLineEdit" name="line_selection">
+       <property name="inputMask">
+        <string/>
+       </property>
+       <property name="placeholderText">
+        <string>输入选集配置</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="button_setSelection">
+       <property name="text">
+        <string>设置选集</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="button_help">
+       <property name="cursor">
+        <cursorShape>WhatsThisCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>?</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTableWidget" name="table_selection">
