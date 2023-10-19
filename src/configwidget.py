@@ -67,14 +67,13 @@ class ConfigWidget(QtWidgets.QWidget):
         quality = self.quality_match[self.ui.combo_quality.currentText()]
         codec = video_codec_match[self.ui.combo_codec.currentText()]
         reserveAudio = configUtils.getUserData(configUtils.Configs.RESERVE_AUDIO, False)
-        # saveDanmaku = configUtils.getUserData("saveDanmaku", False)
         for i in self.data["download_data"]:
             box_danmaku: CentralCheckBox = i["box_danmaku"]
             push = {
                 "path": self.ui.line_path.text(),
                 "quality": quality,
                 "codec": codec,
-                "name": removeSpecialChars(i["name"]),
+                "name": "{:0>3d}-".format(i["page"]) + removeSpecialChars(i["name"]),
                 "title": removeSpecialChars(i["title"]),
                 "id": i["id"],
                 "isbvid": i["isbvid"],

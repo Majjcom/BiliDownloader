@@ -146,6 +146,7 @@ class LoadInfoBV(LoadInfoBase):
         show += "\n\n简介:\n" + data["desc"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
         page_data = []
+        page_id = 1
         for i in data["pages"]:
             part = {
                 "isbvid": self.format == "BV",
@@ -154,6 +155,7 @@ class LoadInfoBV(LoadInfoBase):
                 "page": i["page"],
                 "name": i["part"],
                 "title": data["title"],
+                "pageId": page_id
             }
             page_data.append(part)
         meta_data = {}
