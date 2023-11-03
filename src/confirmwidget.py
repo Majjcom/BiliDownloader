@@ -174,12 +174,15 @@ class LoadInfoMD(LoadInfoBase):
         super(LoadInfoMD, self).__init__(parent, "MD", vid)
 
     def load_data(self):
-        data = bangumi.get_bangumi_info(self.content[2:])
+        data: dict = bangumi.get_bangumi_info(self.content[2:])
         ssid = data["media"]["season_id"]
         ss_data = bangumi.get_bangumi_detailed_info(season_id=ssid)
         show = data["media"]["title"]
         show += "\n\nMD号: MD" + str(data["media"]["media_id"])
-        show += "\n评分: " + str(data["media"]["rating"]["score"])
+        if "rating" in data["media"]:
+            show += "\n评分: " + str(data["media"]["rating"]["score"])
+        else:
+            show += "\n评分: 暂无评分"
         show += "\n\n简介:\n" + ss_data["data"]["evaluate"]
         show += "\n\n制作:\n" + ss_data["data"]["staff"]
         cover_url = data["media"]["cover"]
@@ -216,7 +219,10 @@ class LoadInfoEP(LoadInfoBase):
         data = bangumi.get_bangumi_detailed_info(ep_id=self.content[2:])
         show = data["info"]["media"]["title"]
         show += "\n\nMD号: MD" + str(data["info"]["media"]["media_id"])
-        show += "\n评分: " + str(data["info"]["media"]["rating"]["score"])
+        if "rating" in data["info"]["media"]:
+            show += "\n评分: " + str(data["info"]["media"]["rating"]["score"])
+        else:
+            show += "\n评分: 暂无评分"
         show += "\n\n简介:\n" + data["data"]["evaluate"]
         show += "\n\n制作:\n" + data["data"]["staff"]
         cover_url = data["info"]["media"]["cover"]
