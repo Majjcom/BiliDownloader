@@ -81,25 +81,25 @@ class LoginDataThread(QtCore.QThread):
         )
         login_status = False
         err_msg = ""
-        with user.Get_login_info(qr_info["data"]["oauthKey"]) as getter:
+        with user.Get_login_info(qr_info["data"]["qrcode_key"]) as getter:
             while not login_status:
                 status = getter.request()
                 if "code" in status:
                     if status["code"] != 0:
                         err_msg = "请求错误: " + status["message"]
                         break
-                if str(status["data"]) == "-1":
-                    err_msg = "密钥错误"
-                    break
-                elif str(status["data"]) == "-4":
+                if str(status["data"]["code"]) == "0":
+                    self.emit(QtCore.SIGNAL("update_status(QString)"), "登录成功")
+                    login_status = True
+                elif str(status["data"]["code"]) == "86101":
                     self.emit(
                         QtCore.SIGNAL("update_status(QString)"), "请扫描二维码登录bilibili"
                     )
-                elif str(status["data"]) == "-5":
+                elif str(status["data"]["code"]) == "86090":
                     self.emit(QtCore.SIGNAL("update_status(QString)"), "扫描成功，请确认")
-                elif status["status"]:
-                    self.emit(QtCore.SIGNAL("update_status(QString)"), "登录成功")
-                    login_status = True
+                elif str(status["data"]["code"]) == "86038":
+                    err_msg = "二维码失效"
+                    break
                 else:
                     err_msg = "二维码登录错误"
                     break
@@ -109,7 +109,7 @@ class LoginDataThread(QtCore.QThread):
             time.sleep(1)
             return
         cookie = cookieTools.get_cookie(status["data"]["url"])
-        ret = {"ts": status["ts"], "data": cookie}
+        ret = {"ts": status["data"]["timestamp"], "data": cookie}
         ret = pickle.dumps(ret)
         ret = QtCore.QByteArray(ret)
         self.emit(QtCore.SIGNAL("update_data(QByteArray)"), ret)
