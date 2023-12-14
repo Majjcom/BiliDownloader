@@ -36,7 +36,7 @@ class DownloadTask(QtCore.QThread):
 
     def timer_timeout(self):
         self.emit(
-            QtCore.SIGNAL("update_progress(int, int)"),
+            QtCore.SIGNAL("update_progress(quint64, quint64)"),
             self.video_finished_size + self.audio_finished_size,
             self.total_size,
         )

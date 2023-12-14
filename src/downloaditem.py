@@ -29,7 +29,7 @@ class DownloadItem(QtWidgets.QWidget):
         self.ui.label_status.setText(data)
 
     # Slot
-    def update_progress(self, finished: int, total: int):
+    def update_progress(self, finished: str, total: str):
         self.ui.label_progress.setText(
             "{} / {}".format(sizefStr(finished), sizefStr(total))
         )
@@ -52,9 +52,9 @@ class DownloadItem(QtWidgets.QWidget):
         self.info["thread"] = thread
         thread.connect(
             thread,
-            QtCore.SIGNAL("update_progress(int, int)"),
+            QtCore.SIGNAL("update_progress(quint64, quint64)"),
             self,
-            QtCore.SLOT("update_progress(int, int)"),
+            QtCore.SLOT("update_progress(quint64, quint64)"),
         )
         thread.connect(
             thread,

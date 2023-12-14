@@ -64,9 +64,9 @@ class DownloadWidget(QtWidgets.QWidget):
             self.running_tasks.append(task)
             thread.connect(
                 thread,
-                QtCore.SIGNAL("update_progress(int, int)"),
+                QtCore.SIGNAL("update_progress(quint64, quint64)"),
                 task["widget"],
-                QtCore.SLOT("update_progress(int, int)"),
+                QtCore.SLOT("update_progress(quint64, quint64)"),
             )
             thread.connect(
                 thread,
