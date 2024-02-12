@@ -78,5 +78,25 @@
         "-5": "未确认"
       }
     }
+  },
+  "nav": {
+    "url": "https://api.bilibili.com/x/web-interface/nav",
+    "method": "GET",
+    "verify": true,
+    "params": null,
+    "return": {
+      "code": {
+        "0": "成功",
+        "-101": "账号未登录"
+      },
+      "message": "错误信息",
+      "ttl": 1,
+      "data": {
+        "wbi_img": {
+          "img_url": "img_key",
+          "sub_url": "sub_key"
+        }
+      }
+    }
   }
 }

@@ -9,6 +9,6 @@ int WINAPI WinMain(
     _In_ int nShowCmd
 )
 {
-	::WinExec(".\\bin\\BiliDownloader.exe", SW_SHOW);
-	return 0;
+    WinExec(".\\bin\\BiliDownloader.exe", SW_SHOW);
+    return 0;
 }

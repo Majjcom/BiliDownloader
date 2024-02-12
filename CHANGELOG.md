@@ -1,6 +1,14 @@
 # BiliDownloader
 
-### Copyright © 2023 Majjcom
+### Copyright © 2021-2024 Majjcom
+
+- 1.0.8 2024/2/12
+  - 更新部分API，添加Wbi签名逻辑
+  - 更新python后端
+  - 优化部分下载体验
+  - 修复其他已知问题
+  - 感谢支持 ~
+
 
 - 1.0.7 2023/12/14
   - 修复下载大视频时发生闪退的问题

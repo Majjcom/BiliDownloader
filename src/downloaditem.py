@@ -29,7 +29,7 @@ class DownloadItem(QtWidgets.QWidget):
         self.ui.label_status.setText(data)
 
     # Slot
-    def update_progress(self, finished: str, total: str):
+    def update_progress(self, finished: int, total: int):
         self.ui.label_progress.setText(
             "{} / {}".format(sizefStr(finished), sizefStr(total))
         )

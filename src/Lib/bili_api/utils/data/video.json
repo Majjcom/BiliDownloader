@@ -82,5 +82,30 @@
       "ttl": 1,
       "data": {}
     }
+  },
+  "get_download_url_wbi": {
+    "url": "https://api.bilibili.com/x/player/wbi/playurl",
+    "method": "GET",
+    "verify": true,
+    "wbi": true,
+    "params": {
+      "avid": "av号 num",
+      "bvid": "bv号 string",
+      "cid": "视频id num",
+      "qn": "清晰度 num",
+      "fnval": "视频获取方式",
+      "fnver": 0,
+      "fourk": "有4K=1, 无=0"
+    },
+    "return": {
+      "code": {
+        "0": "成功",
+        "-400": "请求错误",
+        "-404": "无视频"
+      },
+      "message": "错误信息",
+      "ttl": 1,
+      "data": {}
+    }
   }
 }

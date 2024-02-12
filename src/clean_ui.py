@@ -11,6 +11,7 @@ def main():
         if os.path.exists(filename):
             os.remove(filename)
             print("Cleaning", filename)
+    f.close()
 
 
 if __name__ == "__main__":

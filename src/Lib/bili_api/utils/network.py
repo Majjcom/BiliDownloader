@@ -1,10 +1,10 @@
-from ..exceptions.NetWorkException import NetWorkException
-from typing import Union
-import urllib.parse
+import copy
 import http.client
 import json
-import copy
+import urllib.parse
+from typing import Union
 
+from ..exceptions.NetWorkException import NetWorkException
 
 DEFAULT_HEADERS = {"Referer": "https://www.bilibili.com", "User-Agent": "Mozilla/5.0"}
 

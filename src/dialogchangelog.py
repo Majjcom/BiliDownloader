@@ -6,8 +6,8 @@ from ui_dialogchangelog import Ui_DialogChangeLog
 
 
 def show_changelog(parent: QtWidgets.QWidget):
-    if os.path.exists("CHANGELOG.txt"):
-        with open("CHANGELOG.txt", "r", encoding="utf_8") as f:
+    if os.path.exists("CHANGELOG.md"):
+        with open("CHANGELOG.md", "r", encoding="utf_8") as f:
             changelog = f.read()
         dialog = DialogChangeLog(changelog, parent)
         dialog.exec_()
