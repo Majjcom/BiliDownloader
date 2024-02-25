@@ -119,6 +119,6 @@ class SettingsWidget(QtWidgets.QWidget):
 
     # Slot
     def on_login_button_clicked(self):
-        dialog = DialogLogin(self)
+        dialog = DialogLogin(self, self.userdata)
         dialog.exec_()
         self.load_settings()

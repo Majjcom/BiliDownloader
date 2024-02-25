@@ -12,10 +12,11 @@ from utils import configUtils
 
 
 class DialogLogin(QtWidgets.QDialog):
-    def __init__(self, parent: QtWidgets.QWidget | None = ...) -> None:
+    def __init__(self, parent: QtWidgets.QWidget | None, userdata: configUtils.UserDataHelper) -> None:
         super().__init__(parent)
         self.ui = Ui_DialogLogin()
         self.ui.setupUi(self)
+        self.userdata = userdata
 
         self.load_thread = LoginDataThread(self)
         self.connect(
@@ -51,7 +52,7 @@ class DialogLogin(QtWidgets.QDialog):
     # Slot
     def update_data(self, data: QtCore.QByteArray):
         passport = pickle.loads(data.data())
-        configUtils.setUserData("passport", passport)
+        self.userdata.set(self.userdata.CONFIGS.PASSPORT, passport)
 
     # Slot
     def load_finished(self):
