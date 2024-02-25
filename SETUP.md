@@ -3,7 +3,7 @@
 ## 1.直接运行py文件
 
 ### 准备运行环境
-Python Version ~= 3.11
+Python Version ~= 3.10
 
 Operating System >= Windows 10
 

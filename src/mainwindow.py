@@ -2,6 +2,7 @@ import subprocess
 
 from PySide2 import QtWidgets, QtCore
 
+from checkaccount import CheckAccountThread
 from dialogchangelog import show_changelog
 from dialogdownloadupdate import DialogDownloadUpdate
 from dialogupdateinfo import DialogUpdateInfo
@@ -13,6 +14,11 @@ from utils import init, configUtils
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+
+        # Init
+        if init.init():
+            show_changelog(self)
+
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
@@ -37,9 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.on_tab_changes,
         )
 
-        if init.init():
-            show_changelog(self)
-
+        # Check Update
         self.update_thread = UpdateChecker(self)
         self.connect(
             self.update_thread,
@@ -52,6 +56,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.find_update,
         )
         self.update_thread.start()
+
+        # Check Account
+        self.check_account_thread = CheckAccountThread(self)
+        self.connect(
+            self.check_account_thread,
+            QtCore.SIGNAL("check_account_finished(bool)"),
+            self.check_account_finished
+        )
+        self.check_account_thread.start()
 
     # Slot
     def find_update(self, new: str, info: str):
@@ -89,6 +102,15 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_finish(self):
         self.disconnect(self.update_thread)
         del self.update_thread
+
+    # Slot
+    def check_account_finished(self, res):
+        if not res:
+            QtWidgets.QMessageBox.information(
+                self,
+                "提醒",
+                "您的登录信息已失效，请及时重新登录\n视频下载可能会出现问题"
+            )
 
     # Slot
     def download_err(self, msg: str):

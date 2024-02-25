@@ -5,8 +5,10 @@ from urllib.request import Request, urlopen
 
 from PySide2 import QtCore
 
-from Lib.bdnet import client
+from Lib.bd_client import BDClient
 from utils import version
+
+HOST = "www.majjcom.site"
 
 
 class UpdateChecker(QtCore.QThread):
@@ -15,19 +17,23 @@ class UpdateChecker(QtCore.QThread):
         self.timer_finished = False
 
     def run(self) -> None:
-        c = client.Connection("www.majjcom.site", 11288)
-        c.sendMsg({"action": "version", "after": True, "bVersion": version.__version__})
-        get = c.recvMsg()
+        c = BDClient(HOST, 11289)
+        get = c.request({
+            "act": "ver",
+            "ver": version.__version__
+        })
         c.close()
-        new_ver = get["content"]
+        new_ver = get["ver"]
         if not version.check_update(new_ver):
             return
         del c
-        c = client.Connection("www.majjcom.site", 11288)
-        c.sendMsg({"action": "updateInfo", "bVersion": version.__version__})
-        get = c.recvMsg()
+        c = BDClient(HOST, 11289)
+        get = c.request({
+            "act": "info",
+            "ver": version.__version__
+        })
         c.close()
-        info = get["content"]
+        info = get["data"]
         self.emit(QtCore.SIGNAL("find_update(QString, QString)"), new_ver, info)
 
 
@@ -49,12 +55,14 @@ class UpdateDownloader(QtCore.QThread):
 
     def run(self):
         try:
-            s = client.Connection("www.majjcom.site", 11288)
-            s.sendMsg({"action": "updateUrl", "bVersion": version.__version__})
-            get = s.recvMsg()
+            s = BDClient(HOST, 11289)
+            get = s.request({
+                "act": "url",
+                "ver": version.__version__
+            })
             s.close()
-            self.url = get["content"]["url"]
-            self.file_hash = get["content"]["hash"]
+            self.url = get["url"]
+            self.file_hash = get["hash"]
 
             self.size = 0
             self.total = 0

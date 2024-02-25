@@ -7,6 +7,7 @@ from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
 
 import style
 from Lib.bili_api import video, exceptions
+from Lib.bili_api.utils.passport import BiliPassport
 from centralcheckbox import CentralCheckBox
 from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
@@ -66,7 +67,9 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.button_submit.setDisabled(True)
         quality = self.quality_match[self.ui.combo_quality.currentText()]
         codec = video_codec_match[self.ui.combo_codec.currentText()]
-        reserveAudio = configUtils.getUserData(configUtils.Configs.RESERVE_AUDIO, False)
+        userdata = configUtils.UserDataHelper()
+        # reserveAudio = configUtils.getUserData(configUtils.Configs.RESERVE_AUDIO, False)
+        reserveAudio = userdata.get(userdata.CONFIGS.RESERVE_AUDIO, False)
         for i in self.data["download_data"]:
             box_danmaku: CentralCheckBox = i["box_danmaku"]
             push = {
@@ -119,15 +122,19 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.button_submit.setEnabled(False)
         self.ui.combo_quality.clear()
         self.ui.table_downloads.setRowCount(0)
-        codec = configUtils.getUserData(configUtils.Configs.VIDEO_CODEC, 7)
+        userdata = configUtils.UserDataHelper()
+        codec = userdata.get(userdata.CONFIGS.VIDEO_CODEC, 7)
+        # codec = configUtils.getUserData(configUtils.Configs.VIDEO_CODEC, 7)
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.data = self.parent().input_pages[2].data
         self.ui.line_path.setText(
-            configUtils.getUserData(
-                configUtils.Configs.DOWNLOAD_PATH, QtCore.QDir("Download").absolutePath()
+            userdata.get(
+                userdata.CONFIGS.DOWNLOAD_PATH,  # User
+                QtCore.QDir("Download").absolutePath()  # Default
             )
         )
-        download_danmaku = configUtils.getUserData(configUtils.Configs.SAVE_DANMAKU, False)
+        download_danmaku = userdata.get(userdata.CONFIGS.SAVE_DANMAKU, False)
+        # download_danmaku = configUtils.getUserData(configUtils.Configs.SAVE_DANMAKU, False)
         self.data["download_data"] = []
         for i in self.data["page_data"]:
             if not i["box"].get_box().isChecked():
@@ -170,11 +177,14 @@ class GetVideoInfo(QtCore.QThread):
     def run(self):
         data = None
         err = False
+        passport = configUtils.getUserData(configUtils.Configs.PASSPORT)
+        if passport is not None:
+            passport = BiliPassport(passport["data"])
         try:
             if self.isbvid:
-                data = video.get_video_url(bvid=self.vid, cid=self.cid)
+                data = video.get_video_url(bvid=self.vid, cid=self.cid, passport=passport)
             else:
-                data = video.get_video_url(avid=self.vid, cid=self.cid)
+                data = video.get_video_url(avid=self.vid, cid=self.cid, passport=passport)
             quality = []
             for i in range(len(data["accept_quality"])):
                 quality.append(

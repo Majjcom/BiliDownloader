@@ -20,7 +20,8 @@ _HEADERS = {
 
 def _get_online_sign_data(passport: BiliPassport):
     headers = deepcopy(_HEADERS)
-    headers["cookie"] = passport.get_cookie()
+    if passport is not None:
+        headers["cookie"] = passport.get_cookie()
     url = urlsplit(_API["url"])
 
     get: dict = network.get_data(
@@ -32,13 +33,14 @@ def _get_online_sign_data(passport: BiliPassport):
     )
 
     if get["code"] != 0:
-        raise GetWbiException(
-            "获取Wbi信息错误:\n{0}\n{1}\n{2}".format(
-                get["code"],
-                get["message"],
-                _API["return"]["code"].get(str(get["code"]), "未知错误")
+        if passport is not None:
+            raise GetWbiException(
+                "获取Wbi信息错误:\n{0}\n{1}\n{2}".format(
+                    get["code"],
+                    get["message"],
+                    _API["return"]["code"].get(str(get["code"]), "未知错误")
+                )
             )
-        )
 
     return get["data"]["wbi_img"]
 

@@ -83,7 +83,7 @@ def get_video_pages(aid: int = None, bvid: str = None):
 def get_video_url(avid: int = None, bvid: str = None, cid: int = None, passport: utils.BiliPassport = None):
     if cid is None:
         raise BiliVideoIdException('你必须提供视频 cid')
-    api = copy.deepcopy(API['get_download_url' if passport is None else 'get_download_url_wbi'])
+    api = copy.deepcopy(API['get_download_url_wbi'])
     url = urlsplit(api['url'])
     params: dict = api['params']
     params.pop('qn')
@@ -100,8 +100,7 @@ def get_video_url(avid: int = None, bvid: str = None, cid: int = None, passport:
         params['avid'] = avid
     else:
         raise BiliVideoIdException('你必须输入 aid, bvid 中的任意一个')
-    if passport is not None:
-        params = wbisign.sign_params(params, passport)
+    params = wbisign.sign_params(params, passport)
     header = {}
     if passport is not None:
         header['cookie'] = passport.get_cookie()

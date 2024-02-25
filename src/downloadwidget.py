@@ -12,7 +12,7 @@ class DownloadWidget(QtWidgets.QWidget):
         self.ui = Ui_DownloadWidget()
         self.ui.setupUi(self)
 
-        self.max_thread_count = configUtils.getUserData("max_thread_count", 4)
+        self.max_thread_count = configUtils.getUserData(configUtils.Configs.MAX_THREAD_COUNT, 4)
 
         self.tasks = []
         self.finished = []
