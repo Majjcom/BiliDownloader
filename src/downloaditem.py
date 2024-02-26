@@ -1,4 +1,5 @@
 import os
+import sys
 
 from PySide2 import QtWidgets, QtCore
 
@@ -82,4 +83,7 @@ class DownloadItem(QtWidgets.QWidget):
         elif self.button_status == 1:
             dir = QtCore.QDir(self.info["path"])
             dir.cd(self.info["title"])
+            if sys.platform == "linux":
+                QtWidgets.QMessageBox.information(self.info["parent"], "信息", "在Linux中暂时无法使用该功能")
+                return
             os.startfile(dir.absolutePath(), "explore")

@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import time
 from urllib.request import Request, urlopen
 
@@ -213,25 +214,43 @@ class DownloadTask(QtCore.QThread):
         out_name = "{}.mp4".format(self.task["name"])
         if root_dir.exists(out_name):
             root_dir.remove(out_name)
-        ffmpeg_path = QtCore.QDir("ffmpeg").absoluteFilePath("ffmpeg.exe")
+        ffmpeg_path = QtCore.QDir("ffmpeg").absoluteFilePath("ffmpeg" + ("" if sys.platform == "linux" else ".exe"))
         devnull = open(os.devnull, "w")
-        subprocess.call(
-            [
-                ffmpeg_path,
-                "-i",
-                video_temp_file_path,
-                "-i",
-                audio_temp_file_path,
-                "-c:v",
-                "copy",
-                "-c:a",
-                "copy",
-                root_dir.absoluteFilePath(out_name),
-            ],
-            stdout=devnull,
-            stderr=devnull,
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
+        if sys.platform == "linux":
+            subprocess.call(
+                [
+                    ffmpeg_path,
+                    "-i",
+                    video_temp_file_path,
+                    "-i",
+                    audio_temp_file_path,
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "copy",
+                    root_dir.absoluteFilePath(out_name),
+                ],
+                stdout=devnull,
+                stderr=devnull,
+            )
+        else:
+            subprocess.call(
+                [
+                    ffmpeg_path,
+                    "-i",
+                    video_temp_file_path,
+                    "-i",
+                    audio_temp_file_path,
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "copy",
+                    root_dir.absoluteFilePath(out_name),
+                ],
+                stdout=devnull,
+                stderr=devnull,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
         devnull.close()
 
         # Download and parse Xml Danmaku
