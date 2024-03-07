@@ -2,7 +2,7 @@ _TITLE_SIZE_LIMIT = 20
 
 
 def removeSpecialChars(original: str):
-    spe = ":~!@#$%^&*()+*/<>,.[]\\|\"' "
+    spe = ":~!?@#$%^&*()+*/<>,.[]\\|\"' "
     ret = original[:]
     for ch in spe:
         ret = ret.replace(ch, "_")
