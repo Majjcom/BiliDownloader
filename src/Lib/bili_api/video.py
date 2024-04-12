@@ -80,7 +80,24 @@ def get_video_pages(aid: int = None, bvid: str = None):
     return get['data']
 
 
-def get_video_url(avid: int = None, bvid: str = None, cid: int = None, passport: utils.BiliPassport = None):
+class FNVAL_PRESET:
+    Dash = 16
+    FourK = 128
+    AV1 = 2048
+    HDR = 64
+    EighK = 1024
+
+    def default(self):
+        return self.Dash | self.AV1 | self.FourK
+
+
+def get_video_url(
+    avid: int = None,
+    bvid: str = None,
+    cid: int = None,
+    fnval: int = FNVAL_PRESET().default(),
+    passport: utils.BiliPassport = None
+):
     if cid is None:
         raise BiliVideoIdException('你必须提供视频 cid')
     api = copy.deepcopy(API['get_download_url_wbi'])
@@ -89,7 +106,7 @@ def get_video_url(avid: int = None, bvid: str = None, cid: int = None, passport:
     params.pop('qn')
     params.pop('fnver')
     params['cid'] = cid
-    params['fnval'] = 16 | 128 | 2048  # Dash 4K AV1_Codec
+    params['fnval'] = fnval  # 16 | 128 | 2048  # Dash 4K AV1_Codec
     params['fourk'] = 1
     if bvid is not None:
         __check_bvid(bvid)

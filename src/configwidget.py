@@ -25,11 +25,19 @@ for i in video_codec_id:
     video_codec_match[video_codec_id[i]] = i
 
 
+def get_fnval(ultra: bool):
+    fnval = video.FNVAL_PRESET().default()
+    if ultra:
+        fnval |= video.FNVAL_PRESET.EighK | video.FNVAL_PRESET.HDR
+    return fnval
+
+
 class ConfigWidget(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = ...) -> None:
         super().__init__(parent)
         self.ui = Ui_ConfigWidget()
         self.ui.setupUi(self)
+        self.fnval = get_fnval(False)
         codecs = []
         for i in video_codec_match:
             codecs.append(i)
@@ -83,6 +91,7 @@ class ConfigWidget(QtWidgets.QWidget):
                 "cid": i["cid"],
                 "reserveAudio": reserveAudio,
                 "saveDanmaku": box_danmaku.get_box().isChecked(),
+                "fnval": self.fnval
             }
             self.parent().download.push_task(push)
         self.parent().input_finished()
@@ -124,7 +133,7 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.table_downloads.setRowCount(0)
         userdata = configUtils.UserDataHelper()
         codec = userdata.get(userdata.CONFIGS.VIDEO_CODEC, 7)
-        # codec = configUtils.getUserData(configUtils.Configs.VIDEO_CODEC, 7)
+        self.fnval = get_fnval(userdata.get(userdata.CONFIGS.ULTRA_RESOLUTION, False))
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.data = self.parent().input_pages[2].data
         self.ui.line_path.setText(
@@ -150,7 +159,7 @@ class ConfigWidget(QtWidgets.QWidget):
             )
             self.data["download_data"].append(i)
         page = self.data["page_data"][0]
-        self.load_thread = GetVideoInfo(page["id"], page["isbvid"], page["cid"], self)
+        self.load_thread = GetVideoInfo(page["id"], page["isbvid"], page["cid"], self.fnval, self)
         self.connect(
             self.load_thread,
             QtCore.SIGNAL("update_info(QByteArray, bool)"),
@@ -166,12 +175,13 @@ class ConfigWidget(QtWidgets.QWidget):
 
 class GetVideoInfo(QtCore.QThread):
     def __init__(
-        self, vid, isbvid: bool, cid, parent: QtCore.QObject | None = ...
+        self, vid, isbvid: bool, cid, fnval: int, parent: QtCore.QObject | None = ...
     ) -> None:
         super().__init__(parent)
         self.vid = vid
         self.isbvid = isbvid
         self.cid = cid
+        self.fnval = fnval
         self.update_info = QtCore.Signal(QtCore.QByteArray, bool)
 
     def run(self):
@@ -182,9 +192,9 @@ class GetVideoInfo(QtCore.QThread):
             passport = BiliPassport(passport["data"])
         try:
             if self.isbvid:
-                data = video.get_video_url(bvid=self.vid, cid=self.cid, passport=passport)
+                data = video.get_video_url(bvid=self.vid, cid=self.cid, fnval=self.fnval, passport=passport)
             else:
-                data = video.get_video_url(avid=self.vid, cid=self.cid, passport=passport)
+                data = video.get_video_url(avid=self.vid, cid=self.cid, fnval=self.fnval, passport=passport)
             quality = []
             for i in range(len(data["accept_quality"])):
                 quality.append(

@@ -11,6 +11,7 @@ class Configs:
     SAVE_DANMAKU = "saveDanmaku"
     MAX_THREAD_COUNT = "max_thread_count"
     PASSPORT = "passport"
+    ULTRA_RESOLUTION = "ultra_resolution"
 
 
 def setupUserData(reset: bool = False) -> None:

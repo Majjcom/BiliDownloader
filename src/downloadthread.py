@@ -70,11 +70,11 @@ class DownloadTask(QtCore.QThread):
                 get_url = None
                 if self.task["isbvid"]:
                     get_url = video.get_video_url(
-                        bvid=self.task["id"], cid=self.task["cid"], passport=passport
+                        bvid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
                     )
                 else:
                     get_url = video.get_video_url(
-                        avid=self.task["id"], cid=self.task["cid"], passport=passport
+                        avid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
                     )
                 break
             except Exception as e:
