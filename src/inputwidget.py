@@ -5,9 +5,11 @@ from PySide2.QtWidgets import QWidget, QMainWindow
 
 from configwidget import ConfigWidget
 from confirmwidget import ConfirmWidget
+from dialogdownloadtip import DialogDownloadTip
 from inputsetupwidget import InputSetupWidget
 from selectionwidget import SelectionWidget
 from ui_inputwidget import Ui_InputWidget
+from utils import configUtils
 
 
 class InputWidget(QWidget):
@@ -112,7 +114,14 @@ class InputWidget(QWidget):
     def input_finished(self) -> None:
         self.mainwindow.change_tab(1)
         self.load_pages()
-        pass
+        show = configUtils.getUserData(configUtils.Configs.SHOW_DOWNLOAD_TIP, True)
+        if not show:
+            return
+        dialog = DialogDownloadTip("提示", "内容已加入下载队列，您可以回到输入界面继续下载其他内容", "不再提醒", self)
+        dialog.exec_()
+        res = dialog.getResult()
+        if res is True:
+            configUtils.setUserData(configUtils.Configs.SHOW_DOWNLOAD_TIP, False)
 
     def setup_mainwindow(self, widget: QMainWindow):
         self.mainwindow = widget

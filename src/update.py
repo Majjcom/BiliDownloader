@@ -43,8 +43,9 @@ class UpdateDownloader(QtCore.QThread):
 
     def setup(self, path: str):
         self.timer_finished = False
-        self.file_name = "BiliDownloader_Installer.exe"
-        self.save_path = QtCore.QDir(path).absoluteFilePath(self.file_name)
+        # self.file_name = "BiliDownloader_Installer.exe"
+        self.dir_path = path
+        # self.save_path = QtCore.QDir(path).absoluteFilePath(self.file_name)
 
     # Slot
     def timer_timeout(self):
@@ -63,6 +64,8 @@ class UpdateDownloader(QtCore.QThread):
             s.close()
             self.url = get["url"]
             self.file_hash = get["hash"]
+            self.file_name = get["name"]
+            self.save_path = QtCore.QDir(self.dir_path).absoluteFilePath(self.file_name)
 
             self.size = 0
             self.total = 0

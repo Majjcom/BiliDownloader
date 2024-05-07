@@ -12,6 +12,7 @@ class Configs:
     MAX_THREAD_COUNT = "max_thread_count"
     PASSPORT = "passport"
     ULTRA_RESOLUTION = "ultra_resolution"
+    SHOW_DOWNLOAD_TIP = "show_download_tip"
 
 
 def setupUserData(reset: bool = False) -> None:

@@ -118,6 +118,8 @@ class SettingsWidget(QtWidgets.QWidget):
                                       defaultButton=QMessageBox.Yes)
         if dialog == QMessageBox.Yes:
             configUtils.reSetUserData()
+            del self.userdata
+            self.userdata = configUtils.UserDataHelper()
             self.load_settings()
             QMessageBox.information(self, "信息", "设置已重置")
 
