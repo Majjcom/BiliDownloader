@@ -8,6 +8,7 @@ from PySide2.QtCore import SIGNAL, Signal, QByteArray
 from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException
 from ui_confirmwidget import Ui_ConfirmWidget
+from utils import configUtils
 
 
 class ConfirmWidget(QtWidgets.QWidget):
@@ -39,6 +40,17 @@ class ConfirmWidget(QtWidgets.QWidget):
         del self.load_thread
         if not self.err:
             self.ui.button_next.setEnabled(True)
+
+    def save_cover(self):
+        default_save_path = configUtils.getUserData(configUtils.Configs.DOWNLOAD_PATH,
+                                                    QtCore.QDir("Download").absolutePath())
+        save_path = QtWidgets.QFileDialog.getSaveFileName(self, "设置保存位置", default_save_path, "PNG图片(*.png)")
+        if len(save_path[0]) == 0:
+            return
+        self.img.save(
+            save_path[0] + (".png" if not save_path[0].endswith(".png") else '')
+        )
+        QtWidgets.QMessageBox.information(self, "信息", "保存成功")
 
     def data_update(self, back):
         self.img = QtGui.QImage(":/res/Placeholde.png")

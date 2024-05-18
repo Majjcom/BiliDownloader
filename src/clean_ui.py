@@ -12,6 +12,7 @@ def main():
             os.remove(filename)
             print("Cleaning", filename)
     f.close()
+    print("Cleaning cache")
     os.remove(".ui_compiled.cache")
 
 
