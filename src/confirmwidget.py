@@ -129,6 +129,7 @@ class LaodInfoAV(LoadInfoBase):
                 "page": i["page"],
                 "name": i["part"],
                 "title": data["title"],
+                "type": "video",
             }
             page_data.append(part)
         meta_data = {}
@@ -158,7 +159,6 @@ class LoadInfoBV(LoadInfoBase):
         show += "\n\n简介:\n" + data["desc"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
         page_data = []
-        page_id = 1
         for i in data["pages"]:
             part = {
                 "isbvid": self.format == "BV",
@@ -167,7 +167,7 @@ class LoadInfoBV(LoadInfoBase):
                 "page": i["page"],
                 "name": i["part"],
                 "title": data["title"],
-                "pageId": page_id
+                "type": "video",
             }
             page_data.append(part)
         meta_data = {}
@@ -199,6 +199,7 @@ class LoadInfoMD(LoadInfoBase):
         show += "\n\n制作:\n" + ss_data["data"]["staff"]
         cover_url = data["media"]["cover"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
+        rights = ss_data["data"]["rights"]
         page_data = []
         i = 0
         for v in ss_data["data"]["episodes"]:
@@ -209,6 +210,7 @@ class LoadInfoMD(LoadInfoBase):
                 "page": i + 1,
                 "name": v["title"] + "-" + v["long_title"],
                 "title": data["media"]["title"],
+                "type": "video"
             }
             page_data.append(part)
             i += 1
@@ -239,6 +241,7 @@ class LoadInfoEP(LoadInfoBase):
         show += "\n\n制作:\n" + data["data"]["staff"]
         cover_url = data["info"]["media"]["cover"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
+        rights = data["data"]["rights"]
         page_data = []
         i = 0
         for v in data["data"]["episodes"]:
@@ -249,6 +252,7 @@ class LoadInfoEP(LoadInfoBase):
                 "page": i + 1,
                 "name": v["title"] + "-" + v["long_title"],
                 "title": data["info"]["media"]["title"],
+                "type": "video"
             }
             page_data.append(part)
             i += 1

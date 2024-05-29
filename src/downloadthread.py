@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 
 from PySide2 import QtCore
 
-from Lib.bili_api import video, danmaku
+from Lib.bili_api import video, danmaku, bangumi
 from Lib.bili_api.utils import BiliPassport
 from Lib.xml2ass import convertMain
 from utils import configUtils
@@ -28,6 +28,9 @@ class DownloadTask(QtCore.QThread):
     def __init__(self, parent: QtCore.QObject | None = ...) -> None:
         super().__init__(parent)
         self.fource_stop = False
+        self.video_finished_size = 0
+        self.audio_finished_size = 0
+        self.total_size = 0
 
     def setup(self, task: dict):
         self.task = task
@@ -41,55 +44,11 @@ class DownloadTask(QtCore.QThread):
             self.video_finished_size + self.audio_finished_size,
             self.total_size,
         )
-        if self.video_finished_size + self.audio_finished_size == self.total_size:
+        if self.video_finished_size + self.audio_finished_size == self.total_size and self.total_size != 0:
             self.timer.stop()
             self.timer_stopped = True
 
-    def run(self):
-        self.emit(QtCore.SIGNAL("update_status(QString)"), "开始下载")
-
-        # Creat directory
-        root_dir = QtCore.QDir(self.task["path"])
-        if not root_dir.exists(self.task["title"]):
-            root_dir.mkdir(self.task["title"])
-        root_dir.cd(self.task["title"])
-
-        # Load Passport
-        passportRaw = configUtils.getUserData(configUtils.Configs.PASSPORT)
-        passport = None
-        if passportRaw is not None:
-            passportRaw = passportRaw["data"]
-            passportRaw.pop("Expires")
-            passport = BiliPassport(passportRaw)
-
-        # Get Urls
-        try_times = 0
-        while try_times < 3:
-            try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取链接")
-                get_url = None
-                if self.task["isbvid"]:
-                    get_url = video.get_video_url(
-                        bvid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
-                    )
-                else:
-                    get_url = video.get_video_url(
-                        avid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
-                    )
-                break
-            except Exception as e:
-                try_times += 1
-                self.emit(
-                    QtCore.SIGNAL("update_status(QString)"),
-                    "获取链接失败，即将重试，次数{}".format(try_times),
-                )
-                time.sleep(2)
-        else:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
-            self.task["finished"] = True
-            return
-
-        # parse urls
+    def download_dash(self, get_url: dict, root_dir: QtCore.QDir):
         video_urls: list = get_url["dash"]["video"]
         video_urls.sort(key=lambda x: x["id"], reverse=True)
         quality = self.task["quality"]
@@ -133,13 +92,6 @@ class DownloadTask(QtCore.QThread):
         self.total_size = video_size + audio_size
         self.video_finished_size = 0
         self.audio_finished_size = 0
-
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(100)
-        self.timer.timeout.connect(self.timer_timeout)
-        self.timer_stopped = False
-        self.timer.start()
-        self.timer.moveToThread(self.thread())
 
         self.emit(QtCore.SIGNAL("enable_restart()"))
 
@@ -253,20 +205,6 @@ class DownloadTask(QtCore.QThread):
             )
         devnull.close()
 
-        # Download and parse Xml Danmaku
-        if self.task["saveDanmaku"]:
-            danmaku_file_name = "{}.ass".format(self.task["name"])
-            try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载弹幕")
-                download_danmaku(
-                    root_dir.absoluteFilePath(danmaku_file_name), self.task["cid"]
-                )
-            except Exception as e:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "弹幕下载失败，已跳过")
-                if root_dir.exists(danmaku_file_name):
-                    root_dir.remove(danmaku_file_name)
-                time.sleep(1)
-
         # Cleanup
         self.emit(QtCore.SIGNAL("update_status(QString)"), "正在清理")
         root_dir.remove(video_temp_file_path)
@@ -274,6 +212,178 @@ class DownloadTask(QtCore.QThread):
             root_dir.rename(audio_temp_file_name, "{}.m4a".format(self.task["name"]))
         else:
             root_dir.remove(audio_temp_file_path)
+
+    def download_mp4(self, get_url: dict, root_dir: QtCore.QDir):
+        video_urls: list = get_url["durls"]
+        video_urls.sort(key=lambda x: x["quality"], reverse=True)
+        quality = self.task["quality"]
+        if quality > video_urls[0]["quality"]:
+            quality = video_urls[0]["quality"]
+        qid_match = []
+        for i in video_urls:
+            if i["quality"] == quality:
+                qid_match.append(i)
+        video_url = qid_match[0]["durl"][0]["url"]
+
+        # Get size
+        try_times = 0
+        while try_times < 3:
+            try:
+                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取视频流信息")
+                req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
+                with urlopen(req) as resp:
+                    video_size = int(resp.headers["content-length"])
+                break
+            except Exception as e:
+                try_times += 1
+                self.emit(
+                    QtCore.SIGNAL("update_status(QString)"),
+                    "获取视频信息失败，即将重试，次数{}".format(try_times),
+                )
+                time.sleep(2)
+        else:
+            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.task["finished"] = True
+            return
+        self.total_size = video_size
+        self.video_finished_size = 0
+        self.audio_finished_size = 0
+
+        self.emit(QtCore.SIGNAL("enable_restart()"))
+
+        # Download video
+        req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
+        video_temp_file_name = "{}_temp.mp4".format(self.task["name"])
+        video_temp_file_path = root_dir.absoluteFilePath(video_temp_file_name)
+        try_times = 0
+        while try_times < 3:
+            try:
+                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载视频")
+                with open(video_temp_file_path, "wb") as f:
+                    with urlopen(req) as resp:
+                        while True:
+                            buffer = resp.read(4096)
+                            if self.fource_stop:
+                                return
+                            if not buffer:
+                                break
+                            f.write(buffer)
+                            self.video_finished_size += len(buffer)
+                break
+            except Exception as e:
+                try_times += 1
+                self.emit(
+                    QtCore.SIGNAL("update_status(QString)"),
+                    "下载视频失败，即将重试，次数{}".format(try_times),
+                )
+                time.sleep(2)
+        else:
+            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.task["finished"] = True
+            return
+        root_dir.rename(video_temp_file_name, "{}.mp4".format(self.task["name"]))
+
+    def download_danmaku(self, root_dir: QtCore.QDir):
+        danmaku_file_name = "{}.ass".format(self.task["name"])
+        try:
+            self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载弹幕")
+            download_danmaku(
+                root_dir.absoluteFilePath(danmaku_file_name), self.task["cid"]
+            )
+        except Exception as _:
+            self.emit(QtCore.SIGNAL("update_status(QString)"), "弹幕下载失败，已跳过")
+            if root_dir.exists(danmaku_file_name):
+                root_dir.remove(danmaku_file_name)
+            time.sleep(1)
+
+    def run(self):
+        self.emit(QtCore.SIGNAL("update_status(QString)"), "开始下载")
+
+        # Creat directory
+        root_dir = QtCore.QDir(self.task["path"])
+        if not root_dir.exists(self.task["title"]):
+            root_dir.mkdir(self.task["title"])
+        root_dir.cd(self.task["title"])
+
+        # Load Passport
+        passportRaw = configUtils.getUserData(configUtils.Configs.PASSPORT)
+        passport = None
+        if passportRaw is not None:
+            passportRaw = passportRaw["data"]
+            passportRaw.pop("Expires")
+            passport = BiliPassport(passportRaw)
+
+        # Get Urls
+        try_times = 0
+        while try_times < 3:
+            try:
+                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取链接")
+                get_url = None
+                if self.task["type"] == "video":
+                    if self.task["isbvid"]:
+                        get_url = video.get_video_url(
+                            bvid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
+                        )
+                    else:
+                        get_url = video.get_video_url(
+                            avid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
+                        )
+                elif self.task["type"] == "bangumi":
+                    if self.task["isbvid"]:
+                        get_url = bangumi.get_bangumi_url(
+                            bvid=self.task["id"],
+                            cid=self.task["cid"],
+                            fnval=self.task["fnval"],
+                            passport=passport,
+                        )["video_info"]
+                    else:
+                        get_url = bangumi.get_bangumi_url(
+                            avid=self.task["id"],
+                            cid=self.task["cid"],
+                            fnval=self.task["fnval"],
+                            passport=passport,
+                        )["video_info"]
+                break
+            except Exception as e:
+                try_times += 1
+                self.emit(
+                    QtCore.SIGNAL("update_status(QString)"),
+                    "获取链接失败，即将重试，次数{}".format(try_times),
+                )
+                if try_times >= 3 and self.task["type"] == "video":
+                    self.emit(
+                        QtCore.SIGNAL("update_status(QString)"),
+                        "失败次数过多，尝试更换获取链接方式"
+                    )
+                    time.sleep(1.0)
+                    self.task["type"] = "bangumi"
+                    try_times = 0
+                time.sleep(2)
+        else:
+            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.task["finished"] = True
+            return
+
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(100)
+        self.timer.timeout.connect(self.timer_timeout)
+        self.timer_stopped = False
+        self.timer.start()
+        self.timer.moveToThread(self.thread())
+
+        # parse urls
+        if self.task["type"] == "video":
+            self.download_dash(get_url, root_dir)
+        elif self.task["type"] == "bangumi":
+            if get_url["type"] == "DASH":
+                self.download_dash(get_url, root_dir)
+            elif get_url["type"] == "MP4":
+                self.download_mp4(get_url, root_dir)
+
+        # Download and parse Xml Danmaku
+        if self.task["saveDanmaku"]:
+            self.download_danmaku(root_dir)
+
         time.sleep(0.2)
 
         self.emit(QtCore.SIGNAL("update_status(QString)"), "下载完成")

@@ -1,4 +1,5 @@
 import pickle
+import time
 import traceback
 from os.path import isdir
 
@@ -6,7 +7,7 @@ from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
 
 import style
-from Lib.bili_api import video, exceptions
+from Lib.bili_api import video, exceptions, bangumi
 from Lib.bili_api.utils.passport import BiliPassport
 from centralcheckbox import CentralCheckBox
 from ui_configwidget import Ui_ConfigWidget
@@ -91,7 +92,8 @@ class ConfigWidget(QtWidgets.QWidget):
                 "cid": i["cid"],
                 "reserveAudio": reserveAudio,
                 "saveDanmaku": box_danmaku.get_box().isChecked(),
-                "fnval": self.fnval
+                "fnval": self.fnval,
+                "type": i["type"],
             }
             self.parent().download.push_task(push)
         self.parent().input_finished()
@@ -159,7 +161,7 @@ class ConfigWidget(QtWidgets.QWidget):
             )
             self.data["download_data"].append(i)
         page = self.data["page_data"][0]
-        self.load_thread = GetVideoInfo(page["id"], page["isbvid"], page["cid"], self.fnval, self)
+        self.load_thread = GetVideoInfo(page["id"], page["isbvid"], page["cid"], self.fnval, page["type"], self)
         self.connect(
             self.load_thread,
             QtCore.SIGNAL("update_info(QByteArray, bool)"),
@@ -175,13 +177,14 @@ class ConfigWidget(QtWidgets.QWidget):
 
 class GetVideoInfo(QtCore.QThread):
     def __init__(
-        self, vid, isbvid: bool, cid, fnval: int, parent: QtCore.QObject | None = ...
+        self, vid, isbvid: bool, cid, fnval: int, type: str, parent: QtCore.QObject | None = ...
     ) -> None:
         super().__init__(parent)
         self.vid = vid
         self.isbvid = isbvid
         self.cid = cid
         self.fnval = fnval
+        self.type = type
         self.update_info = QtCore.Signal(QtCore.QByteArray, bool)
 
     def run(self):
@@ -190,22 +193,48 @@ class GetVideoInfo(QtCore.QThread):
         passport = configUtils.getUserData(configUtils.Configs.PASSPORT)
         if passport is not None:
             passport = BiliPassport(passport["data"])
-        try:
-            if self.isbvid:
-                data = video.get_video_url(bvid=self.vid, cid=self.cid, fnval=self.fnval, passport=passport)
-            else:
-                data = video.get_video_url(avid=self.vid, cid=self.cid, fnval=self.fnval, passport=passport)
-            quality = []
-            for i in range(len(data["accept_quality"])):
-                quality.append(
-                    (data["accept_quality"][i], data["accept_description"][i])
-                )
-            data = quality
-        except exceptions.NetWorkException as ex:
-            data = str(ex)
-            err = True
-        except Exception as ex:
-            data = traceback.format_exc()
+        try_times = 0
+        while try_times < 2:
+            try:
+                if self.type == "video":
+                    if self.isbvid:
+                        data = video.get_video_url(bvid=self.vid, cid=self.cid, fnval=self.fnval, passport=passport)
+                    else:
+                        data = video.get_video_url(avid=self.vid, cid=self.cid, fnval=self.fnval, passport=passport)
+                elif self.type == "bangumi":
+                    if self.isbvid:
+                        data = bangumi.get_bangumi_url(
+                            bvid=self.vid,
+                            cid=self.cid,
+                            fnval=self.fnval,
+                            passport=passport
+                        )["video_info"]
+                    else:
+                        data = bangumi.get_bangumi_url(
+                            bvid=self.vid,
+                            cid=self.cid,
+                            fnval=self.fnval,
+                            passport=passport
+                        )["video_info"]
+                quality = []
+                for i in range(len(data["accept_quality"])):
+                    quality.append(
+                        (data["accept_quality"][i], data["accept_description"][i])
+                    )
+                data = quality
+                break
+            except exceptions.NetWorkException as ex:
+                data = str(ex)
+                try_times += 1
+                if try_times >= 2 and self.type == "video":
+                    self.type = "bangumi"
+                    try_times = 0
+                time.sleep(1.0)
+            except Exception as ex:
+                data = traceback.format_exc()
+                try_times += 1
+                time.sleep(1.0)
+        else:
             err = True
         data = pickle.dumps(data)
         data = QtCore.QByteArray(data)

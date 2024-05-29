@@ -34,7 +34,11 @@ class DownloadItem(QtWidgets.QWidget):
         self.ui.label_progress.setText(
             "{} / {}".format(sizefStr(finished), sizefStr(total))
         )
-        self.ui.progressBar.setValue(round(finished / total * 100))
+        if total == 0:
+            val = 0
+        else:
+            val = round(finished / total * 100)
+        self.ui.progressBar.setValue(val)
 
     # Slot
     def update_finished(self):

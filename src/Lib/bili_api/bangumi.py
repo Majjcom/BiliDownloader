@@ -4,6 +4,9 @@ from urllib.parse import urlsplit
 from . import utils
 from .exceptions.BiliVideoIdException import BiliVideoIdException
 from .exceptions.NetWorkException import NetWorkException
+from .utils.bvid import check_bvid
+from .utils.fnval import FNVAL_PRESET
+from .utils.passport import BiliPassport
 
 API = utils.get_api(('bangumi',))
 
@@ -61,3 +64,48 @@ def get_bangumi_detailed_info(season_id: int = None, ep_id: int = None, media_id
         ))
     info = get_bangumi_info(get['result']['media_id']) if media_id is None else info
     return {'info': info, 'data': get['result']}
+
+
+def get_bangumi_url(
+    avid: int = None,
+    bvid: str = None,
+    cid: int = None,
+    fnval: int = FNVAL_PRESET().default(),
+    passport: BiliPassport = None
+):
+    api = copy.deepcopy(API["bangumi_url"])
+    url = urlsplit(api["url"])
+    params: dict = api["params"]
+    params.pop("qn")
+    params["fnval"] = fnval
+    params["cid"] = cid
+    params["fourk"] = 1
+    if bvid is not None:
+        check_bvid(bvid)
+        params.pop("avid")
+        params["bvid"] = bvid
+    elif avid is not None:
+        params.pop("bvid")
+        params["avid"] = avid
+    else:
+        raise BiliVideoIdException("你必须输入 aid, bvid 中的任意一个")
+    header = {}
+    if passport is not None:
+        header["cookie"] = passport.get_cookie()
+    get: dict = utils.network.get_data(
+        scheme=url.scheme,
+        host=url.netloc,
+        method=api["method"],
+        path=url.path,
+        query=params,
+        header=header
+    )
+
+    if get["code"] != 0:
+        raise NetWorkException("获取番剧链接错误:\n{0};\n{1};\n{2};".format(
+            get["code"],
+            api["return"]["code"].get(get["code"], "未知错误"),
+            get["message"]
+        ))
+
+    return get["result"]

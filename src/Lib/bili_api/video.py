@@ -5,6 +5,8 @@ from . import utils
 from .exceptions.BiliVideoIdException import BiliVideoIdException
 from .exceptions.NetWorkException import NetWorkException
 from .utils import wbisign
+from .utils.bvid import check_bvid
+from .utils.fnval import FNVAL_PRESET
 
 API = utils.get_api(('video',))
 HEADERS = {
@@ -13,19 +15,12 @@ HEADERS = {
 }
 
 
-def __check_bvid(bvid: str) -> None:
-    if len(bvid) != 12:
-        raise BiliVideoIdException('bvid 格式不正确: bvid 必须是一个长度为12的字符串')
-    if bvid[:2].upper() != 'BV':
-        raise BiliVideoIdException('bvid 格式错误: bvid 必须是一个由BV开头的字符串')
-
-
 def get_video_info(aid: int = None, bvid: str = None):
     api = copy.deepcopy(API['info'])
     url = urlsplit(api['url'])
     params: dict = api['params']
     if bvid is not None:
-        __check_bvid(bvid)
+        check_bvid(bvid)
         params.pop('aid')
         params['bvid'] = bvid
     elif aid is not None:
@@ -55,7 +50,7 @@ def get_video_pages(aid: int = None, bvid: str = None):
     url = urlsplit(api['url'])
     params: dict = api['params']
     if bvid is not None:
-        __check_bvid(bvid)
+        check_bvid(bvid)
         params.pop('aid')
         params['bvid'] = bvid
     elif aid is not None:
@@ -80,17 +75,6 @@ def get_video_pages(aid: int = None, bvid: str = None):
     return get['data']
 
 
-class FNVAL_PRESET:
-    Dash = 16
-    FourK = 128
-    AV1 = 2048
-    HDR = 64
-    EighK = 1024
-
-    def default(self):
-        return self.Dash | self.AV1 | self.FourK
-
-
 def get_video_url(
     avid: int = None,
     bvid: str = None,
@@ -109,7 +93,7 @@ def get_video_url(
     params['fnval'] = fnval  # 16 | 128 | 2048  # Dash 4K AV1_Codec
     params['fourk'] = 1
     if bvid is not None:
-        __check_bvid(bvid)
+        check_bvid(bvid)
         params.pop('avid')
         params['bvid'] = bvid
     elif avid is not None:
@@ -145,7 +129,7 @@ def get_video_online_count(cid: int, aid: int = None, bvid: str = None):
     params: dict = api['params']
     params['cid'] = cid
     if bvid is not None:
-        __check_bvid(bvid)
+        check_bvid(bvid)
         params.pop('aid')
         params['bvid'] = bvid
     elif aid is not None:

@@ -33,5 +33,28 @@
       "ttl": 1,
       "result": {}
     }
+  },
+  "bangumi_url": {
+    "url": "https://api.bilibili.com/pgc/player/web/v2/playurl",
+    "method": "GET",
+    "verify": true,
+    "params": {
+      "avid": "num",
+      "bvid": "str",
+      "cid": "num",
+      "qn": "num",
+      "fnver": 0,
+      "fnval": "num",
+      "fourk": "num"
+    },
+    "return": {
+      "code": {
+        "0": "成功",
+        "-400": "请求错误",
+        "-404": "无视频"
+      },
+      "message": "请求信息 str",
+      "result": "obj"
+    }
   }
 }
