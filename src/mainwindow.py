@@ -1,12 +1,12 @@
 import subprocess
 
 from PySide6 import QtWidgets, QtCore
+from ui_mainwindow import Ui_MainWindow
 
 from checkaccount import CheckAccountThread
 from dialogchangelog import show_changelog
 from dialogdownloadupdate import DialogDownloadUpdate
 from dialogupdateinfo import DialogUpdateInfo
-from ui_mainwindow import Ui_MainWindow
 from update import UpdateChecker, UpdateDownloader
 from utils import init, configUtils
 
@@ -127,7 +127,10 @@ class MainWindow(QtWidgets.QMainWindow):
     # Slot
     def downlaod_install(self, file: str):
         self.close()
-        subprocess.call(f"cmd /c \"start {file}\"")
+        subprocess.call(
+            f"cmd /c \"start {file}\"",
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
 
     def on_tab_changes(self, index):
         for tab in self.tabs:
