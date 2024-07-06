@@ -1,5 +1,6 @@
+from PySide6 import QtWidgets, QtGui
+
 from ui_dialogdownloadupdate import Ui_DialogDownloadUpdate
-from PySide2 import QtWidgets, QtGui
 
 
 class DialogDownloadUpdate(QtWidgets.QDialog):

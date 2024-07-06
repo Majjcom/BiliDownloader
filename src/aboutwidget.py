@@ -1,6 +1,6 @@
 import os.path
 
-from PySide2 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 from dialogchangelog import show_changelog
 from ui_aboutwidget import Ui_AboutWidget
@@ -13,7 +13,7 @@ class AboutWidget(QtWidgets.QWidget):
         self.ui = Ui_AboutWidget()
         self.ui.setupUi(self)
         self.ui.label_version.setText(version.__version__)
-        
+
         self.connect(
             self.ui.button_changelog,
             QtCore.SIGNAL("clicked()"),

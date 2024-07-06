@@ -37,6 +37,7 @@ def get_bangumi_detailed_info(season_id: int = None, ep_id: int = None, media_id
     api = copy.deepcopy(API['detailed_info'])
     url = urlsplit(api['url'])
     params = api['params']
+    info = None
     if media_id is not None and season_id is None and ep_id is None:
         info = get_bangumi_info(media_id)
         season_id = info['media']['season_id']

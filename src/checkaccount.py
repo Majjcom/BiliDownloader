@@ -1,6 +1,6 @@
 from enum import Enum
 
-from PySide2.QtCore import QThread, QObject, SIGNAL
+from PySide6.QtCore import QThread, QObject, SIGNAL
 
 from Lib.bili_api.utils import checkAccount
 from Lib.bili_api.utils.passport import BiliPassport

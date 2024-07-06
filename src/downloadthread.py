@@ -4,7 +4,7 @@ import sys
 import time
 from urllib.request import Request, urlopen
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 from Lib.bili_api import video, danmaku, bangumi
 from Lib.bili_api.utils import BiliPassport

@@ -1,8 +1,9 @@
-from ui_inputsetupwidget import Ui_InputSetupWidget
-from Lib.bili_api.utils import matchFomat
-from PySide2.QtCore import SIGNAL, SLOT
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import SIGNAL, SLOT
+from PySide6.QtWidgets import QWidget
+
 import style
+from Lib.bili_api.utils import matchFomat
+from ui_inputsetupwidget import Ui_InputSetupWidget
 
 
 class InputSetupWidget(QWidget):

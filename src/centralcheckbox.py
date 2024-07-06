@@ -1,5 +1,6 @@
+from PySide6.QtWidgets import QWidget
+
 from ui_centralcheckbox import Ui_CentralCheckBox
-from PySide2.QtWidgets import QWidget
 
 
 class CentralCheckBox(QWidget):

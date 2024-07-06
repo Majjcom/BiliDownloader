@@ -10,11 +10,11 @@ for i in dirs:
         tgt = i[:-3] + ".py"
         f.write(tgt + "\n")
         print(i + " => " + tgt)
-        subprocess.call(["pyside2-uic", i, "-o", tgt])
+        subprocess.call(["pyside6-uic", i, "-o", tgt])
     if i.endswith(".qrc"):
         tgt = i[:-4] + "_rc.py"
         f.write(tgt + "\n")
         print(i + " => " + tgt)
-        subprocess.call(["pyside2-rcc", i, "-o", tgt])
+        subprocess.call(["pyside6-rcc", i, "-o", tgt])
 
 f.close()

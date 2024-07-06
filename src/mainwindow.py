@@ -1,6 +1,6 @@
 import subprocess
 
-from PySide2 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 from checkaccount import CheckAccountThread
 from dialogchangelog import show_changelog
@@ -70,7 +70,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def find_update(self, new: str, info: str):
         self.ui.centralwidget.setEnabled(False)
         dialog = DialogUpdateInfo(new, info, self)
-        dialog.exec_()
+        resault = dialog.exec()
+        if resault == QtWidgets.QDialog.DialogCode.Rejected:
+            self.ui.centralwidget.setEnabled(True)
+            return
         dialog = DialogDownloadUpdate(self)
         self.download_thread = UpdateDownloader(self)
         self.download_path = configUtils.getUserData(
@@ -96,7 +99,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtCore.SLOT("downlaod_install(QString)"),
         )
         self.download_thread.start()
-        dialog.exec_()
+        dialog.exec()
 
     # Slot
     def update_finish(self):
@@ -124,7 +127,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # Slot
     def downlaod_install(self, file: str):
         self.close()
-        subprocess.call(file)
+        subprocess.call(f"cmd /c \"start {file}\"")
 
     def on_tab_changes(self, index):
         for tab in self.tabs:

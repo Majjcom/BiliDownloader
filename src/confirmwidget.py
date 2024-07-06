@@ -2,8 +2,8 @@ import pickle
 import traceback
 from urllib.request import urlopen
 
-from PySide2 import QtWidgets, QtGui, QtCore
-from PySide2.QtCore import SIGNAL, Signal, QByteArray
+from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6.QtCore import SIGNAL, Signal, QByteArray
 
 from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException
@@ -20,7 +20,7 @@ class ConfirmWidget(QtWidgets.QWidget):
 
     def on_size_change(self):
         img = self.img.scaledToWidth(
-            self.ui.cover_label.width(), QtCore.Qt.SmoothTransformation
+            self.ui.cover_label.width(), QtCore.Qt.TransformationMode.SmoothTransformation
         )
         self.ui.cover_label.setPixmap(QtGui.QPixmap.fromImage(img))
 
@@ -55,7 +55,7 @@ class ConfirmWidget(QtWidgets.QWidget):
     def data_update(self, back):
         self.img = QtGui.QImage(":/res/Placeholde.png")
         img = self.img.scaledToWidth(
-            self.ui.cover_label.width(), QtCore.Qt.SmoothTransformation
+            self.ui.cover_label.width(), QtCore.Qt.TransformationMode.SmoothTransformation
         )
         self.ui.cover_label.setPixmap(QtGui.QPixmap.fromImage(img))
         self.ui.text_info.setText("")

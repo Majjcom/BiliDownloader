@@ -1,6 +1,6 @@
 import os
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 from ui_dialogchangelog import Ui_DialogChangeLog
 
@@ -10,7 +10,7 @@ def show_changelog(parent: QtWidgets.QWidget):
         with open("CHANGELOG.md", "r", encoding="utf_8") as f:
             changelog = f.read()
         dialog = DialogChangeLog(changelog, parent)
-        dialog.exec_()
+        dialog.exec()
 
 
 class DialogChangeLog(QtWidgets.QDialog):

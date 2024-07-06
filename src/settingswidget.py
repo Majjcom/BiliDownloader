@@ -1,7 +1,7 @@
 import os
 
-from PySide2 import QtWidgets, QtCore
-from PySide2.QtWidgets import QMessageBox
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import QMessageBox
 
 import style
 from dialoglogin import DialogLogin
@@ -114,9 +114,10 @@ class SettingsWidget(QtWidgets.QWidget):
 
     # Slot
     def on_reset_button_clicked(self):
-        dialog = QMessageBox.question(self, "提示", "确定要重置所有设置吗？", buttons=QMessageBox.Yes | QMessageBox.No,
-                                      defaultButton=QMessageBox.Yes)
-        if dialog == QMessageBox.Yes:
+        dialog = QMessageBox.question(self, "提示", "确定要重置所有设置吗？",
+                                      buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                      defaultButton=QMessageBox.StandardButton.Yes)
+        if dialog == QMessageBox.StandardButton.Yes:
             configUtils.reSetUserData()
             del self.userdata
             self.userdata = configUtils.UserDataHelper()
@@ -126,5 +127,5 @@ class SettingsWidget(QtWidgets.QWidget):
     # Slot
     def on_login_button_clicked(self):
         dialog = DialogLogin(self, self.userdata)
-        dialog.exec_()
+        dialog.exec()
         self.load_settings()

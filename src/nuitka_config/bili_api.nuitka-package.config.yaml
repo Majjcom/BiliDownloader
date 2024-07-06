@@ -1,0 +1,10 @@
+# yamllint disable rule:line-length
+# yamllint disable rule:indentation
+# yamllint disable rule:comments-indentation
+# too many spelling things, spell-checker: disable
+---
+- module-name: 'Lib.bili_api'
+  data-files:
+    dest_path: 'Lib/bili_api'
+    dirs:
+      - 'utils/data'

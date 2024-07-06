@@ -3,7 +3,7 @@ import time
 from io import BytesIO
 
 import qrcode
-from PySide2 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from Lib.bili_api import user
 from Lib.bili_api.utils import cookieTools
@@ -17,6 +17,7 @@ class DialogLogin(QtWidgets.QDialog):
         self.ui = Ui_DialogLogin()
         self.ui.setupUi(self)
         self.userdata = userdata
+        self.dialog_end = False
 
         self.load_thread = LoginDataThread(self)
         self.connect(
@@ -39,6 +40,11 @@ class DialogLogin(QtWidgets.QDialog):
             QtCore.SIGNAL("update_data(QByteArray)"),
             self.update_data,
         )
+        self.connect(
+            self,
+            QtCore.SIGNAL("finished(int)"),
+            self.dialog_finished
+        )
         self.load_thread.start()
 
     # Slot
@@ -57,13 +63,22 @@ class DialogLogin(QtWidgets.QDialog):
     # Slot
     def load_finished(self):
         self.disconnect(self.load_thread)
-        del self.load_thread
         self.close()
+
+    # Slot
+    def dialog_finished(self, _resault: int):
+        self.dialog_end = True
+        while not self.load_thread.thread_finished:
+            pass
 
 
 class LoginDataThread(QtCore.QThread):
     def __init__(self, parent: QtCore.QObject | None = ...) -> None:
         super().__init__(parent)
+        self.thread_finished = False
+
+    def self_finished(self):
+        self.thread_finished = True
 
     def run(self):
         qr_info = user.get_login_url()
@@ -83,8 +98,10 @@ class LoginDataThread(QtCore.QThread):
         login_status = False
         err_msg = ""
         with user.Get_login_info(qr_info["data"]["qrcode_key"]) as getter:
-            while not login_status:
+            while not login_status and not self.parent().dialog_end:
                 status = getter.request()
+                if self.parent().dialog_end:
+                    break
                 if "code" in status:
                     if status["code"] != 0:
                         err_msg = "请求错误: " + status["message"]
@@ -105,9 +122,13 @@ class LoginDataThread(QtCore.QThread):
                     err_msg = "二维码登录错误"
                     break
                 time.sleep(1.2)
+        if self.parent().dialog_end:
+            self.self_finished()
+            return
         if not login_status:
             self.emit(QtCore.SIGNAL("update_status(QString)"), err_msg)
             time.sleep(1)
+            self.self_finished()
             return
         cookie = cookieTools.get_cookie(status["data"]["url"])
         ret = {"ts": status["data"]["timestamp"], "data": cookie}
@@ -115,3 +136,4 @@ class LoginDataThread(QtCore.QThread):
         ret = QtCore.QByteArray(ret)
         self.emit(QtCore.SIGNAL("update_data(QByteArray)"), ret)
         time.sleep(1)
+        self.self_finished()

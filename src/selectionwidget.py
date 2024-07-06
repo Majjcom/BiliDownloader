@@ -1,9 +1,9 @@
 import pickle
 
-from PySide2 import QtWidgets, QtCore
-from ui_selectionwidget import Ui_SelectionWidget
+from PySide6 import QtWidgets, QtCore
 
 from centralcheckbox import CentralCheckBox
+from ui_selectionwidget import Ui_SelectionWidget
 
 SELECTTON_HELP = """输入你要下载的区段：
 

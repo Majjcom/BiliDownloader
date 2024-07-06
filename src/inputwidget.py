@@ -1,7 +1,7 @@
 from typing import List
 
-from PySide2.QtCore import SIGNAL
-from PySide2.QtWidgets import QWidget, QMainWindow
+from PySide6.QtCore import SIGNAL
+from PySide6.QtWidgets import QWidget, QMainWindow
 
 from configwidget import ConfigWidget
 from confirmwidget import ConfirmWidget
@@ -118,7 +118,7 @@ class InputWidget(QWidget):
         if not show:
             return
         dialog = DialogDownloadTip("提示", "内容已加入下载队列，您可以回到输入界面继续下载其他内容", "不再提醒", self)
-        dialog.exec_()
+        dialog.exec()
         res = dialog.getResult()
         if res is True:
             configUtils.setUserData(configUtils.Configs.SHOW_DOWNLOAD_TIP, False)
