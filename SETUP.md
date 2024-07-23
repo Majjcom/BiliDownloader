@@ -25,7 +25,7 @@ python3 -m venv ./venv
 pip install -r requirements.txt
 ```
 ### 运行前准备
-下载支持AV1的[ffmpeg](https://majjcom.lanzouy.com/iX5kY18c1dhi)可执行文件，并将`ffmpeg`文件夹解压至`main.py`所在的目录下
+下载支持AV1的[ffmpeg](https://majjcom.lanzouo.com/ipE9324dv8sh)可执行文件，并将`ffmpeg`文件夹解压至`main.py`所在的目录下
 
 目录结构大概是这样：
 
