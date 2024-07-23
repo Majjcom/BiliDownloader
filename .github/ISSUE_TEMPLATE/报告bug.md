@@ -17,8 +17,8 @@ assignees: ''
 3. 
 4. 
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**预期的效果**
+请描述一下你对该程序预期的效果
 
 **屏幕截图**
 如果可以的话，请上传发生错误的屏幕截图
