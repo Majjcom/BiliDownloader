@@ -18,8 +18,12 @@ video_codec_id = {
 }
 
 video_codec_match = {}
-for i in video_codec_id:
-    video_codec_match[video_codec_id[i]] = i
+for _i in video_codec_id:
+    video_codec_match[video_codec_id[_i]] = _i
+
+# style
+qt_styles = ["default"]
+qt_styles += QtWidgets.QStyleFactory.keys()
 
 
 class SettingsWidget(QtWidgets.QWidget):
@@ -32,6 +36,7 @@ class SettingsWidget(QtWidgets.QWidget):
         for i in video_codec_match:
             codecs.append(i)
         self.ui.combo_codec.addItems(codecs)
+        self.ui.combo_style.addItems(qt_styles)
         self.connect(
             self.ui.button_path,
             QtCore.SIGNAL("clicked()"),
@@ -67,6 +72,7 @@ class SettingsWidget(QtWidgets.QWidget):
         codec = self.userdata.get(self.userdata.CONFIGS.VIDEO_CODEC, 7)
         max_thread_count = self.userdata.get(self.userdata.CONFIGS.MAX_THREAD_COUNT, 4)
         ultra_resolution = self.userdata.get(self.userdata.CONFIGS.ULTRA_RESOLUTION, False)
+        qt_style = self.userdata.get(self.userdata.CONFIGS.QT_STYLE, "default")
         self.ui.spin_threads.setValue(max_thread_count)
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.ui.line_path.setText(path)
@@ -74,6 +80,7 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ui.check_danmaku.setChecked(danmaku)
         self.ui.check_hiper.setChecked(ultra_resolution)
         self.ui.line_login.setText("未登录" if passport is None else "已登录")
+        self.ui.combo_style.setCurrentText(qt_style)
 
     def save_settings(self):
         path = self.ui.line_path.text()
@@ -82,12 +89,14 @@ class SettingsWidget(QtWidgets.QWidget):
         codec = video_codec_match[self.ui.combo_codec.currentText()]
         max_thread_count = self.ui.spin_threads.value()
         ultra_resolution = self.ui.check_hiper.isChecked()
+        qt_style = self.ui.combo_style.currentText()
         self.userdata.set(self.userdata.CONFIGS.VIDEO_CODEC, codec)
         self.userdata.set(self.userdata.CONFIGS.DOWNLOAD_PATH, path)
         self.userdata.set(self.userdata.CONFIGS.RESERVE_AUDIO, audio)
         self.userdata.set(self.userdata.CONFIGS.SAVE_DANMAKU, danmaku)
         self.userdata.set(self.userdata.CONFIGS.MAX_THREAD_COUNT, max_thread_count)
         self.userdata.set(self.userdata.CONFIGS.ULTRA_RESOLUTION, ultra_resolution)
+        self.userdata.set(self.userdata.CONFIGS.QT_STYLE, qt_style)
         self.userdata.save()
 
     def update_tab_changes(self, old, now):

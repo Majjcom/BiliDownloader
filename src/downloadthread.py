@@ -31,6 +31,9 @@ class DownloadTask(QtCore.QThread):
         self.video_finished_size = 0
         self.audio_finished_size = 0
         self.total_size = 0
+        self.task = None
+        self.timer_stopped = False
+        self.timer = None
 
     def setup(self, task: dict):
         self.task = task
@@ -78,7 +81,7 @@ class DownloadTask(QtCore.QThread):
                 with urlopen(req) as resp:
                     audio_size = int(resp.headers["content-length"])
                 break
-            except Exception as e:
+            except Exception as _e:
                 try_times += 1
                 self.emit(
                     QtCore.SIGNAL("update_status(QString)"),
@@ -114,7 +117,7 @@ class DownloadTask(QtCore.QThread):
                             f.write(buffer)
                             self.video_finished_size += len(buffer)
                 break
-            except Exception as e:
+            except Exception as _e:
                 try_times += 1
                 self.emit(
                     QtCore.SIGNAL("update_status(QString)"),
@@ -145,7 +148,7 @@ class DownloadTask(QtCore.QThread):
                             f.write(buffer)
                             self.audio_finished_size += len(buffer)
                 break
-            except Exception as e:
+            except Exception as _e:
                 try_times += 1
                 self.emit(
                     QtCore.SIGNAL("update_status(QString)"),
@@ -234,7 +237,7 @@ class DownloadTask(QtCore.QThread):
                 with urlopen(req) as resp:
                     video_size = int(resp.headers["content-length"])
                 break
-            except Exception as e:
+            except Exception as _e:
                 try_times += 1
                 self.emit(
                     QtCore.SIGNAL("update_status(QString)"),
@@ -270,7 +273,7 @@ class DownloadTask(QtCore.QThread):
                             f.write(buffer)
                             self.video_finished_size += len(buffer)
                 break
-            except Exception as e:
+            except Exception as _e:
                 try_times += 1
                 self.emit(
                     QtCore.SIGNAL("update_status(QString)"),
@@ -344,7 +347,7 @@ class DownloadTask(QtCore.QThread):
                             passport=passport,
                         )["video_info"]
                 break
-            except Exception as e:
+            except Exception as _e:
                 try_times += 1
                 self.emit(
                     QtCore.SIGNAL("update_status(QString)"),
@@ -379,6 +382,9 @@ class DownloadTask(QtCore.QThread):
                 self.download_dash(get_url, root_dir)
             elif get_url["type"] == "MP4":
                 self.download_mp4(get_url, root_dir)
+
+        if self.fource_stop:
+            return
 
         # Download and parse Xml Danmaku
         if self.task["saveDanmaku"]:

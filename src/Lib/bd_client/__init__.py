@@ -5,8 +5,8 @@ from random import randint as _randint
 
 from Crypto.Cipher import AES as _AES
 
-from .rconn_client import rconn as _rconn
 from .const import CONST_KEY as _CONST_KEY
+from .rconn_client import rconn as _rconn
 
 
 class BDClient:

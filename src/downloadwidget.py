@@ -35,7 +35,9 @@ class DownloadWidget(QtWidgets.QWidget):
 
     def push_task(self, task: dict):
         task["widget"] = DownloadItem(self)
-        task["item"] = QtWidgets.QListWidgetItem()
+        item = QtWidgets.QListWidgetItem()
+        item.setSizeHint(QtCore.QSize(0, 106))
+        task["item"] = item
         self.tasks.insert(0, task)
         self.ui.listWidget.addItem(task["item"])
         self.ui.listWidget.setItemWidget(task["item"], task["widget"])

@@ -1,4 +1,5 @@
 import hashlib
+import os.path
 import time
 import traceback
 from urllib.request import Request, urlopen
@@ -9,6 +10,8 @@ from Lib.bd_client import BDClient
 from utils import version
 
 HOST = "www.majjcom.site"
+PORT = 11289
+NO_UPDATE = False
 
 
 class UpdateChecker(QtCore.QThread):
@@ -17,7 +20,9 @@ class UpdateChecker(QtCore.QThread):
         self.timer_finished = False
 
     def run(self) -> None:
-        c = BDClient(HOST, 11289)
+        if NO_UPDATE:
+            return
+        c = BDClient(HOST, PORT)
         get = c.request({
             "act": "ver",
             "ver": version.__version__
@@ -27,7 +32,7 @@ class UpdateChecker(QtCore.QThread):
         if not version.check_update(new_ver):
             return
         del c
-        c = BDClient(HOST, 11289)
+        c = BDClient(HOST, PORT)
         get = c.request({
             "act": "info",
             "ver": version.__version__
@@ -40,6 +45,15 @@ class UpdateChecker(QtCore.QThread):
 class UpdateDownloader(QtCore.QThread):
     def __init__(self, parent: QtCore.QObject | None = ...) -> None:
         super().__init__(parent)
+        self.timer_finished = False
+        self.dir_path = None
+        self.url = None
+        self.file_hash = None
+        self.file_name = None
+        self.save_path = None
+        self.size = None
+        self.total = None
+        self.timer = None
 
     def setup(self, path: str):
         self.timer_finished = False
@@ -56,7 +70,7 @@ class UpdateDownloader(QtCore.QThread):
 
     def run(self):
         try:
-            s = BDClient(HOST, 11289)
+            s = BDClient(HOST, PORT)
             get = s.request({
                 "act": "url",
                 "ver": version.__version__
@@ -66,6 +80,19 @@ class UpdateDownloader(QtCore.QThread):
             self.file_hash = get["hash"]
             self.file_name = get["name"]
             self.save_path = QtCore.QDir(self.dir_path).absoluteFilePath(self.file_name)
+
+            if os.path.exists(self.save_path):
+                md5_re = hashlib.md5()
+                with open(self.save_path, "rb") as f:
+                    while True:
+                        data = f.read(4096)
+                        if len(data) == 0:
+                            break
+                        md5_re.update(data)
+                if md5_re.hexdigest().lower() == self.file_hash.lower():
+                    self.emit(QtCore.SIGNAL("update_process(int, int)"), 100, 100)
+                    self.emit(QtCore.SIGNAL("downlaod_install(QString)"), self.save_path)
+                    return
 
             self.size = 0
             self.total = 0

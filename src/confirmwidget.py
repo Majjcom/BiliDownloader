@@ -17,6 +17,8 @@ class ConfirmWidget(QtWidgets.QWidget):
         self.ui = Ui_ConfirmWidget()
         self.ui.setupUi(self)
         self.err = True
+        self.img = None
+        self.meta = None
 
     def on_size_change(self):
         img = self.img.scaledToWidth(
@@ -52,7 +54,7 @@ class ConfirmWidget(QtWidgets.QWidget):
         )
         QtWidgets.QMessageBox.information(self, "信息", "保存成功")
 
-    def data_update(self, back):
+    def data_update(self, _back):
         self.img = QtGui.QImage(":/res/Placeholde.png")
         img = self.img.scaledToWidth(
             self.ui.cover_label.width(), QtCore.Qt.TransformationMode.SmoothTransformation
@@ -60,8 +62,8 @@ class ConfirmWidget(QtWidgets.QWidget):
         self.ui.cover_label.setPixmap(QtGui.QPixmap.fromImage(img))
         self.ui.text_info.setText("")
         self.ui.button_next.setDisabled(True)
-        format, content = self.parent().input_pages[0].get_content()
-        self.load_thread = load_map[format](self, content)
+        fmt, content = self.parent().input_pages[0].get_content()
+        self.load_thread = load_map[fmt](self, content)
         self.connect(
             self.load_thread,
             SIGNAL("update_info(QString, bool)"),
@@ -82,9 +84,9 @@ class ConfirmWidget(QtWidgets.QWidget):
 
 
 class LoadInfoBase(QtCore.QThread):
-    def __init__(self, parent: ConfirmWidget, format: str, content: str) -> None:
+    def __init__(self, parent: ConfirmWidget, fmt: str, content: str) -> None:
         super(LoadInfoBase, self).__init__(parent)
-        self.format = format
+        self.format = fmt
         self.content = content
         self.update_imgae = Signal(QtGui.QImage, name="update_imgae")
         self.update_info = Signal(str, bool, name="update_info")
@@ -132,9 +134,10 @@ class LaodInfoAV(LoadInfoBase):
                 "type": "video",
             }
             page_data.append(part)
-        meta_data = {}
-        meta_data["title"] = data["title"]
-        meta_data["page_data"] = page_data
+        meta_data = {
+            "title": data["title"],
+            "page_data": page_data
+        }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)
@@ -170,9 +173,10 @@ class LoadInfoBV(LoadInfoBase):
                 "type": "video",
             }
             page_data.append(part)
-        meta_data = {}
-        meta_data["title"] = data["title"]
-        meta_data["page_data"] = page_data
+        meta_data = {
+            "title": data["title"],
+            "page_data": page_data
+        }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)
@@ -199,7 +203,6 @@ class LoadInfoMD(LoadInfoBase):
         show += "\n\n制作:\n" + ss_data["data"]["staff"]
         cover_url = data["media"]["cover"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
-        rights = ss_data["data"]["rights"]
         page_data = []
         i = 0
         for v in ss_data["data"]["episodes"]:
@@ -214,9 +217,10 @@ class LoadInfoMD(LoadInfoBase):
             }
             page_data.append(part)
             i += 1
-        meta_data = {}
-        meta_data["title"] = data["media"]["season_id"]
-        meta_data["page_data"] = page_data
+        meta_data = {
+            "title": data["media"]["season_id"],
+            "page_data": page_data
+        }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)
@@ -241,7 +245,6 @@ class LoadInfoEP(LoadInfoBase):
         show += "\n\n制作:\n" + data["data"]["staff"]
         cover_url = data["info"]["media"]["cover"]
         self.emit(SIGNAL("update_info(QString, bool)"), show, False)
-        rights = data["data"]["rights"]
         page_data = []
         i = 0
         for v in data["data"]["episodes"]:
@@ -256,9 +259,10 @@ class LoadInfoEP(LoadInfoBase):
             }
             page_data.append(part)
             i += 1
-        meta_data = {}
-        meta_data["title"] = data["info"]["media"]["title"]
-        meta_data["page_data"] = page_data
+        meta_data = {
+            "title": data["info"]["media"]["title"],
+            "page_data": page_data
+        }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)

@@ -20,6 +20,8 @@ class InputWidget(QWidget):
 
         self.input_pages: List[QWidget] = []
         self.current_input_page = 0
+        self.mainwindow = None
+        self.download = None
 
         self.load_pages()
 

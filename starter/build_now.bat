@@ -6,6 +6,6 @@ call "D:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Bu
 
 @echo Start Build...
 
-devenv %cd%\starter.sln /Rebuild "Release|x86"
+devenv %cd%\starter.sln /Rebuild "Release|x64"
 
 @echo Build finish...

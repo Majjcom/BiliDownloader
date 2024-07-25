@@ -22,8 +22,8 @@ video_codec_id = {
 }
 
 video_codec_match = {}
-for i in video_codec_id:
-    video_codec_match[video_codec_id[i]] = i
+for _i in video_codec_id:
+    video_codec_match[video_codec_id[_i]] = _i
 
 
 def get_fnval(ultra: bool):
@@ -36,9 +36,11 @@ def get_fnval(ultra: bool):
 class ConfigWidget(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = ...) -> None:
         super().__init__(parent)
+        self.quality_match = {}
         self.ui = Ui_ConfigWidget()
         self.ui.setupUi(self)
         self.fnval = get_fnval(False)
+        self.data = None
         codecs = []
         for i in video_codec_match:
             codecs.append(i)
@@ -128,7 +130,7 @@ class ConfigWidget(QtWidgets.QWidget):
         self.disconnect(self.load_thread)
         del self.load_thread
 
-    def data_update(self, back):
+    def data_update(self, _back):
         self.ui.widget.setEnabled(False)
         self.ui.button_submit.setEnabled(False)
         self.ui.combo_quality.clear()
@@ -177,14 +179,14 @@ class ConfigWidget(QtWidgets.QWidget):
 
 class GetVideoInfo(QtCore.QThread):
     def __init__(
-        self, vid, isbvid: bool, cid, fnval: int, type: str, parent: QtCore.QObject | None = ...
+        self, vid, isbvid: bool, cid, fnval: int, type_: str, parent: QtCore.QObject | None = ...
     ) -> None:
         super().__init__(parent)
         self.vid = vid
         self.isbvid = isbvid
         self.cid = cid
         self.fnval = fnval
-        self.type = type
+        self.type = type_
         self.update_info = QtCore.Signal(QtCore.QByteArray, bool)
 
     def run(self):
@@ -230,7 +232,7 @@ class GetVideoInfo(QtCore.QThread):
                     self.type = "bangumi"
                     try_times = 0
                 time.sleep(1.0)
-            except Exception as ex:
+            except Exception as _ex:
                 data = traceback.format_exc()
                 try_times += 1
                 time.sleep(1.0)

@@ -13,6 +13,7 @@ class Configs:
     PASSPORT = "passport"
     ULTRA_RESOLUTION = "ultra_resolution"
     SHOW_DOWNLOAD_TIP = "show_download_tip"
+    QT_STYLE = "qt_ui_style"
 
 
 def setupUserData(reset: bool = False) -> None:

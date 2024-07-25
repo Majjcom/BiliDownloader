@@ -14,6 +14,7 @@ class DownloadItem(QtWidgets.QWidget):
         self.ui = Ui_DownloadItem()
         self.ui.setupUi(self)
         self.button_status = 0  # 0: Restart, 1: Open
+        self.info = None
         self.connect(
             self.ui.button_open,
             QtCore.SIGNAL("clicked()"),
@@ -50,6 +51,7 @@ class DownloadItem(QtWidgets.QWidget):
         self.ui.button_open.setEnabled(True)
 
     def re_start(self):
+        self.ui.button_open.setEnabled(False)
         self.info["thread"].disconnect(self)
         self.info["thread"].t_stop()
         thread = DownloadTask(self.info["parent"])
@@ -85,9 +87,9 @@ class DownloadItem(QtWidgets.QWidget):
         if self.button_status == 0:
             self.re_start()
         elif self.button_status == 1:
-            dir = QtCore.QDir(self.info["path"])
-            dir.cd(self.info["title"])
+            directory = QtCore.QDir(self.info["path"])
+            directory.cd(self.info["title"])
             if sys.platform == "linux":
                 QtWidgets.QMessageBox.information(self.info["parent"], "信息", "在Linux中暂时无法使用该功能")
                 return
-            os.startfile(dir.absolutePath(), "explore")
+            os.startfile(directory.absolutePath(), "explore")

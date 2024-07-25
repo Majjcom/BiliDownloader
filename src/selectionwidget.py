@@ -19,6 +19,8 @@ class SelectionWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.ui = Ui_SelectionWidget()
         self.ui.setupUi(self)
+        self.meta = None
+        self.data = None
         self.connect(
             self.ui.button_setSelection,
             QtCore.SIGNAL("clicked()"),
@@ -34,12 +36,18 @@ class SelectionWidget(QtWidgets.QWidget):
         if back:
             return
         self.ui.table_selection.setRowCount(0)
+        self.ui.button_next.setEnabled(True)
         self.meta: QtCore.QByteArray = self.parent().input_pages[1].meta
         self.data = pickle.loads(self.meta.data())
         for i in self.data["page_data"]:
             box = CentralCheckBox()
             box.get_box().setChecked(True)
             i["box"] = box
+            self.connect(
+                box.get_box(),
+                QtCore.SIGNAL("toggled(bool)"),
+                self.on_check_button_changed
+            )
             item_text = QtWidgets.QTableWidgetItem(i["name"])
             self.ui.table_selection.setRowCount(self.ui.table_selection.rowCount() + 1)
             self.ui.table_selection.setCellWidget(
@@ -48,6 +56,16 @@ class SelectionWidget(QtWidgets.QWidget):
             self.ui.table_selection.setItem(
                 self.ui.table_selection.rowCount() - 1, 1, item_text
             )
+
+    # Slot
+    def on_check_button_changed(self, _checked: bool):
+        count = 0
+        for i in self.data["page_data"]:
+            box = i["box"]
+            box = box.get_box()
+            if box.isChecked():
+                count += 1
+        self.ui.button_next.setEnabled(count > 0)
 
     # Slot
     def on_help_button_clicked(self):
