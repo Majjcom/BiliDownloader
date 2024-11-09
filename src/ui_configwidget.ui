@@ -144,6 +144,11 @@
         </column>
         <column>
          <property name="text">
+          <string>仅下载音频</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
           <string>下载项</string>
          </property>
         </column>

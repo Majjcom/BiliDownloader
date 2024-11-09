@@ -73,10 +73,12 @@ class SettingsWidget(QtWidgets.QWidget):
         max_thread_count = self.userdata.get(self.userdata.CONFIGS.MAX_THREAD_COUNT, 4)
         ultra_resolution = self.userdata.get(self.userdata.CONFIGS.ULTRA_RESOLUTION, False)
         qt_style = self.userdata.get(self.userdata.CONFIGS.QT_STYLE, "default")
+        only_audio = self.userdata.get(self.userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, False)
         self.ui.spin_threads.setValue(max_thread_count)
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.ui.line_path.setText(path)
         self.ui.check_reserve_audio.setChecked(audio)
+        self.ui.check_audio.setChecked(only_audio)
         self.ui.check_danmaku.setChecked(danmaku)
         self.ui.check_hiper.setChecked(ultra_resolution)
         self.ui.line_login.setText("未登录" if passport is None else "已登录")
@@ -90,6 +92,7 @@ class SettingsWidget(QtWidgets.QWidget):
         max_thread_count = self.ui.spin_threads.value()
         ultra_resolution = self.ui.check_hiper.isChecked()
         qt_style = self.ui.combo_style.currentText()
+        only_audio = self.ui.check_audio.isChecked()
         self.userdata.set(self.userdata.CONFIGS.VIDEO_CODEC, codec)
         self.userdata.set(self.userdata.CONFIGS.DOWNLOAD_PATH, path)
         self.userdata.set(self.userdata.CONFIGS.RESERVE_AUDIO, audio)
@@ -97,6 +100,7 @@ class SettingsWidget(QtWidgets.QWidget):
         self.userdata.set(self.userdata.CONFIGS.MAX_THREAD_COUNT, max_thread_count)
         self.userdata.set(self.userdata.CONFIGS.ULTRA_RESOLUTION, ultra_resolution)
         self.userdata.set(self.userdata.CONFIGS.QT_STYLE, qt_style)
+        self.userdata.set(self.userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, only_audio)
         self.userdata.save()
 
     def update_tab_changes(self, old, now):

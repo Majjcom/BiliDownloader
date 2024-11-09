@@ -38,7 +38,14 @@ pip install -r requirements.txt
  |-...
 ```
 
+仓库隐藏了服务密钥，可以使用离线模式，修改如下：
 
+添加`const.py`到`src/Lib/bd_client`下，并添加以下内容：
+```python
+CONST_KEY=""
+```
+
+修改`src/update.py`，将`NO_UPDATE`设置为True
 
 ### 运行
 在当前目录下运行以下命令
@@ -47,3 +54,29 @@ python compile_ui.py
 pythonw main.py
 ```
 当然，也可以写 shell 文件来快速启动，这里不再讲解，参照此处的 shell 即可
+
+## 2. Linux构建独立可执行文件
+
+### 构建环境准备
+
+先根据上文准备好基本的运行环境。
+
+再安装nuitka构建工具：
+
+```shell
+python -m pip install -U pip
+pip install nuitka
+```
+
+### 构建
+
+构建可能需要`patchelf`的包，请自行安装
+
+```shell
+cd src
+python compile_ui.py
+chmod +x ./build_nuitka_linux.sh
+./build_nuitka_linux.sh
+```
+
+构建将输出在`dist.nuitka.linux`目录下

@@ -74,9 +74,13 @@ class DownloadTask(QtCore.QThread):
         while try_times < 3:
             try:
                 self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取视频流信息")
-                req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
-                with urlopen(req) as resp:
-                    video_size = int(resp.headers["content-length"])
+                if self.task["onlyAudio"]:
+                    video_size = 0
+                else:
+                    req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
+                    with urlopen(req) as resp:
+                        video_size = int(resp.headers["content-length"])
+                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取音频流信息")
                 req = Request(url=audio_url, method="GET", headers=_DEFAULT_HEADERS)
                 with urlopen(req) as resp:
                     audio_size = int(resp.headers["content-length"])
@@ -99,9 +103,34 @@ class DownloadTask(QtCore.QThread):
         self.emit(QtCore.SIGNAL("enable_restart()"))
 
         # Download video
-        req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
         video_temp_file_name = "{}_temp.mp4".format(self.task["name"])
         video_temp_file_path = root_dir.absoluteFilePath(video_temp_file_name)
+        if not self.task["onlyAudio"]:
+            self.download_dash_video(video_url, video_temp_file_path)
+
+        # Download audio
+        audio_temp_file_name = "{}_temp.m4a".format(self.task["name"])
+        audio_temp_file_path = root_dir.absoluteFilePath(audio_temp_file_name)
+        self.download_dash_audio(audio_url, audio_temp_file_path)
+
+        # End Download
+        while not self.timer_stopped:
+            time.sleep(0.1)
+
+        if not self.task["onlyAudio"]:
+            self.dash_ffmpeg_merge_video(root_dir, video_temp_file_path, audio_temp_file_path)
+
+        # Cleanup
+        self.emit(QtCore.SIGNAL("update_status(QString)"), "正在清理")
+        root_dir.remove(video_temp_file_path)
+        if self.task["reserveAudio"] or self.task["onlyAudio"]:
+            root_dir.rename(audio_temp_file_name, "{}.m4a".format(self.task["name"]))
+        else:
+            root_dir.remove(audio_temp_file_path)
+
+    def download_dash_video(self, video_url: str, video_temp_file_path: str):
+        # Download video
+        req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
         try_times = 0
         while try_times < 3:
             try:
@@ -129,10 +158,8 @@ class DownloadTask(QtCore.QThread):
             self.task["finished"] = True
             return
 
-        # Download audio
+    def download_dash_audio(self, audio_url, audio_temp_file_path):
         req = Request(url=audio_url, method="GET", headers=_DEFAULT_HEADERS)
-        audio_temp_file_name = "{}_temp.m4a".format(self.task["name"])
-        audio_temp_file_path = root_dir.absoluteFilePath(audio_temp_file_name)
         try_times = 0
         while try_times < 3:
             try:
@@ -160,11 +187,7 @@ class DownloadTask(QtCore.QThread):
             self.task["finished"] = True
             return
 
-        # End Download
-        while not self.timer_stopped:
-            time.sleep(0.1)
-
-        # ffmpeg
+    def dash_ffmpeg_merge_video(self, root_dir: QtCore.QDir, video_temp_file_path, audio_temp_file_path):
         self.emit(QtCore.SIGNAL("update_status(QString)"), "正在使用ffmpeg合并")
         out_name = "{}.mp4".format(self.task["name"])
         if root_dir.exists(out_name):
@@ -207,14 +230,6 @@ class DownloadTask(QtCore.QThread):
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
         devnull.close()
-
-        # Cleanup
-        self.emit(QtCore.SIGNAL("update_status(QString)"), "正在清理")
-        root_dir.remove(video_temp_file_path)
-        if self.task["reserveAudio"]:
-            root_dir.rename(audio_temp_file_name, "{}.m4a".format(self.task["name"]))
-        else:
-            root_dir.remove(audio_temp_file_path)
 
     def download_mp4(self, get_url: dict, root_dir: QtCore.QDir):
         video_urls: list = get_url["durls"]

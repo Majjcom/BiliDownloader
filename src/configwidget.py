@@ -83,6 +83,8 @@ class ConfigWidget(QtWidgets.QWidget):
         reserveAudio = userdata.get(userdata.CONFIGS.RESERVE_AUDIO, False)
         for i in self.data["download_data"]:
             box_danmaku: CentralCheckBox = i["box_danmaku"]
+            box_audio: CentralCheckBox = i["box_audio"]
+            onlyAudio = box_audio.get_box().isChecked()
             push = {
                 "path": self.ui.line_path.text(),
                 "quality": quality,
@@ -93,6 +95,7 @@ class ConfigWidget(QtWidgets.QWidget):
                 "isbvid": i["isbvid"],
                 "cid": i["cid"],
                 "reserveAudio": reserveAudio,
+                "onlyAudio": onlyAudio,
                 "saveDanmaku": box_danmaku.get_box().isChecked(),
                 "fnval": self.fnval,
                 "type": i["type"],
@@ -147,7 +150,7 @@ class ConfigWidget(QtWidgets.QWidget):
             )
         )
         download_danmaku = userdata.get(userdata.CONFIGS.SAVE_DANMAKU, False)
-        # download_danmaku = configUtils.getUserData(configUtils.Configs.SAVE_DANMAKU, False)
+        only_audio = userdata.get(userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, False)
         self.data["download_data"] = []
         for i in self.data["page_data"]:
             if not i["box"].get_box().isChecked():
@@ -155,11 +158,16 @@ class ConfigWidget(QtWidgets.QWidget):
             self.ui.table_downloads.setRowCount(self.ui.table_downloads.rowCount() + 1)
             i["box_danmaku"] = CentralCheckBox()
             i["box_danmaku"].get_box().setChecked(download_danmaku)
+            i["box_audio"] = CentralCheckBox()
+            i["box_audio"].get_box().setChecked(only_audio)
             self.ui.table_downloads.setCellWidget(
                 self.ui.table_downloads.rowCount() - 1, 0, i["box_danmaku"]
             )
+            self.ui.table_downloads.setCellWidget(
+                self.ui.table_downloads.rowCount() - 1, 1, i["box_audio"]
+            )
             self.ui.table_downloads.setItem(
-                self.ui.table_downloads.rowCount() - 1, 1, QTableWidgetItem(i["name"])
+                self.ui.table_downloads.rowCount() - 1, 2, QTableWidgetItem(i["name"])
             )
             self.data["download_data"].append(i)
         page = self.data["page_data"][0]
