@@ -15,6 +15,7 @@ class Configs:
     SHOW_DOWNLOAD_TIP = "show_download_tip"
     QT_STYLE = "qt_ui_style"
     DOWNLOAD_AUDIO_ONLY = "download_audio_only"
+    APPLY_HIGH_DPI = "apply_high_dpi"
 
 
 def setupUserData(reset: bool = False) -> None:

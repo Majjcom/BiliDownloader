@@ -29,8 +29,14 @@ def update_style(app: QtWidgets.QApplication):
         app.setStyle(QtWidgets.QStyleFactory.create(style))
 
 
+def updateHighDpi():
+    highdpi = configUtils.getUserData(configUtils.Configs.APPLY_HIGH_DPI, True)
+    if not highdpi:
+        os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+
+
 if __name__ == "__main__":
-    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+    updateHighDpi()
     app = QtWidgets.QApplication(sys.argv)
 
     update_cwd()

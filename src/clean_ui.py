@@ -7,7 +7,7 @@ def main():
         return
     f = open(".ui_compiled.cache", "r")
     for line in f:
-        filename = line.strip()
+        filename = line.strip().split(" ")[0]
         if os.path.exists(filename):
             os.remove(filename)
             print("Cleaning", filename)
