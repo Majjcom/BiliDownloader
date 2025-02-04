@@ -40,6 +40,9 @@ def main():
                 cache.pop(tgt)
                 continue
             f.write(tgt + " " + hashhex + "\n")
+            if cache:
+                if tgt in cache:
+                    cache.pop(tgt)
             print(i + " => " + tgt)
             subprocess.call(["pyside6-uic", i, "-o", tgt])
         if i.endswith(".qrc"):
@@ -52,6 +55,9 @@ def main():
                 cache.pop(tgt)
                 continue
             f.write(tgt + " " + hashhex + "\n")
+            if cache:
+                if tgt in cache:
+                    cache.pop(tgt)
             print(i + " => " + tgt)
             subprocess.call(["pyside6-rcc", i, "-o", tgt])
 

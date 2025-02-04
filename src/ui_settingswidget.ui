@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>SettingsWidget</class>
  <widget class="QWidget" name="SettingsWidget">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>526</width>
-    <height>438</height>
-   </rect>
-  </property>
   <property name="font">
    <font>
     <family>HarmonyOS Sans SC</family>
@@ -55,7 +47,7 @@
         <x>0</x>
         <y>0</y>
         <width>526</width>
-        <height>438</height>
+        <height>511</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
@@ -357,6 +349,22 @@
    <header>specialcoloredlabel.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>scrollArea</tabstop>
+  <tabstop>line_path</tabstop>
+  <tabstop>button_path</tabstop>
+  <tabstop>line_login</tabstop>
+  <tabstop>button_login</tabstop>
+  <tabstop>spin_threads</tabstop>
+  <tabstop>combo_codec</tabstop>
+  <tabstop>combo_style</tabstop>
+  <tabstop>check_reserve_audio</tabstop>
+  <tabstop>check_hiper</tabstop>
+  <tabstop>check_highdpi</tabstop>
+  <tabstop>check_audio</tabstop>
+  <tabstop>check_danmaku</tabstop>
+  <tabstop>button_reset</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

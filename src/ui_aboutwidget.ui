@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>AboutWidget</class>
  <widget class="QWidget" name="AboutWidget">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>553</width>
-    <height>498</height>
-   </rect>
-  </property>
   <property name="font">
    <font>
     <family>HarmonyOS Sans SC</family>
@@ -59,7 +51,7 @@
    <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Copyright (C) 2021-2024 Majjcom</string>
+      <string>Copyright (C) 2021-2025 Majjcom</string>
      </property>
     </widget>
    </item>

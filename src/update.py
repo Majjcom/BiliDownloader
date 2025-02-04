@@ -49,6 +49,7 @@ class UpdateDownloader(QtCore.QThread):
         self.dir_path = None
         self.url = None
         self.file_hash = None
+        self.hash_type = None
         self.file_name = None
         self.save_path = None
         self.size = None
@@ -76,13 +77,21 @@ class UpdateDownloader(QtCore.QThread):
                 "ver": version.__version__
             })
             s.close()
+            print(get)
             self.url = get["url"]
             self.file_hash = get["hash"]
+            self.hash_type = get["hash_type"]
             self.file_name = get["name"]
             self.save_path = QtCore.QDir(self.dir_path).absoluteFilePath(self.file_name)
 
+            hasher = hashlib.md5
+            if self.hash_type == "md5":
+                hasher = hashlib.md5
+            elif self.hash_type == "sha256":
+                hasher = hashlib.sha256
+
             if os.path.exists(self.save_path):
-                md5_re = hashlib.md5()
+                md5_re = hasher()
                 with open(self.save_path, "rb") as f:
                     while True:
                         data = f.read(4096)
@@ -97,7 +106,7 @@ class UpdateDownloader(QtCore.QThread):
             self.size = 0
             self.total = 0
 
-            builder = hashlib.md5()
+            builder = hasher()
             req = Request(url=self.url, method="GET")
 
             with urlopen(req) as resp:
