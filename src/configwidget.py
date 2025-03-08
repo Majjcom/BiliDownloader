@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
 
 import style
 from Lib.bili_api import video, exceptions, bangumi
-from Lib.bili_api.utils.passport import BiliPassport
+from Lib.bili_api.utils.passport import BiliPassport, decode_cookie
 from centralcheckbox import CentralCheckBox
 from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
@@ -187,7 +187,7 @@ class ConfigWidget(QtWidgets.QWidget):
 
 class GetVideoInfo(QtCore.QThread):
     def __init__(
-        self, vid, isbvid: bool, cid, fnval: int, type_: str, parent: QtCore.QObject | None = ...
+            self, vid, isbvid: bool, cid, fnval: int, type_: str, parent: QtCore.QObject | None = ...
     ) -> None:
         super().__init__(parent)
         self.vid = vid
@@ -202,7 +202,12 @@ class GetVideoInfo(QtCore.QThread):
         err = False
         passport = configUtils.getUserData(configUtils.Configs.PASSPORT)
         if passport is not None:
-            passport = BiliPassport(passport["data"])
+            if "data" not in passport:
+                passport["data"] = decode_cookie(passport["secure_data"])
+            if passport["data"] is not None:
+                passport = BiliPassport(passport["data"])
+            else:
+                passport = None
         try_times = 0
         while try_times < 2:
             try:

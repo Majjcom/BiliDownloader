@@ -1,12 +1,12 @@
 import subprocess
 
 from PySide6 import QtWidgets, QtCore
-from ui_mainwindow import Ui_MainWindow
 
 from checkaccount import CheckAccountThread
 from dialogchangelog import show_changelog
 from dialogdownloadupdate import DialogDownloadUpdate
 from dialogupdateinfo import DialogUpdateInfo
+from ui_mainwindow import Ui_MainWindow
 from update import UpdateChecker, UpdateDownloader
 from utils import init, configUtils
 
@@ -33,6 +33,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.append(self.ui.widget_download)
         self.tabs.append(self.ui.widget_settings)
         self.tabs.append(self.ui.widget_about)
+
+        self.tabs[2].load_settings()
 
         self.ui.widget_input.setup_mainwindow(self)
         self.ui.widget_input.setup_download(self.ui.widget_download)
@@ -139,3 +141,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def change_tab(self, index):
         self.ui.tabWidget.setCurrentIndex(index)
+
+    def closeEvent(self, event):
+        self.tabs[2].save_settings()
+        event.accept()

@@ -7,6 +7,7 @@ import style
 from dialoglogin import DialogLogin
 from ui_settingswidget import Ui_SettingsWidget
 from utils import configUtils
+from utils.open_folder import open_folder
 
 _CURRENT_INDEX = 2
 
@@ -59,6 +60,12 @@ class SettingsWidget(QtWidgets.QWidget):
             self.ui.line_path,
             QtCore.SIGNAL("textChanged(QString)"),
             self.on_line_path_changed,
+        )
+
+        self.connect(
+            self.ui.button_config_dir,
+            QtCore.SIGNAL("clicked()"),
+            self.on_open_config_dir_clicked,
         )
 
     def load_settings(self):
@@ -146,3 +153,7 @@ class SettingsWidget(QtWidgets.QWidget):
         dialog = DialogLogin(self, self.userdata)
         dialog.exec()
         self.load_settings()
+
+    # Slot
+    def on_open_config_dir_clicked(self):
+        open_folder(QtCore.QDir("data").absolutePath(), self)

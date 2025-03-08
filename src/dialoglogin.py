@@ -6,7 +6,7 @@ import qrcode
 from PySide6 import QtWidgets, QtGui, QtCore
 
 from Lib.bili_api import user
-from Lib.bili_api.utils import cookieTools
+from Lib.bili_api.utils import cookieTools, passport
 from ui_dialoglogin import Ui_DialogLogin
 from utils import configUtils
 
@@ -131,7 +131,8 @@ class LoginDataThread(QtCore.QThread):
             self.self_finished()
             return
         cookie = cookieTools.get_cookie(status["data"]["url"])
-        ret = {"ts": status["data"]["timestamp"], "data": cookie}
+        cookie = passport.encode_cookie(cookie)
+        ret = {"ts": status["data"]["timestamp"], "secure_data": cookie}
         ret = pickle.dumps(ret)
         ret = QtCore.QByteArray(ret)
         self.emit(QtCore.SIGNAL("update_data(QByteArray)"), ret)

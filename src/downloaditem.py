@@ -1,10 +1,8 @@
-import os
-import sys
-
 from PySide6 import QtWidgets, QtCore
 
 from downloadthread import DownloadTask
 from ui_downloaditem import Ui_DownloadItem
+from utils.open_folder import open_folder
 from utils.sizefstr import sizefStr
 
 
@@ -89,7 +87,4 @@ class DownloadItem(QtWidgets.QWidget):
         elif self.button_status == 1:
             directory = QtCore.QDir(self.info["path"])
             directory.cd(self.info["title"])
-            if sys.platform == "linux":
-                QtWidgets.QMessageBox.information(self.info["parent"], "信息", "在Linux中暂时无法使用该功能")
-                return
-            os.startfile(directory.absolutePath(), "explore")
+            open_folder(directory.absolutePath(), self.info["parent"])

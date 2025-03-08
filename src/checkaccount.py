@@ -3,7 +3,7 @@ from enum import Enum
 from PySide6.QtCore import QThread, QObject, SIGNAL
 
 from Lib.bili_api.utils import checkAccount
-from Lib.bili_api.utils.passport import BiliPassport
+from Lib.bili_api.utils.passport import BiliPassport, decode_cookie
 from utils.configUtils import UserDataHelper
 
 
@@ -18,6 +18,10 @@ def check_account() -> ACCOUNT_STATUS:
     passport = userdata.get(userdata.CONFIGS.PASSPORT)
     if passport is None:
         return ACCOUNT_STATUS.NO_LOGIN
+    if "data" not in passport:
+        passport["data"] = decode_cookie(passport["secure_data"])
+        if passport["data"] is None:
+            return ACCOUNT_STATUS.FAIL
     if checkAccount.check(BiliPassport(passport["data"])):
         return ACCOUNT_STATUS.NORMAL
     return ACCOUNT_STATUS.FAIL

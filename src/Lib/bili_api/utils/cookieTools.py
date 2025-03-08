@@ -1,9 +1,8 @@
 import re
 
-
-_cookieMakers = [re.compile(r'DedeUserID=.+(?=&DedeUserID__ckMd5=)'), re.compile(r'DedeUserID__ckMd5=.+(?=&Expires=)'),
-                re.compile(r'Expires=.+(?=&SESSDATA=)'), re.compile(r'SESSDATA=.+(?=&bili_jct=)'),
-                re.compile(r'bili_jct=.+(?=&gourl=)')]
+_cookieMakers = [re.compile(r'DedeUserID=([^&]+)'), re.compile(r'DedeUserID__ckMd5=([^&]+)'),
+                 re.compile(r'Expires=([^&]+)'), re.compile(r'SESSDATA=([^&]+)'),
+                 re.compile(r'bili_jct=([^&]+)')]
 
 
 def make_cookie(cookies: dict):

@@ -8,6 +8,7 @@ from PySide6 import QtCore
 
 from Lib.bili_api import video, danmaku, bangumi
 from Lib.bili_api.utils import BiliPassport
+from Lib.bili_api.utils.passport import decode_cookie
 from Lib.xml2ass import convertMain
 from utils import configUtils
 
@@ -327,9 +328,12 @@ class DownloadTask(QtCore.QThread):
         passportRaw = configUtils.getUserData(configUtils.Configs.PASSPORT)
         passport = None
         if passportRaw is not None:
-            passportRaw = passportRaw["data"]
-            passportRaw.pop("Expires")
-            passport = BiliPassport(passportRaw)
+            if "data" not in passportRaw:
+                passportRaw["data"] = decode_cookie(passportRaw["secure_data"])
+            if passportRaw["data"] is not None:
+                passportRaw = passportRaw["data"]
+                passportRaw.pop("Expires")
+                passport = BiliPassport(passportRaw)
 
         # Get Urls
         try_times = 0
