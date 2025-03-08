@@ -16,6 +16,7 @@ class Configs:
     QT_STYLE = "qt_ui_style"
     DOWNLOAD_AUDIO_ONLY = "download_audio_only"
     APPLY_HIGH_DPI = "apply_high_dpi"
+    PASSPORT_CRYPT_KEY = "passport_crypt_key"
 
 
 def setupUserData(reset: bool = False) -> None:

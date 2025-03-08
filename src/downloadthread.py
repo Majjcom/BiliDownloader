@@ -329,7 +329,8 @@ class DownloadTask(QtCore.QThread):
         passport = None
         if passportRaw is not None:
             if "data" not in passportRaw:
-                passportRaw["data"] = decode_cookie(passportRaw["secure_data"])
+                key = configUtils.getUserData(configUtils.Configs.PASSPORT_CRYPT_KEY)
+                passportRaw["data"] = decode_cookie(passportRaw["secure_data"], key)
             if passportRaw["data"] is not None:
                 passportRaw = passportRaw["data"]
                 passportRaw.pop("Expires")

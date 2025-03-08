@@ -203,7 +203,8 @@ class GetVideoInfo(QtCore.QThread):
         passport = configUtils.getUserData(configUtils.Configs.PASSPORT)
         if passport is not None:
             if "data" not in passport:
-                passport["data"] = decode_cookie(passport["secure_data"])
+                key = configUtils.getUserData(configUtils.Configs.PASSPORT_CRYPT_KEY)
+                passport["data"] = decode_cookie(passport["secure_data"], key)
             if passport["data"] is not None:
                 passport = BiliPassport(passport["data"])
             else:

@@ -1,18 +1,35 @@
 import base64
 import json
-import uuid
+import random
+import sys
 
 from Crypto.Cipher import AES
 
 from .cookieTools import make_cookie
 
-__all__ = ['BiliPassport', 'encode_cookie', 'decode_cookie']
+__all__ = ['BiliPassport', 'encode_cookie', 'decode_cookie', 'gen_key', 'get_key']
 
 
-def encode_cookie(data):
+def gen_key():
+    r = random.SystemRandom()
+    k = r.randbytes(16)
+    if sys.platform == "win32":
+        import win32crypt
+        k = win32crypt.CryptProtectData(k, None, None, None, None, 0)
+    return base64.b64encode(k).decode("utf_8")
+
+
+def get_key(data):
+    r = base64.b64decode(data.encode('utf_8'))
+    if sys.platform == "win32":
+        import win32crypt
+        r = win32crypt.CryptUnprotectData(r, None, None, None, 0)[1]
+    return r
+
+
+def encode_cookie(data, key):
     s = json.dumps(data).encode('utf_8')
-    hardware_addr = uuid.getnode().to_bytes(6, "big")
-    cipher = AES.new((hardware_addr * 3)[:16], AES.MODE_ECB)
+    cipher = AES.new(get_key(key), AES.MODE_ECB)
     pad = 16 - len(s) % 16
     s = bytearray(s)
     for _ in range(pad):
@@ -21,15 +38,14 @@ def encode_cookie(data):
     return base64.b64encode(crypted).decode("utf_8")
 
 
-def decode_cookie(data):
+def decode_cookie(data, key):
     try:
         bs = base64.b64decode(data)
-        hardware_addr = uuid.getnode().to_bytes(6, "big")
-        cipher = AES.new((hardware_addr * 3)[:16], AES.MODE_ECB)
+        cipher = AES.new(get_key(key), AES.MODE_ECB)
         plain = cipher.decrypt(bs)
         plain = plain[:-plain[-1]]
         return json.loads(plain.decode('utf_8'))
-    except Exception as _:
+    except Exception as e:
         return None
 
 

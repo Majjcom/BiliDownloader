@@ -37,7 +37,7 @@ class DialogLogin(QtWidgets.QDialog):
         )
         self.connect(
             self.load_thread,
-            QtCore.SIGNAL("update_data(QByteArray)"),
+            QtCore.SIGNAL("update_data(QByteArray, QString)"),
             self.update_data,
         )
         self.connect(
@@ -56,9 +56,10 @@ class DialogLogin(QtWidgets.QDialog):
         self.ui.label_status.setText(status)
 
     # Slot
-    def update_data(self, data: QtCore.QByteArray):
+    def update_data(self, data: QtCore.QByteArray, key: str):
         passport = pickle.loads(data.data())
         self.userdata.set(self.userdata.CONFIGS.PASSPORT, passport)
+        self.userdata.set(self.userdata.CONFIGS.PASSPORT_CRYPT_KEY, key)
 
     # Slot
     def load_finished(self):
@@ -131,10 +132,11 @@ class LoginDataThread(QtCore.QThread):
             self.self_finished()
             return
         cookie = cookieTools.get_cookie(status["data"]["url"])
-        cookie = passport.encode_cookie(cookie)
+        key = passport.gen_key()
+        cookie = passport.encode_cookie(cookie, key)
         ret = {"ts": status["data"]["timestamp"], "secure_data": cookie}
         ret = pickle.dumps(ret)
         ret = QtCore.QByteArray(ret)
-        self.emit(QtCore.SIGNAL("update_data(QByteArray)"), ret)
+        self.emit(QtCore.SIGNAL("update_data(QByteArray, QString)"), ret, key)
         time.sleep(1)
         self.self_finished()
