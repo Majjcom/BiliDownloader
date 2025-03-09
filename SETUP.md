@@ -24,6 +24,16 @@ python3 -m venv ./venv
 ```shell
 pip install -r requirements.txt
 ```
+
+Windows 需要安装额外的库才能运行：
+
+```shell
+# 安装Windows依赖
+pip install -r requirements_win.txt
+```
+
+
+
 ### 运行前准备
 下载支持AV1的[ffmpeg](https://majjcom.lanzouo.com/ipE9324dv8sh)可执行文件，并将`ffmpeg`文件夹解压至`main.py`所在的目录下
 
@@ -47,6 +57,8 @@ CONST_KEY=""
 
 修改`src/update.py`，将`NO_UPDATE`设置为True
 
+
+
 ### 运行
 在当前目录下运行以下命令
 ```shell
@@ -54,6 +66,8 @@ python compile_ui.py
 pythonw main.py
 ```
 当然，也可以写 shell 文件来快速启动，这里不再讲解，参照此处的 shell 即可
+
+
 
 ## 2. Linux构建独立可执行文件
 
@@ -67,6 +81,8 @@ pythonw main.py
 python -m pip install -U pip
 pip install nuitka
 ```
+
+
 
 ### 构建
 
