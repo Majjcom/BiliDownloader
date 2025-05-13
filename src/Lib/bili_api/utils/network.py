@@ -10,12 +10,12 @@ DEFAULT_HEADERS = {"Referer": "https://www.bilibili.com", "User-Agent": "Mozilla
 
 
 def get_data(
-    scheme: str,
-    host: str,
-    method: str,
-    path: str,
-    query: dict = None,
-    header: dict = None,
+        scheme: str,
+        host: str,
+        method: str,
+        path: str,
+        query: dict = None,
+        header: dict = None,
 ):
     c = (
         http.client.HTTPSConnection(host)
@@ -42,15 +42,15 @@ def get_data(
     return ret
 
 
-class Data_getter:
+class DataGetter:
     def __init__(
-        self,
-        scheme: str,
-        host: str,
-        method: str,
-        path: str,
-        query: dict = None,
-        header: dict = None,
+            self,
+            scheme: str,
+            host: str,
+            method: str,
+            path: str,
+            query: dict = None,
+            header: dict = None,
     ):
         self._scheme = scheme
         self._host = host

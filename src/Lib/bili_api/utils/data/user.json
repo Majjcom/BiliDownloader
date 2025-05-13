@@ -98,5 +98,29 @@
         }
       }
     }
+  },
+  "exit": {
+    "url": "https://passport.bilibili.com/login/exit/v2",
+    "method": "POST",
+    "verify": true,
+    "params": {
+      "biliCSRF": "CSRF Token (bili_jct)",
+      "gourl": "成功后跳转到的页面 (非必要)"
+    },
+    "return": {
+      "code": {
+        "0": "成功",
+        "2202": "csrf 请求非法"
+      },
+      "status": "是否成功 (bool)",
+      "ts": "时间戳",
+      "message": "错误信息 (成功时不存在)",
+      "data": [
+        "返回信息 (失败时不存在)",
+        {
+          "redirectUrl": "重定向链接"
+        }
+      ]
+    }
   }
 }

@@ -81,6 +81,11 @@ class ConfigWidget(QtWidgets.QWidget):
         userdata = configUtils.UserDataHelper()
         # reserveAudio = configUtils.getUserData(configUtils.Configs.RESERVE_AUDIO, False)
         reserveAudio = userdata.get(userdata.CONFIGS.RESERVE_AUDIO, False)
+        disable_title_limit = userdata.get(userdata.CONFIGS.DISABLE_TITLE_LENGTH_LIMIT, False)
+        if disable_title_limit:
+            rmspchar = lambda s: removeSpecialChars(s, None)
+        else:
+            rmspchar = lambda s: removeSpecialChars(s)
         for i in self.data["download_data"]:
             box_danmaku: CentralCheckBox = i["box_danmaku"]
             box_audio: CentralCheckBox = i["box_audio"]
@@ -89,8 +94,8 @@ class ConfigWidget(QtWidgets.QWidget):
                 "path": self.ui.line_path.text(),
                 "quality": quality,
                 "codec": codec,
-                "name": "{:0>3d}-".format(i["page"]) + removeSpecialChars(i["name"]),
-                "title": removeSpecialChars(i["title"]),
+                "name": "{:0>3d}-".format(i["page"]) + rmspchar(i["name"]),
+                "title": rmspchar(i["title"]),
                 "id": i["id"],
                 "isbvid": i["isbvid"],
                 "cid": i["cid"],

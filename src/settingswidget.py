@@ -4,12 +4,11 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QMessageBox
 
 import style
+from Lib.bili_api import user, utils
 from dialoglogin import DialogLogin
 from ui_settingswidget import Ui_SettingsWidget
 from utils import configUtils
 from utils.open_folder import open_folder
-
-_CURRENT_INDEX = 2
 
 # codec
 video_codec_id = {
@@ -33,6 +32,7 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ui = Ui_SettingsWidget()
         self.ui.setupUi(self)
         self.userdata = configUtils.UserDataHelper()
+        self.mw_tab_index = None
         codecs = []
         for i in video_codec_match:
             codecs.append(i)
@@ -68,6 +68,12 @@ class SettingsWidget(QtWidgets.QWidget):
             self.on_open_config_dir_clicked,
         )
 
+        self.connect(
+            self.ui.button_logout,
+            QtCore.SIGNAL("clicked()"),
+            self.on_logout_button_clicked,
+        )
+
     def load_settings(self):
         path = self.userdata.get(
             self.userdata.CONFIGS.DOWNLOAD_PATH,
@@ -82,6 +88,7 @@ class SettingsWidget(QtWidgets.QWidget):
         qt_style = self.userdata.get(self.userdata.CONFIGS.QT_STYLE, "default")
         high_dpi = self.userdata.get(self.userdata.CONFIGS.APPLY_HIGH_DPI, True)
         only_audio = self.userdata.get(self.userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, False)
+        disable_title_limit = self.userdata.get(self.userdata.CONFIGS.DISABLE_TITLE_LENGTH_LIMIT, False)
         self.ui.spin_threads.setValue(max_thread_count)
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.ui.line_path.setText(path)
@@ -92,6 +99,7 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ui.line_login.setText("未登录" if passport is None else "已登录")
         self.ui.combo_style.setCurrentText(qt_style)
         self.ui.check_highdpi.setChecked(high_dpi)
+        self.ui.check_close_text_len_limit.setChecked(disable_title_limit)
 
     def save_settings(self):
         path = self.ui.line_path.text()
@@ -103,6 +111,7 @@ class SettingsWidget(QtWidgets.QWidget):
         qt_style = self.ui.combo_style.currentText()
         only_audio = self.ui.check_audio.isChecked()
         high_dpi = self.ui.check_highdpi.isChecked()
+        disable_title_limit = self.ui.check_close_text_len_limit.isChecked()
         self.userdata.set(self.userdata.CONFIGS.VIDEO_CODEC, codec)
         self.userdata.set(self.userdata.CONFIGS.DOWNLOAD_PATH, path)
         self.userdata.set(self.userdata.CONFIGS.RESERVE_AUDIO, audio)
@@ -112,12 +121,13 @@ class SettingsWidget(QtWidgets.QWidget):
         self.userdata.set(self.userdata.CONFIGS.QT_STYLE, qt_style)
         self.userdata.set(self.userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, only_audio)
         self.userdata.set(self.userdata.CONFIGS.APPLY_HIGH_DPI, high_dpi)
+        self.userdata.set(self.userdata.CONFIGS.DISABLE_TITLE_LENGTH_LIMIT, disable_title_limit)
         self.userdata.save()
 
     def update_tab_changes(self, old, now):
-        if old == _CURRENT_INDEX:
+        if old == self.mw_tab_index:
             self.save_settings()
-        elif now == _CURRENT_INDEX:
+        elif now == self.mw_tab_index:
             self.load_settings()
 
     # Slot
@@ -140,7 +150,7 @@ class SettingsWidget(QtWidgets.QWidget):
     def on_reset_button_clicked(self):
         dialog = QMessageBox.question(self, "提示", "确定要重置所有设置吗？",
                                       buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                      defaultButton=QMessageBox.StandardButton.Yes)
+                                      defaultButton=QMessageBox.StandardButton.No)
         if dialog == QMessageBox.StandardButton.Yes:
             configUtils.reSetUserData()
             del self.userdata
@@ -157,3 +167,34 @@ class SettingsWidget(QtWidgets.QWidget):
     # Slot
     def on_open_config_dir_clicked(self):
         open_folder(QtCore.QDir("data").absolutePath(), self)
+
+    # Slot
+    def on_logout_button_clicked(self):
+        ret = QMessageBox.question(
+            self, "确认", "确认退出登录？",
+            buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            defaultButton=QMessageBox.StandardButton.No)
+        if ret == QtWidgets.QMessageBox.StandardButton.No:
+            return
+        passport = self.userdata.get(self.userdata.CONFIGS.PASSPORT, None)
+        if passport is None:
+            QMessageBox.information(self, "信息", "未登录")
+            return
+
+        try:
+            if "data" not in passport:
+                key = self.userdata.get(self.userdata.CONFIGS.PASSPORT_CRYPT_KEY, None)
+                if key is None:
+                    raise Exception("无法获取密钥")
+                decode = utils.passport.decode_cookie(passport["secure_data"], key)
+                if decode is None:
+                    raise Exception("处理信息失败")
+                passport["data"] = decode
+            user.exit_login(utils.passport.BiliPassport(passport["data"]))
+            QMessageBox.information(self, "成功", "已退出登录")
+        except Exception as e:
+            QMessageBox.critical(self, "退出登录失败", "登录信息已清除\n" + str(e))
+        self.userdata.set(self.userdata.CONFIGS.PASSPORT, None)
+        self.userdata.set(self.userdata.CONFIGS.PASSPORT_CRYPT_KEY, None)
+        self.userdata.save()
+        self.load_settings()

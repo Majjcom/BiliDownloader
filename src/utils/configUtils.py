@@ -17,6 +17,7 @@ class Configs:
     DOWNLOAD_AUDIO_ONLY = "download_audio_only"
     APPLY_HIGH_DPI = "apply_high_dpi"
     PASSPORT_CRYPT_KEY = "passport_crypt_key"
+    DISABLE_TITLE_LENGTH_LIMIT = "disable_title_length_limit"
 
 
 def setupUserData(reset: bool = False) -> None:
@@ -48,7 +49,7 @@ class UserDataHelper:
         if key in self.KEYWD:
             self.raw[key] = value
             return
-        if key is None:
+        if value is None:
             self.raw["userinfo"].pop(key)
             return
         self.raw["userinfo"][key] = value

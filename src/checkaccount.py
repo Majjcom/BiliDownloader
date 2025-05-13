@@ -11,6 +11,7 @@ class ACCOUNT_STATUS(Enum):
     NO_LOGIN = 0
     NORMAL = 1
     FAIL = 2
+    NO_NETWORK = 3
 
 
 def check_account() -> ACCOUNT_STATUS:
@@ -25,8 +26,11 @@ def check_account() -> ACCOUNT_STATUS:
         passport["data"] = decode_cookie(passport["secure_data"], key)
         if passport["data"] is None:
             return ACCOUNT_STATUS.FAIL
-    if checkAccount.check(BiliPassport(passport["data"])):
+    account_status = checkAccount.check(BiliPassport(passport["data"]))
+    if account_status == "OK":
         return ACCOUNT_STATUS.NORMAL
+    elif account_status == "NO_NETWORK":
+        return ACCOUNT_STATUS.NO_NETWORK
     return ACCOUNT_STATUS.FAIL
 
 

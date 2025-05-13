@@ -37,7 +37,7 @@ def get_video_info(aid: int = None, bvid: str = None):
         query=params
     )
     if get['code'] != 0:
-        raise NetWorkException('视频信息获取错误:\n{0};\n{1};\n{2}'.format(
+        raise NetWorkException('视频信息获取错误:\n{0};\n{1};\n{2};'.format(
             get['code'],
             api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
@@ -67,7 +67,7 @@ def get_video_pages(aid: int = None, bvid: str = None):
         query=params
     )
     if get['code'] != 0:
-        raise NetWorkException('视频信息获取错误:\n{0};\n{1};\n{2}'.format(
+        raise NetWorkException('视频信息获取错误:\n{0};\n{1};\n{2};'.format(
             get['code'],
             api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
@@ -76,11 +76,11 @@ def get_video_pages(aid: int = None, bvid: str = None):
 
 
 def get_video_url(
-    avid: int = None,
-    bvid: str = None,
-    cid: int = None,
-    fnval: int = FNVAL_PRESET().default(),
-    passport: utils.BiliPassport = None
+        avid: int = None,
+        bvid: str = None,
+        cid: int = None,
+        fnval: int = FNVAL_PRESET().default(),
+        passport: utils.BiliPassport = None
 ):
     if cid is None:
         raise BiliVideoIdException('你必须提供视频 cid')
@@ -115,7 +115,7 @@ def get_video_url(
     )
 
     if get['code'] != 0:
-        raise NetWorkException('视频链接获取错误:\n{0};\n{1};\n{2}'.format(
+        raise NetWorkException('视频链接获取错误:\n{0};\n{1};\n{2};'.format(
             get['code'],
             api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']
@@ -147,7 +147,7 @@ def get_video_online_count(cid: int, aid: int = None, bvid: str = None):
     )
 
     if get['code'] != 0:
-        raise NetWorkException('视频在线人数获取错误: {0}; {1}; {2}'.format(
+        raise NetWorkException('视频在线人数获取错误:\n{0};\n{1};\n{2};'.format(
             get['code'],
             api['return']['code'].get(str(get['code']), '未知错误'),
             get['message']

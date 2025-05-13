@@ -57,8 +57,8 @@ class DialogLogin(QtWidgets.QDialog):
 
     # Slot
     def update_data(self, data: QtCore.QByteArray, key: str):
-        passport = pickle.loads(data.data())
-        self.userdata.set(self.userdata.CONFIGS.PASSPORT, passport)
+        passp = pickle.loads(data.data())
+        self.userdata.set(self.userdata.CONFIGS.PASSPORT, passp)
         self.userdata.set(self.userdata.CONFIGS.PASSPORT_CRYPT_KEY, key)
 
     # Slot

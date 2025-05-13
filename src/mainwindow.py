@@ -22,10 +22,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.ui.tabWidget.setTabText(0, "输入")
-        self.ui.tabWidget.setTabText(1, "下载")
-        self.ui.tabWidget.setTabText(2, "设置")
-        self.ui.tabWidget.setTabText(3, "关于")
+        tab_names = ["输入", "下载", "设置", "关于"]
+        for i in range(len(tab_names)):
+            self.ui.tabWidget.setTabText(i, tab_names[i])
 
         self.tabs = []
         self.tab_now = 0
@@ -34,7 +33,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.append(self.ui.widget_settings)
         self.tabs.append(self.ui.widget_about)
 
-        self.tabs[2].load_settings()
+        for i in range(len(self.tabs)):
+            self.tabs[i].mw_tab_index = i
+
+        self.ui.widget_settings.load_settings()
 
         self.ui.widget_input.setup_mainwindow(self)
         self.ui.widget_input.setup_download(self.ui.widget_download)
@@ -130,7 +132,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def downlaod_install(self, file: str):
         self.close()
         subprocess.call(
-            f"cmd /c \"start {file}\"",
+            f"cmd /c start \"\" \"{file}\"",
             creationflags=subprocess.CREATE_NO_WINDOW
         )
 

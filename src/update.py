@@ -77,7 +77,7 @@ class UpdateDownloader(QtCore.QThread):
                 "ver": version.__version__
             })
             s.close()
-            print(get)
+            # print(get)
             self.url = get["url"]
             self.file_hash = get["hash"]
             self.hash_type = get["hash_type"]
