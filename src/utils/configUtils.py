@@ -37,7 +37,7 @@ class UserDataHelper:
     def __init__(self, autosave=False):
         setupUserData()
         fp = open("data/userdata.json", "r", encoding="utf_8")
-        self.CONFIGS: Configs = Configs()
+        self.CFGS: Configs = Configs()
         self.raw = json.load(fp)
         self.KEYWD = ("version", "isnew")
         self.autosave = autosave
@@ -45,14 +45,25 @@ class UserDataHelper:
         fp.close()
 
     def set(self, key: str, value: {dict, list, int, float, str, None}):
-        self.changed = True
         if key in self.KEYWD:
             self.raw[key] = value
+            self.changed = True
             return
+
+        # Erase value
         if value is None:
             self.raw["userinfo"].pop(key)
+            self.changed = True
             return
+
+        # Save same value
+        if self.raw["userinfo"].get(key, None) == value:
+            return
+
+        # Set value
         self.raw["userinfo"][key] = value
+        self.changed = True
+
         if self.autosave:
             self.save()
 
@@ -67,6 +78,13 @@ class UserDataHelper:
         fp = open("data/userdata.json", "w", encoding="utf_8")
         json.dump(self.raw, fp, sort_keys=True, indent=2)
         fp.close()
+        self.changed = False
+
+    def reload(self):
+        fp = open("data/userdata.json", "r", encoding="utf_8")
+        self.raw = json.load(fp)
+        fp.close()
+        self.changed = False
 
 
 def getUserData(key: str, default=None):

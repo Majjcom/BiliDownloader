@@ -16,11 +16,11 @@ class ACCOUNT_STATUS(Enum):
 
 def check_account() -> ACCOUNT_STATUS:
     userdata = UserDataHelper()
-    passport = userdata.get(userdata.CONFIGS.PASSPORT)
+    passport = userdata.get(userdata.CFGS.PASSPORT)
     if passport is None:
         return ACCOUNT_STATUS.NO_LOGIN
     if "data" not in passport:
-        key = userdata.get(userdata.CONFIGS.PASSPORT_CRYPT_KEY)
+        key = userdata.get(userdata.CFGS.PASSPORT_CRYPT_KEY)
         if key is None:
             return ACCOUNT_STATUS.FAIL
         passport["data"] = decode_cookie(passport["secure_data"], key)

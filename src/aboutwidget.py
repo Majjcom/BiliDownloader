@@ -25,11 +25,20 @@ class AboutWidget(QtWidgets.QWidget):
             self.on_button_license_clicked
         )
 
+        self.connect(
+            self.ui.button_about_qt,
+            QtCore.SIGNAL("clicked()"),
+            self.on_button_about_qt_clicked
+        )
+
     def on_button_changelog_clicked(self):
         show_changelog(self)
 
     def on_button_license_clicked(self):
         show_license(self)
+
+    def on_button_about_qt_clicked(self):
+        QtWidgets.QMessageBox.aboutQt(self)
 
     def update_tab_changes(self, old, now):
         pass

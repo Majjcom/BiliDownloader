@@ -75,20 +75,21 @@ class SettingsWidget(QtWidgets.QWidget):
         )
 
     def load_settings(self):
+        self.userdata.reload()
         path = self.userdata.get(
-            self.userdata.CONFIGS.DOWNLOAD_PATH,
+            self.userdata.CFGS.DOWNLOAD_PATH,
             QtCore.QDir("Download").absolutePath()
         )
-        audio = self.userdata.get(self.userdata.CONFIGS.RESERVE_AUDIO, False)
-        passport = self.userdata.get(self.userdata.CONFIGS.PASSPORT)
-        danmaku = self.userdata.get(self.userdata.CONFIGS.SAVE_DANMAKU, False)
-        codec = self.userdata.get(self.userdata.CONFIGS.VIDEO_CODEC, 7)
-        max_thread_count = self.userdata.get(self.userdata.CONFIGS.MAX_THREAD_COUNT, 4)
-        ultra_resolution = self.userdata.get(self.userdata.CONFIGS.ULTRA_RESOLUTION, False)
-        qt_style = self.userdata.get(self.userdata.CONFIGS.QT_STYLE, "default")
-        high_dpi = self.userdata.get(self.userdata.CONFIGS.APPLY_HIGH_DPI, True)
-        only_audio = self.userdata.get(self.userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, False)
-        disable_title_limit = self.userdata.get(self.userdata.CONFIGS.DISABLE_TITLE_LENGTH_LIMIT, False)
+        audio = self.userdata.get(self.userdata.CFGS.RESERVE_AUDIO, False)
+        passport = self.userdata.get(self.userdata.CFGS.PASSPORT)
+        danmaku = self.userdata.get(self.userdata.CFGS.SAVE_DANMAKU, False)
+        codec = self.userdata.get(self.userdata.CFGS.VIDEO_CODEC, 7)
+        max_thread_count = self.userdata.get(self.userdata.CFGS.MAX_THREAD_COUNT, 4)
+        ultra_resolution = self.userdata.get(self.userdata.CFGS.ULTRA_RESOLUTION, False)
+        qt_style = self.userdata.get(self.userdata.CFGS.QT_STYLE, "default")
+        high_dpi = self.userdata.get(self.userdata.CFGS.APPLY_HIGH_DPI, True)
+        only_audio = self.userdata.get(self.userdata.CFGS.DOWNLOAD_AUDIO_ONLY, False)
+        disable_title_limit = self.userdata.get(self.userdata.CFGS.DISABLE_TITLE_LENGTH_LIMIT, False)
         self.ui.spin_threads.setValue(max_thread_count)
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.ui.line_path.setText(path)
@@ -112,16 +113,16 @@ class SettingsWidget(QtWidgets.QWidget):
         only_audio = self.ui.check_audio.isChecked()
         high_dpi = self.ui.check_highdpi.isChecked()
         disable_title_limit = self.ui.check_close_text_len_limit.isChecked()
-        self.userdata.set(self.userdata.CONFIGS.VIDEO_CODEC, codec)
-        self.userdata.set(self.userdata.CONFIGS.DOWNLOAD_PATH, path)
-        self.userdata.set(self.userdata.CONFIGS.RESERVE_AUDIO, audio)
-        self.userdata.set(self.userdata.CONFIGS.SAVE_DANMAKU, danmaku)
-        self.userdata.set(self.userdata.CONFIGS.MAX_THREAD_COUNT, max_thread_count)
-        self.userdata.set(self.userdata.CONFIGS.ULTRA_RESOLUTION, ultra_resolution)
-        self.userdata.set(self.userdata.CONFIGS.QT_STYLE, qt_style)
-        self.userdata.set(self.userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, only_audio)
-        self.userdata.set(self.userdata.CONFIGS.APPLY_HIGH_DPI, high_dpi)
-        self.userdata.set(self.userdata.CONFIGS.DISABLE_TITLE_LENGTH_LIMIT, disable_title_limit)
+        self.userdata.set(self.userdata.CFGS.VIDEO_CODEC, codec)
+        self.userdata.set(self.userdata.CFGS.DOWNLOAD_PATH, path)
+        self.userdata.set(self.userdata.CFGS.RESERVE_AUDIO, audio)
+        self.userdata.set(self.userdata.CFGS.SAVE_DANMAKU, danmaku)
+        self.userdata.set(self.userdata.CFGS.MAX_THREAD_COUNT, max_thread_count)
+        self.userdata.set(self.userdata.CFGS.ULTRA_RESOLUTION, ultra_resolution)
+        self.userdata.set(self.userdata.CFGS.QT_STYLE, qt_style)
+        self.userdata.set(self.userdata.CFGS.DOWNLOAD_AUDIO_ONLY, only_audio)
+        self.userdata.set(self.userdata.CFGS.APPLY_HIGH_DPI, high_dpi)
+        self.userdata.set(self.userdata.CFGS.DISABLE_TITLE_LENGTH_LIMIT, disable_title_limit)
         self.userdata.save()
 
     def update_tab_changes(self, old, now):
@@ -176,14 +177,14 @@ class SettingsWidget(QtWidgets.QWidget):
             defaultButton=QMessageBox.StandardButton.No)
         if ret == QtWidgets.QMessageBox.StandardButton.No:
             return
-        passport = self.userdata.get(self.userdata.CONFIGS.PASSPORT, None)
+        passport = self.userdata.get(self.userdata.CFGS.PASSPORT, None)
         if passport is None:
             QMessageBox.information(self, "信息", "未登录")
             return
 
         try:
             if "data" not in passport:
-                key = self.userdata.get(self.userdata.CONFIGS.PASSPORT_CRYPT_KEY, None)
+                key = self.userdata.get(self.userdata.CFGS.PASSPORT_CRYPT_KEY, None)
                 if key is None:
                     raise Exception("无法获取密钥")
                 decode = utils.passport.decode_cookie(passport["secure_data"], key)
@@ -194,7 +195,7 @@ class SettingsWidget(QtWidgets.QWidget):
             QMessageBox.information(self, "成功", "已退出登录")
         except Exception as e:
             QMessageBox.critical(self, "退出登录失败", "登录信息已清除\n" + str(e))
-        self.userdata.set(self.userdata.CONFIGS.PASSPORT, None)
-        self.userdata.set(self.userdata.CONFIGS.PASSPORT_CRYPT_KEY, None)
+        self.userdata.set(self.userdata.CFGS.PASSPORT, None)
+        self.userdata.set(self.userdata.CFGS.PASSPORT_CRYPT_KEY, None)
         self.userdata.save()
         self.load_settings()

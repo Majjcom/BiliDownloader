@@ -150,6 +150,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="button_about_qt">
+       <property name="text">
+        <string>关于Qt</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

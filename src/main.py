@@ -2,7 +2,7 @@ import os
 import pathlib
 import sys
 
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtGui
 
 from mainwindow import MainWindow
 from utils import configUtils
@@ -38,6 +38,11 @@ def updateHighDpi():
 if __name__ == "__main__":
     updateHighDpi()
     app = QtWidgets.QApplication(sys.argv)
+    font = app.font()
+
+    font.setHintingPreference(QtGui.QFont.HintingPreference.PreferNoHinting)
+    # font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias)
+    app.setFont(font)
 
     update_cwd()
     update_style(app)

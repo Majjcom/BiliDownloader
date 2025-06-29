@@ -80,8 +80,8 @@ class ConfigWidget(QtWidgets.QWidget):
         codec = video_codec_match[self.ui.combo_codec.currentText()]
         userdata = configUtils.UserDataHelper()
         # reserveAudio = configUtils.getUserData(configUtils.Configs.RESERVE_AUDIO, False)
-        reserveAudio = userdata.get(userdata.CONFIGS.RESERVE_AUDIO, False)
-        disable_title_limit = userdata.get(userdata.CONFIGS.DISABLE_TITLE_LENGTH_LIMIT, False)
+        reserveAudio = userdata.get(userdata.CFGS.RESERVE_AUDIO, False)
+        disable_title_limit = userdata.get(userdata.CFGS.DISABLE_TITLE_LENGTH_LIMIT, False)
         if disable_title_limit:
             rmspchar = lambda s: removeSpecialChars(s, None)
         else:
@@ -144,18 +144,18 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.combo_quality.clear()
         self.ui.table_downloads.setRowCount(0)
         userdata = configUtils.UserDataHelper()
-        codec = userdata.get(userdata.CONFIGS.VIDEO_CODEC, 7)
-        self.fnval = get_fnval(userdata.get(userdata.CONFIGS.ULTRA_RESOLUTION, False))
+        codec = userdata.get(userdata.CFGS.VIDEO_CODEC, 7)
+        self.fnval = get_fnval(userdata.get(userdata.CFGS.ULTRA_RESOLUTION, False))
         self.ui.combo_codec.setCurrentText(video_codec_id[codec])
         self.data = self.parent().input_pages[2].data
         self.ui.line_path.setText(
             userdata.get(
-                userdata.CONFIGS.DOWNLOAD_PATH,  # User
+                userdata.CFGS.DOWNLOAD_PATH,  # User
                 QtCore.QDir("Download").absolutePath()  # Default
             )
         )
-        download_danmaku = userdata.get(userdata.CONFIGS.SAVE_DANMAKU, False)
-        only_audio = userdata.get(userdata.CONFIGS.DOWNLOAD_AUDIO_ONLY, False)
+        download_danmaku = userdata.get(userdata.CFGS.SAVE_DANMAKU, False)
+        only_audio = userdata.get(userdata.CFGS.DOWNLOAD_AUDIO_ONLY, False)
         self.data["download_data"] = []
         for i in self.data["page_data"]:
             if not i["box"].get_box().isChecked():

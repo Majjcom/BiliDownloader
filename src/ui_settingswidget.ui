@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>SettingsWidget</class>
  <widget class="QWidget" name="SettingsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>526</width>
+    <height>576</height>
+   </rect>
+  </property>
   <property name="font">
    <font>
     <family>HarmonyOS Sans SC</family>
@@ -32,6 +40,14 @@
        <height>0</height>
       </size>
      </property>
+     <property name="styleSheet">
+      <string notr="true">#scrollArea{
+  background-color: transparent;
+}
+#scrollArea #scrollAreaWidgetContents{
+  background-color: transparent;
+}</string>
+     </property>
      <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
      </property>
@@ -46,8 +62,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>505</width>
-        <height>582</height>
+        <width>526</width>
+        <height>576</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">

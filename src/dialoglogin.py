@@ -58,8 +58,8 @@ class DialogLogin(QtWidgets.QDialog):
     # Slot
     def update_data(self, data: QtCore.QByteArray, key: str):
         passp = pickle.loads(data.data())
-        self.userdata.set(self.userdata.CONFIGS.PASSPORT, passp)
-        self.userdata.set(self.userdata.CONFIGS.PASSPORT_CRYPT_KEY, key)
+        self.userdata.set(self.userdata.CFGS.PASSPORT, passp)
+        self.userdata.set(self.userdata.CFGS.PASSPORT_CRYPT_KEY, key)
 
     # Slot
     def load_finished(self):

@@ -124,6 +124,7 @@ class InputWidget(QWidget):
         res = dialog.getResult()
         if res is True:
             configUtils.setUserData(configUtils.Configs.SHOW_DOWNLOAD_TIP, False)
+            self.mainwindow.tabs[2].load_settings()
 
     def setup_mainwindow(self, widget: QMainWindow):
         self.mainwindow = widget
