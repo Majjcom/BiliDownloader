@@ -4,10 +4,10 @@ from io import BytesIO
 
 import qrcode
 from PySide6 import QtWidgets, QtGui, QtCore
+from ui_dialoglogin import Ui_DialogLogin
 
 from Lib.bili_api import user
 from Lib.bili_api.utils import cookieTools, passport
-from ui_dialoglogin import Ui_DialogLogin
 from utils import configUtils
 
 
@@ -60,6 +60,7 @@ class DialogLogin(QtWidgets.QDialog):
         passp = pickle.loads(data.data())
         self.userdata.set(self.userdata.CFGS.PASSPORT, passp)
         self.userdata.set(self.userdata.CFGS.PASSPORT_CRYPT_KEY, key)
+        self.userdata.save()
 
     # Slot
     def load_finished(self):

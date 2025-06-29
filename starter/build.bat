@@ -1,4 +1,8 @@
 @echo off
+
+rem setup utf-8
+chcp 65001>nul 2>nul
+
 set LOCAL_PATH=%~dp0
 set /p TCC_PATH=<tccpath.txt
 set /p GCC_PATH=<gccpath.txt
