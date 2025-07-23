@@ -55,3 +55,9 @@ Windows可执行文件通过Nuitka构建
 ![](imgs/2025-06-03_00-28-57.png)
 
 ![](imgs/2025-06-03_00-29-05.png)
+
+
+
+尾注：感谢[吾爱破解论坛](www.52pojie.cn)
+
+maj001@www.52pojie.cn
