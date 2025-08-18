@@ -36,3 +36,5 @@ class SpecialColoredLabel(ColoredLabel):
             QtWidgets.QMessageBox.information(self.parent(), "干嘛", reactions[self.re_index])
             self.re_index += 1
             self.click_times = 0
+        if self.re_index >= len(reactions):
+            self.deleteLater()

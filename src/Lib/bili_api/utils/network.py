@@ -1,12 +1,21 @@
 import copy
+import gzip
 import http.client
 import json
 import urllib.parse
+import zlib
 from typing import Union
+
+import brotli
+import zstandard
 
 from ..exceptions.NetWorkException import NetWorkException
 
-DEFAULT_HEADERS = {"Referer": "https://www.bilibili.com", "User-Agent": "Mozilla/5.0"}
+DEFAULT_HEADERS = {
+    "Referer": "https://www.bilibili.com",
+    "User-Agent": "Mozilla/5.0",
+    "Accept-Encoding": "gzip, deflate, br, zstd"
+}
 
 
 def get_data(
@@ -16,16 +25,18 @@ def get_data(
         path: str,
         query: dict = None,
         header: dict = None,
+        data: dict | bytes = None,
+        data_type: str = "application/json"
 ):
     c = (
         http.client.HTTPSConnection(host)
         if scheme == "https"
         else http.client.HTTPConnection(host)
     )
-    if method.upper() == "GET":
-        qu = "" if query is None else "?{}".format(urllib.parse.urlencode(query))
-    else:
-        qu = urllib.parse.urlencode(query)
+    if query is not None:
+        if len(query) == 0:
+            query = None
+    qu = "" if query is None else "?{}".format(urllib.parse.urlencode(query))
     head = copy.deepcopy(DEFAULT_HEADERS)
     if header is not None:
         for i in header:
@@ -33,10 +44,32 @@ def get_data(
     if method == "GET":
         c.request(method, path + qu, headers=head)
     else:
-        head["Content-Type"] = "application/x-www-form-urlencoded"
-        c.request(method, path, body=qu, headers=head)
+        if isinstance(data, dict):
+            if data_type == "application/x-www-form-urlencoded":
+                qdata = urllib.parse.urlencode(data).encode("utf-8")
+            else:
+                qdata = json.dumps(data, separators=(',', ':')).encode("utf-8")
+        else:
+            qdata = data
+        head["Content-Type"] = data_type
+        c.request(method, path + qu, body=qdata, headers=head)
     r = c.getresponse()
-    ret = json.loads(r.read())
+    encoding = r.headers.get("Content-Encoding")
+    read_data = r.read()
+    if encoding is not None:
+        if encoding == "gzip":
+            dec = gzip.decompress(read_data)
+        elif encoding == "deflate":
+            dec = zlib.decompress(read_data, -zlib.MAX_WBITS)
+        elif encoding == "br":
+            dec = brotli.decompress(read_data)
+        elif encoding == "zstd":
+            dec = zstandard.decompress(read_data)
+        else:
+            dec = read_data
+    else:
+        dec = read_data
+    ret = json.loads(dec)
     r.close()
     c.close()
     return ret

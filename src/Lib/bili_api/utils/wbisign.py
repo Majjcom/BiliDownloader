@@ -21,7 +21,7 @@ _HEADERS = {
 def _get_online_sign_data(passport: BiliPassport):
     headers = deepcopy(_HEADERS)
     if passport is not None:
-        headers["cookie"] = passport.get_cookie()
+        headers["Cookie"] = passport.get_cookie()
     url = urlsplit(_API["url"])
 
     get: dict = network.get_data(

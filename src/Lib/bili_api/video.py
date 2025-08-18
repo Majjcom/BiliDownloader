@@ -104,7 +104,7 @@ def get_video_url(
     params = wbisign.sign_params(params, passport)
     header = {}
     if passport is not None:
-        header['cookie'] = passport.get_cookie()
+        header['Cookie'] = passport.get_cookie()
     get: dict = utils.network.get_data(
         scheme=url.scheme,
         host=url.netloc,

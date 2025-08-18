@@ -1,12 +1,12 @@
-from urllib.parse import urlencode
-from urllib.parse import urlsplit
-from . import utils
+import copy
 import http.client
 import zlib
-import copy
+from urllib.parse import urlencode
+from urllib.parse import urlsplit
 
+from . import utils
 
-API = utils.get_api(('danmaku', ))
+API = utils.get_api(('danmaku',))
 
 
 def get_danmaku_xml(cid: int) -> str:

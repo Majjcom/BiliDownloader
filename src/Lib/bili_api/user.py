@@ -74,12 +74,13 @@ def exit_login(passport: utils.BiliPassport):
         host=url.netloc,
         method=api["method"],
         path=url.path,
-        query=params,
-        header={"cookie": passport.get_cookie()}
+        header={"Cookie": passport.get_cookie()},
+        data=params,
+        data_type=api["data_type"]
     )
 
     if get["code"] != 0:
-        raise utils.network.NetWorkException("退出登录失败:\n{0};\n{1};\n2{2};".format(
+        raise utils.network.NetWorkException("退出登录失败:\n{0};\n{1};\n{2};".format(
             get["code"],
             api["return"]["code"].get(str(get["code"]), "未知错误"),
             get.get("message", "未知错误")

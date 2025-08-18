@@ -5,12 +5,12 @@ from os.path import isdir
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
+from ui_configwidget import Ui_ConfigWidget
 
 import style
 from Lib.bili_api import video, exceptions, bangumi
 from Lib.bili_api.utils.passport import BiliPassport, decode_cookie
 from centralcheckbox import CentralCheckBox
-from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
 from utils.removeSpecialChars import removeSpecialChars
 
@@ -247,9 +247,10 @@ class GetVideoInfo(QtCore.QThread):
             except exceptions.NetWorkException as ex:
                 data = str(ex)
                 try_times += 1
-                if try_times >= 2 and self.type == "video":
-                    self.type = "bangumi"
-                    try_times = 0
+                if try_times >= 2:
+                    if self.type == "video":
+                        self.type = "bangumi"
+                        try_times = 0
                 time.sleep(1.0)
             except Exception as _ex:
                 data = traceback.format_exc()

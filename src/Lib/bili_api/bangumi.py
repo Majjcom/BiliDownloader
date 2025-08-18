@@ -68,11 +68,11 @@ def get_bangumi_detailed_info(season_id: int = None, ep_id: int = None, media_id
 
 
 def get_bangumi_url(
-    avid: int = None,
-    bvid: str = None,
-    cid: int = None,
-    fnval: int = FNVAL_PRESET().default(),
-    passport: BiliPassport = None
+        avid: int = None,
+        bvid: str = None,
+        cid: int = None,
+        fnval: int = FNVAL_PRESET().default(),
+        passport: BiliPassport = None
 ):
     api = copy.deepcopy(API["bangumi_url"])
     url = urlsplit(api["url"])
@@ -92,7 +92,7 @@ def get_bangumi_url(
         raise BiliVideoIdException("你必须输入 aid, bvid 中的任意一个")
     header = {}
     if passport is not None:
-        header["cookie"] = passport.get_cookie()
+        header["Cookie"] = passport.get_cookie()
     get: dict = utils.network.get_data(
         scheme=url.scheme,
         host=url.netloc,
@@ -110,3 +110,46 @@ def get_bangumi_url(
         ))
 
     return get["result"]
+
+
+def get_bangumi_url_v2(
+        ep_id: int,
+        ss_id: int,
+        fnval: int = FNVAL_PRESET().default(),
+        passport: BiliPassport = None
+):
+    api = copy.deepcopy(API["bangumi_url_v2"])
+    url = urlsplit(api["url"])
+    params = api["params"]
+    if passport is None:
+        params.pop("csrf")
+    else:
+        params["csrf"] = passport.get_data()["bili_jct"]
+    body: dict = api["body"]
+    # body.pop("exp_info")
+    # body.pop("video_param")
+    body["player_param"]["fnval"] = fnval
+    body["video_index"]["ogv_episode_id"] = ep_id
+    body["video_index"]["ogv_season_id"] = ss_id
+    header = {}
+    if passport is not None:
+        header["Cookie"] = passport.get_cookie()
+    get: dict = utils.network.get_data(
+        scheme=url.scheme,
+        host=url.netloc,
+        method=api["method"],
+        path=url.path,
+        query=params,
+        header=header,
+        data=body,
+        data_type=api["data_type"]
+    )
+
+    if get["code"] != 0:
+        raise NetWorkException("获取链接错误:\n{0};\n{1};\n{2};".format(
+            get["code"],
+            api["return"]["code"].get(get["code"], "未知错误"),
+            get["message"]
+        ))
+
+    return get["data"]

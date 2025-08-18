@@ -102,6 +102,7 @@
   "exit": {
     "url": "https://passport.bilibili.com/login/exit/v2",
     "method": "POST",
+    "data_type": "application/x-www-form-urlencoded",
     "verify": true,
     "params": {
       "biliCSRF": "CSRF Token (bili_jct)",
