@@ -125,6 +125,17 @@ class DataGetter:
             self._c.request(self._method, self._path, body=data, headers=self._head)
         r = self._c.getresponse()
         data = r.read()
+        encoding = r.headers.get("Content-Encoding")
+        if encoding is not None:
+            if encoding == "gzip":
+                data = gzip.decompress(data)
+            elif encoding == "deflate":
+                data = zlib.decompress(data, -zlib.MAX_WBITS)
+            elif encoding == "br":
+                data = brotli.decompress(data)
+            elif encoding == "zstd":
+                data = zstandard.decompress(data)
+        data = data.decode("utf-8")
         get = json.loads(data)
         r.close()
         return get
