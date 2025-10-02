@@ -11,7 +11,7 @@ from utils import version
 
 HOST = "www.majjcom.site"
 PORT = 11289
-NO_UPDATE = False
+NO_UPDATE = True
 
 
 class UpdateChecker(QtCore.QThread):
