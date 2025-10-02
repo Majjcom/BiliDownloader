@@ -4,7 +4,7 @@ import time
 import traceback
 from urllib.request import Request, urlopen
 
-from PySide6 import QtCore
+from PySide2 import QtCore
 
 from Lib.bd_client import BDClient
 from utils import version

@@ -1,6 +1,6 @@
 import pickle
 
-from PySide6 import QtWidgets, QtCore
+from PySide2 import QtWidgets, QtCore
 
 from centralcheckbox import CentralCheckBox
 from ui_selectionwidget import Ui_SelectionWidget

@@ -3,7 +3,7 @@ import time
 from io import BytesIO
 
 import qrcode
-from PySide6 import QtWidgets, QtGui, QtCore
+from PySide2 import QtWidgets, QtGui, QtCore
 
 from Lib.bili_api import user
 from Lib.bili_api.utils import cookieTools, passport

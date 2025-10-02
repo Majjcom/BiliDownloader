@@ -2,8 +2,9 @@ import os
 import pathlib
 import sys
 
-from PySide6 import QtWidgets, QtGui
+from PySide2 import QtWidgets, QtGui
 
+import fixssl
 import update
 from mainwindow import MainWindow
 from utils import configUtils
@@ -46,6 +47,7 @@ def install_font_for_portable_windows():
 
 
 if __name__ == "__main__":
+    fixssl.fix()
     install_font_for_portable_windows()
     updateHighDpi()
     app = QtWidgets.QApplication(sys.argv)
@@ -60,4 +62,4 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.show()
-    sys.exit(app.exec())
+    sys.exit(app.exec_())

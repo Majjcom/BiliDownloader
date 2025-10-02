@@ -1,5 +1,5 @@
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtGui import QResizeEvent
+from PySide2 import QtWidgets, QtGui, QtCore
+from PySide2.QtGui import QResizeEvent
 
 
 class ImageLabel(QtWidgets.QLabel):
@@ -12,7 +12,7 @@ class ImageLabel(QtWidgets.QLabel):
         self.setScaledContents(True)
         self.setMouseTracking(True)
         self.menu = QtWidgets.QMenu(self)
-        action = QtGui.QAction(text="保存封面", parent=self)
+        action = QtWidgets.QAction(text="保存封面", parent=self)
         self.menu.addAction(action)
         self.connect(
             action,

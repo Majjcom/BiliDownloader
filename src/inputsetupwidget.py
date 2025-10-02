@@ -1,6 +1,6 @@
 import pyperclip
-from PySide6.QtCore import SIGNAL, SLOT, QEvent
-from PySide6.QtWidgets import QWidget
+from PySide2.QtCore import SIGNAL, SLOT, QEvent
+from PySide2.QtWidgets import QWidget
 
 import style
 from Lib.bili_api.utils import matchFomat

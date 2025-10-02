@@ -1,7 +1,7 @@
 import os
 import sys
 
-from PySide6 import QtWidgets
+from PySide2 import QtWidgets
 
 
 def open_folder(path, qtparent=None):

@@ -1,6 +1,6 @@
 import os
 
-from PySide6 import QtWidgets
+from PySide2 import QtWidgets
 
 from ui_dialoglicense import Ui_DialogLicense
 

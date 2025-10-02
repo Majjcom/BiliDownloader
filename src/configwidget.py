@@ -3,8 +3,8 @@ import time
 import traceback
 from os.path import isdir
 
-from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
+from PySide2 import QtWidgets, QtCore
+from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
 
 import style
 from Lib.bili_api import video, exceptions, bangumi

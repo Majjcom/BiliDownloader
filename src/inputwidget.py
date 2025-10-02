@@ -1,7 +1,7 @@
 from typing import List
 
-from PySide6.QtCore import SIGNAL
-from PySide6.QtWidgets import QWidget, QMainWindow
+from PySide2.QtCore import SIGNAL
+from PySide2.QtWidgets import QWidget, QMainWindow
 
 from configwidget import ConfigWidget
 from confirmwidget import ConfirmWidget

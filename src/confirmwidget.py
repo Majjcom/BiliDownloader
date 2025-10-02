@@ -2,8 +2,8 @@ import pickle
 import traceback
 from urllib.request import urlopen
 
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtCore import SIGNAL, Signal, QByteArray
+from PySide2 import QtWidgets, QtGui, QtCore
+from PySide2.QtCore import SIGNAL, Signal, QByteArray
 
 from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException

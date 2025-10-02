@@ -1,4 +1,4 @@
-from PySide6 import QtWidgets, QtCore
+from PySide2 import QtWidgets, QtCore
 
 from downloadthread import DownloadTask
 from ui_downloaditem import Ui_DownloadItem

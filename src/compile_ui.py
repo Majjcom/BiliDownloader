@@ -44,7 +44,7 @@ def main():
                 if tgt in cache:
                     cache.pop(tgt)
             print(i + " => " + tgt)
-            subprocess.call(["pyside6-uic", i, "-o", tgt])
+            subprocess.call(["pyside2-uic", i, "-o", tgt])
         if i.endswith(".qrc"):
             with open(i, "rb") as fc:
                 hashhex = SHA256.new(fc.read()).hexdigest()
@@ -59,7 +59,7 @@ def main():
                 if tgt in cache:
                     cache.pop(tgt)
             print(i + " => " + tgt)
-            subprocess.call(["pyside6-rcc", i, "-o", tgt])
+            subprocess.call(["pyside2-rcc", i, "-o", tgt])
 
     if cache:
         for k, v in cache.items():

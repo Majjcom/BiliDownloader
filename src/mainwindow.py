@@ -1,6 +1,6 @@
 import subprocess
 
-from PySide6 import QtWidgets, QtCore
+from PySide2 import QtWidgets, QtCore
 
 from checkaccount import CheckAccountThread
 from dialogchangelog import show_changelog
