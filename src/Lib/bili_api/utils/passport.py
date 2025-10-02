@@ -1,6 +1,7 @@
 import base64
 import json
 import random
+import sys
 
 from Crypto.Cipher import AES
 
@@ -11,18 +12,18 @@ __all__ = ['BiliPassport', 'encode_cookie', 'decode_cookie', 'gen_key', 'get_key
 
 def gen_key():
     r = random.SystemRandom()
-    k = r.randbytes(16)
-    # if sys.platform == "win32":
-    #     import win32crypt
-    #     k = win32crypt.CryptProtectData(k, None, None, None, None, 0)
+    k = b''.join([r.randint(0, 256).to_bytes(1, "big") for _ in range(16)])
+    if sys.platform == "win32":
+        import win32crypt
+        k = win32crypt.CryptProtectData(k, None, None, None, None, 0)
     return base64.b64encode(k).decode("utf_8")
 
 
 def get_key(data):
     r = base64.b64decode(data.encode('utf_8'))
-    # if sys.platform == "win32":
-    #     import win32crypt
-    #     r = win32crypt.CryptUnprotectData(r, None, None, None, 0)[1]
+    if sys.platform == "win32":
+        import win32crypt
+        r = win32crypt.CryptUnprotectData(r, None, None, None, 0)[1]
     return r
 
 
