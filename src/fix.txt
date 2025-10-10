@@ -1,0 +1,5 @@
+- compile_ui.py ==> pyside6 -> pyside2
+- all qt lib ==> PySide6 -> PySide2
+- main.py ==> import fixssl and call fix()
+- imagelable.py ==> QAction -> From QWidget not QtCore
+- Lib/bili_api/utils/passport.py ==> fix r.randbytes()

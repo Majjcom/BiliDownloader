@@ -87,8 +87,8 @@ class DownloadTask(QtCore.QThread):
                 video_url = i["baseUrl"]
 
         # process special audio stream
-        if self.task["special_audio"] is not None:
-            special_audio = self.task["special_audio"]
+        if self.task["specialAudio"] is not None:
+            special_audio = self.task["specialAudio"]
             aud_stream_data = None
             try:
                 if special_audio == "flac":
@@ -159,7 +159,7 @@ class DownloadTask(QtCore.QThread):
         self.emit(QtCore.SIGNAL("update_status(QString)"), "正在清理")
         root_dir.remove(video_temp_file_path)
         if self.task["reserveAudio"] or self.task["onlyAudio"]:
-            if self.task.get("special_audio", "") == "flac":
+            if self.task["specialAudio"] == "flac":
                 root_dir.rename(audio_temp_file_name, "{}.flac".format(self.task["name"]))
             else:
                 root_dir.rename(audio_temp_file_name, "{}.m4a".format(self.task["name"]))
