@@ -9,13 +9,8 @@ from typing import Union
 import brotli
 import zstandard
 
+from .defaultHeaders import DEFAULT_HEADERS
 from ..exceptions.NetWorkException import NetWorkException
-
-DEFAULT_HEADERS = {
-    "Referer": "https://www.bilibili.com",
-    "User-Agent": "Mozilla/5.0",
-    "Accept-Encoding": "gzip, deflate, br, zstd"
-}
 
 
 def get_data(

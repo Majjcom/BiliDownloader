@@ -1,13 +1,13 @@
 import pickle
 import traceback
-from urllib.request import urlopen
 
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import SIGNAL, Signal, QByteArray
-from ui_confirmwidget import Ui_ConfirmWidget
 
 from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException
+from Lib.bili_api.utils import loadImage
+from ui_confirmwidget import Ui_ConfirmWidget
 from utils import configUtils
 
 
@@ -141,9 +141,12 @@ class LaodInfoAV(LoadInfoBase):
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)
-        with urlopen(pic_url) as pic_data:
-            img = QtGui.QImage.fromData(pic_data.read())
+        try:
+            pic_data = loadImage.load_bili_image(pic_url)
+            img = QtGui.QImage.fromData(pic_data)
             self.emit(SIGNAL("update_image(QImage)"), img)
+        except:
+            pass
 
 
 class LoadInfoBV(LoadInfoBase):
@@ -180,9 +183,12 @@ class LoadInfoBV(LoadInfoBase):
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)
-        with urlopen(pic_url) as pic_data:
-            img = QtGui.QImage.fromData(pic_data.read())
+        try:
+            pic_data = loadImage.load_bili_image(pic_url)
+            img = QtGui.QImage.fromData(pic_data)
             self.emit(SIGNAL("update_image(QImage)"), img)
+        except:
+            pass
 
 
 class LoadInfoMD(LoadInfoBase):
@@ -224,9 +230,12 @@ class LoadInfoMD(LoadInfoBase):
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)
-        with urlopen(cover_url) as pic_data:
-            img = QtGui.QImage.fromData(pic_data.read())
+        try:
+            pic_data = loadImage.load_bili_image(cover_url)
+            img = QtGui.QImage.fromData(pic_data)
             self.emit(SIGNAL("update_image(QImage)"), img)
+        except:
+            pass
 
 
 class LoadInfoEP(LoadInfoBase):
@@ -266,9 +275,12 @@ class LoadInfoEP(LoadInfoBase):
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
         self.emit(SIGNAL("update_meta(QByteArray)"), pack)
-        with urlopen(cover_url) as pic_data:
-            img = QtGui.QImage.fromData(pic_data.read())
+        try:
+            pic_data = loadImage.load_bili_image(cover_url)
+            img = QtGui.QImage.fromData(pic_data)
             self.emit(SIGNAL("update_image(QImage)"), img)
+        except:
+            pass
 
 
 load_map = {

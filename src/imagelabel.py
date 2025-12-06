@@ -26,7 +26,7 @@ class ImageLabel(QtWidgets.QLabel):
 
     def mousePressEvent(self, ev: QtGui.QMouseEvent):
         if ev.button() == QtCore.Qt.MouseButton.RightButton:
-            self.menu.exec(self.cursor().pos())
+            self.menu.exec_(self.cursor().pos())
         return super().mousePressEvent(ev)
 
     def on_action_save_clicked(self):

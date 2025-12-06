@@ -30,8 +30,7 @@ class SpecialColoredLabel(ColoredLabel):
     # Slot
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         super().mousePressEvent(event)
-        if event.isBeginEvent():
-            self.click_times += 1
+        self.click_times += 1
         if self.click_times % 16 == 0 and self.re_index < len(reactions):
             QtWidgets.QMessageBox.information(self.parent(), "干嘛", reactions[self.re_index])
             self.re_index += 1

@@ -1,9 +1,9 @@
 import pickle
 
 from PySide2 import QtWidgets, QtCore
-from ui_selectionwidget import Ui_SelectionWidget
 
 from centralcheckbox import CentralCheckBox
+from ui_selectionwidget import Ui_SelectionWidget
 
 SELECTTON_HELP = """输入你要下载的区段：
 区段使用单集数字或 A-B 的格式指定头尾，使用英文逗号(,)分割多个区段。
