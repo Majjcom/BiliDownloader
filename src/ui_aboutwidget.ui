@@ -51,7 +51,7 @@
    <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Copyright (C) 2021-2025 Majjcom</string>
+      <string>Copyright (C) 2021-2026 Majjcom</string>
      </property>
     </widget>
    </item>

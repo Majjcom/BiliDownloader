@@ -2,13 +2,13 @@ from typing import List
 
 from PySide2.QtCore import SIGNAL
 from PySide2.QtWidgets import QWidget, QMainWindow
+from ui_inputwidget import Ui_InputWidget
 
 from configwidget import ConfigWidget
 from confirmwidget import ConfirmWidget
 from dialogdownloadtip import DialogDownloadTip
 from inputsetupwidget import InputSetupWidget
 from selectionwidget import SelectionWidget
-from ui_inputwidget import Ui_InputWidget
 from utils import configUtils
 
 

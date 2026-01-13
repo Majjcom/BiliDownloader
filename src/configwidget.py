@@ -5,12 +5,12 @@ from os.path import isdir
 
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
+from ui_configwidget import Ui_ConfigWidget
 
 import style
 from Lib.bili_api import video, exceptions, bangumi
 from Lib.bili_api.utils.passport import BiliPassport, decode_cookie
 from centralcheckbox import CentralCheckBox
-from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
 from utils.removeSpecialChars import removeSpecialChars
 

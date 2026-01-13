@@ -12,7 +12,7 @@ __all__ = ['BiliPassport', 'encode_cookie', 'decode_cookie', 'gen_key', 'get_key
 
 def gen_key():
     r = random.SystemRandom()
-    k = b''.join([r.randint(0, 255).to_bytes(1, "big") for _ in range(16)])
+    k = b''.join([r.randint(0, 255).to_bytes(1, 'big') for _ in range(16)])
     if sys.platform == "win32":
         import win32crypt
         k = win32crypt.CryptProtectData(k, None, None, None, None, 0)

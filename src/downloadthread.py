@@ -100,10 +100,16 @@ class DownloadTask(QtCore.QThread):
             if aud_stream_data is not None:
                 get_url["dash"]["audio"].insert(0, aud_stream_data)
 
-        audio_url = get_url["dash"]["audio"][0]["baseUrl"]
+        audio_url = None
+        try:
+            # 处理可能出现无音频流的情况
+            audio_url = get_url["dash"]["audio"][0]["baseUrl"]
+        except:
+            pass
 
         # Get size
         try_times = 0
+        video_size = 0
         while try_times < 3:
             try:
                 self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取视频流信息")
@@ -113,10 +119,13 @@ class DownloadTask(QtCore.QThread):
                     req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
                     with urlopen(req) as resp:
                         video_size = int(resp.headers["content-length"])
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取音频流信息")
-                req = Request(url=audio_url, method="GET", headers=_DEFAULT_HEADERS)
-                with urlopen(req) as resp:
-                    audio_size = int(resp.headers["content-length"])
+                if audio_url is not None:
+                    self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取音频流信息")
+                    req = Request(url=audio_url, method="GET", headers=_DEFAULT_HEADERS)
+                    with urlopen(req) as resp:
+                        audio_size = int(resp.headers["content-length"])
+                else:
+                    audio_size = 0
                 break
             except Exception as _e:
                 try_times += 1
@@ -146,25 +155,45 @@ class DownloadTask(QtCore.QThread):
         audio_temp_file_base = "{}_temp.m4a"
         audio_temp_file_name = audio_temp_file_base.format(self.task["name"])
         audio_temp_file_path = root_dir.absoluteFilePath(audio_temp_file_name)
-        self.download_dash_audio(audio_url, audio_temp_file_path)
+        if audio_url is not None:
+            self.download_dash_audio(audio_url, audio_temp_file_path)
 
         # End Download
         while not self.timer_stopped:
             time.sleep(0.1)
 
-        if not self.task["onlyAudio"]:
+        do_merge = True
+
+        if self.task["onlyAudio"]:
+            do_merge = False
+
+        if audio_url is None:
+            do_merge = False
+
+        if self.task["specialAudio"] == "flac":
+            tmp = audio_temp_file_name
+            audio_temp_file_name = "{}_temp.flac".format(self.task["name"])
+            audio_temp_file_path = root_dir.absoluteFilePath(audio_temp_file_name)
+            root_dir.rename(tmp, audio_temp_file_name)
+
+        if do_merge:
             self.dash_ffmpeg_merge_video(root_dir, video_temp_file_path, audio_temp_file_path)
 
         # Cleanup
         self.emit(QtCore.SIGNAL("update_status(QString)"), "正在清理")
-        root_dir.remove(video_temp_file_path)
+        if audio_url is None:
+            root_dir.rename(video_temp_file_name, "{}.mp4".format(self.task["name"]))
+        else:
+            root_dir.remove(video_temp_file_name)
         if self.task["reserveAudio"] or self.task["onlyAudio"]:
             if self.task["specialAudio"] == "flac":
                 root_dir.rename(audio_temp_file_name, "{}.flac".format(self.task["name"]))
             else:
                 root_dir.rename(audio_temp_file_name, "{}.m4a".format(self.task["name"]))
+        elif audio_url is None:
+            pass
         else:
-            root_dir.remove(audio_temp_file_path)
+            root_dir.remove(audio_temp_file_name)
 
     def download_dash_video(self, video_url: str, video_temp_file_path: str):
         # Download video
@@ -232,37 +261,33 @@ class DownloadTask(QtCore.QThread):
             root_dir.remove(out_name)
         ffmpeg_path = QtCore.QDir("ffmpeg").absoluteFilePath("ffmpeg" + ("" if sys.platform == "linux" else ".exe"))
         devnull = open(os.devnull, "w")
+        command = [
+            ffmpeg_path,
+            "-i",
+            video_temp_file_path,
+            "-i",
+            audio_temp_file_path,
+            "-c:v",
+            "copy",
+            "-c:a",
+            "copy",
+        ]
+
+        # 启用实验性选项
+        if audio_temp_file_path.endswith(".flac"):
+            command.append('-strict')
+            command.append('-2')
+        command.append(root_dir.absoluteFilePath(out_name))
+
         if sys.platform == "linux":
             subprocess.call(
-                [
-                    ffmpeg_path,
-                    "-i",
-                    video_temp_file_path,
-                    "-i",
-                    audio_temp_file_path,
-                    "-c:v",
-                    "copy",
-                    "-c:a",
-                    "copy",
-                    root_dir.absoluteFilePath(out_name),
-                ],
+                command,
                 stdout=devnull,
                 stderr=devnull,
             )
         else:
             subprocess.call(
-                [
-                    ffmpeg_path,
-                    "-i",
-                    video_temp_file_path,
-                    "-i",
-                    audio_temp_file_path,
-                    "-c:v",
-                    "copy",
-                    "-c:a",
-                    "copy",
-                    root_dir.absoluteFilePath(out_name),
-                ],
+                command,
                 stdout=devnull,
                 stderr=devnull,
                 creationflags=subprocess.CREATE_NO_WINDOW
