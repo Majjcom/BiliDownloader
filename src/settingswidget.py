@@ -2,20 +2,14 @@ import os
 
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QMessageBox
-from ui_settingswidget import Ui_SettingsWidget
 
 import style
 from Lib.bili_api import user, utils
 from dialoglogin import DialogLogin
+from ui_settingswidget import Ui_SettingsWidget
 from utils import configUtils
 from utils.open_folder import open_folder
-
-# codec
-video_codec_id = {
-    7: "H.264(AVC) 尺寸大，兼容性最佳",
-    12: "H.265(HEVC) 尺寸中等，兼容性一般",
-    13: "AV1 尺寸小，老机型兼容差",
-}
+from utils.video_codec import video_codec_id
 
 video_codec_match = {}
 for _i in video_codec_id:

@@ -1,7 +1,7 @@
 from PySide2 import QtWidgets, QtCore
-from ui_downloaditem import Ui_DownloadItem
 
 from downloadthread import DownloadTask
+from ui_downloaditem import Ui_DownloadItem
 from utils.open_folder import open_folder
 from utils.sizefstr import sizefStr
 

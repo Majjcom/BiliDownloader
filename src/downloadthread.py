@@ -100,6 +100,9 @@ class DownloadTask(QtCore.QThread):
             if aud_stream_data is not None:
                 get_url["dash"]["audio"].insert(0, aud_stream_data)
 
+        if get_url["dash"].get("audio", None) is not None:
+            get_url["dash"]["audio"].sort(key=lambda x: x["bandwidth"], reverse=True)
+
         audio_url = None
         try:
             # 处理可能出现无音频流的情况
@@ -271,13 +274,17 @@ class DownloadTask(QtCore.QThread):
             "copy",
             "-c:a",
             "copy",
+            root_dir.absoluteFilePath(out_name)
         ]
 
+        # 使用新版本ffmpeg，不需要此功能
+        '''
         # 启用实验性选项
         if audio_temp_file_path.endswith(".flac"):
             command.append('-strict')
             command.append('-2')
-        command.append(root_dir.absoluteFilePath(out_name))
+        command.append()
+        '''
 
         if sys.platform == "linux":
             subprocess.call(

@@ -2,7 +2,7 @@
 - all qt lib ==> PySide6 -> PySide2
 - main.py ==> import fixssl and call fix()
 - main.py ==> exec() -> exec_()
-- imagelable.py ==> QAction -> From QtWidgets not QtCore
-- Lib/bili_api/utils/passport.py ==> fix r.randbytes()
-- specialcoloredlabel.py ==> remove if event.isBeginEvent()
+- imagelabel.py ==> QAction -> From QtWidgets not QtCore
 - imagelabel.py ==> change exec() -> exec_() at mousePressEvent
+- Lib/bili_api/utils/passport.py ==> fix r.randbytes() to `b''.join([r.randint(0, 255).to_bytes(1, "big") for _ in range(16)])`
+- specialcoloredlabel.py ==> remove if event.isBeginEvent()

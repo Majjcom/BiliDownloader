@@ -5,21 +5,15 @@ from os.path import isdir
 
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
-from ui_configwidget import Ui_ConfigWidget
 
 import style
 from Lib.bili_api import video, exceptions, bangumi
 from Lib.bili_api.utils.passport import BiliPassport, decode_cookie
 from centralcheckbox import CentralCheckBox
+from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
 from utils.removeSpecialChars import removeSpecialChars
-
-# codec
-video_codec_id = {
-    7: "H.264(AVC) 尺寸大，兼容性最佳",
-    12: "H.265(HEVC) 尺寸中等，兼容性一般",
-    13: "AV1 尺寸小，老机型兼容差",
-}
+from utils.video_codec import video_codec_id
 
 video_codec_match = {}
 for _i in video_codec_id:

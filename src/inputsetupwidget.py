@@ -1,10 +1,10 @@
 import pyperclip
 from PySide2.QtCore import SIGNAL, SLOT, QEvent
 from PySide2.QtWidgets import QWidget
-from ui_inputsetupwidget import Ui_InputSetupWidget
 
 import style
 from Lib.bili_api.utils import matchFomat
+from ui_inputsetupwidget import Ui_InputSetupWidget
 from utils import configUtils
 
 
