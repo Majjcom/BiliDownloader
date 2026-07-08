@@ -80,6 +80,7 @@ def get_video_url(
         bvid: str = None,
         cid: int = None,
         fnval: int = FNVAL_PRESET().default(),
+        cur_language: str = None,
         passport: utils.BiliPassport = None
 ):
     if cid is None:
@@ -101,6 +102,10 @@ def get_video_url(
         params['avid'] = avid
     else:
         raise BiliVideoIdException('你必须输入 aid, bvid 中的任意一个')
+    if cur_language is None:
+        params.pop("cur_language")
+    else:
+        params["cur_language"] = cur_language
     params = wbisign.sign_params(params, passport)
     header = {}
     if passport is not None:

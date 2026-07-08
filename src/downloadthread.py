@@ -86,6 +86,9 @@ class DownloadTask(QtCore.QThread):
             if i["codecid"] == codec:
                 video_url = i["baseUrl"]
 
+        if get_url["dash"].get("audio", None) is not None:
+            get_url["dash"]["audio"].sort(key=lambda x: x["bandwidth"], reverse=True)
+
         # process special audio stream
         if self.task["specialAudio"] is not None:
             special_audio = self.task["specialAudio"]
@@ -99,9 +102,6 @@ class DownloadTask(QtCore.QThread):
                 pass
             if aud_stream_data is not None:
                 get_url["dash"]["audio"].insert(0, aud_stream_data)
-
-        if get_url["dash"].get("audio", None) is not None:
-            get_url["dash"]["audio"].sort(key=lambda x: x["bandwidth"], reverse=True)
 
         audio_url = None
         try:
@@ -262,7 +262,7 @@ class DownloadTask(QtCore.QThread):
         out_name = "{}.mp4".format(self.task["name"])
         if root_dir.exists(out_name):
             root_dir.remove(out_name)
-        ffmpeg_path = QtCore.QDir("ffmpeg").absoluteFilePath("ffmpeg" + ("" if sys.platform == "linux" else ".exe"))
+        ffmpeg_path = QtCore.QDir("ffmpeg").absoluteFilePath("ffmpeg" + ("" if sys.platform == "linux" else ".upx.exe"))
         devnull = open(os.devnull, "w")
         command = [
             ffmpeg_path,
@@ -412,13 +412,22 @@ class DownloadTask(QtCore.QThread):
                 self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取链接")
                 get_url = None
                 if self.task["type"] == "video":
+                    ai_language = self.task["aiLanguage"]
                     if self.task["isbvid"]:
                         get_url = video.get_video_url(
-                            bvid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
+                            bvid=self.task["id"],
+                            cid=self.task["cid"],
+                            fnval=self.task["fnval"],
+                            cur_language=ai_language,
+                            passport=passport
                         )
                     else:
                         get_url = video.get_video_url(
-                            avid=self.task["id"], cid=self.task["cid"], fnval=self.task["fnval"], passport=passport
+                            avid=self.task["id"],
+                            cid=self.task["cid"],
+                            fnval=self.task["fnval"],
+                            cur_language=ai_language,
+                            passport=passport
                         )
                 elif self.task["type"] == "bangumi":
                     if self.task["isbvid"]:

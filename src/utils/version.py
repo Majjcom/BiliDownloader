@@ -1,4 +1,4 @@
-__version__ = "1.3.18"
+__version__ = "1.3.19"
 
 
 def check_version(new: str, old: str) -> bool:

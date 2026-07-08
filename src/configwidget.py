@@ -5,12 +5,12 @@ from os.path import isdir
 
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QFileDialog, QTableWidgetItem, QMessageBox
+from ui_configwidget import Ui_ConfigWidget
 
 import style
 from Lib.bili_api import video, exceptions, bangumi
 from Lib.bili_api.utils.passport import BiliPassport, decode_cookie
 from centralcheckbox import CentralCheckBox
-from ui_configwidget import Ui_ConfigWidget
 from utils import configUtils
 from utils.removeSpecialChars import removeSpecialChars
 from utils.video_codec import video_codec_id
@@ -37,6 +37,7 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.setupUi(self)
         self.fnval = get_fnval()
         self.data = None
+        self.ai_language_title_map = {}
         codecs = []
         for i in video_codec_match:
             codecs.append(i)
@@ -87,6 +88,13 @@ class ConfigWidget(QtWidgets.QWidget):
             special_audio = self.ui.combo_audio.currentText()
             if len(special_audio) == 0:
                 special_audio = None
+        ai_language = None
+        if self.ui.combo_ai_language.isEnabled():
+            ai_language = self.ui.combo_ai_language.currentText()
+            if len(ai_language) == 0:
+                ai_language = None
+            else:
+                ai_language = self.ai_language_title_map[ai_language]
         for i in self.data["download_data"]:
             box_danmaku: CentralCheckBox = i["box_danmaku"]
             box_audio: CentralCheckBox = i["box_audio"]
@@ -106,6 +114,7 @@ class ConfigWidget(QtWidgets.QWidget):
                 "fnval": self.fnval,
                 "type": i["type"],
                 "specialAudio": special_audio,
+                "aiLanguage": ai_language,
             }
             self.parent().download.push_task(push)
         self.parent().input_finished()
@@ -143,6 +152,15 @@ class ConfigWidget(QtWidgets.QWidget):
             self.ui.combo_audio.setEnabled(True)
         else:
             self.ui.combo_audio.setToolTip("当前视频无特殊音频")
+        if len(data["ai_language"]) > 0:
+            self.ui.label_ai_language.setEnabled(True)
+            self.ui.combo_ai_language.addItem("")
+            for i in data["ai_language"]:
+                self.ui.combo_ai_language.addItem(i["title"])
+                self.ai_language_title_map[i["title"]] = i["lang"]
+            self.ui.combo_ai_language.setEnabled(True)
+        else:
+            self.ui.combo_ai_language.setToolTip("当前视频无AI原声翻译")
 
     # Slot
     def load_finish(self):
@@ -153,10 +171,18 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.widget.setEnabled(False)
         self.ui.button_submit.setEnabled(False)
         self.ui.combo_quality.clear()
+
         self.ui.combo_audio.clear()
         self.ui.combo_audio.setToolTip(None)
         self.ui.combo_audio.setEnabled(False)
         self.ui.label_audio.setEnabled(False)
+
+        self.ui.combo_ai_language.clear()
+        self.ui.combo_ai_language.setToolTip(None)
+        self.ui.combo_ai_language.setEnabled(False)
+        self.ui.label_ai_language.setEnabled(False)
+        self.ai_language_title_map = {}
+
         self.ui.table_downloads.setRowCount(0)
         userdata = configUtils.UserDataHelper()
         codec = userdata.get(userdata.CFGS.VIDEO_CODEC, 7)
@@ -275,9 +301,18 @@ class GetVideoInfo(QtCore.QThread):
                         if dash_data["dolby"]["audio"] is not None:
                             if len(dash_data["dolby"]["audio"]) > 0:
                                 audio.append("dolby")
+                ai_language = []
+                if "language" in data:
+                    for l in data["language"]["items"]:
+                        lang = {
+                            "lang": l["lang"],
+                            "title": l["title"],
+                        }
+                        ai_language.append(lang)
                 data = {
                     "audio": audio,
-                    "quality": quality
+                    "quality": quality,
+                    "ai_language": ai_language,
                 }
                 break
             except exceptions.NetWorkException as ex:

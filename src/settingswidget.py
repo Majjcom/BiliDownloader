@@ -2,11 +2,11 @@ import os
 
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtWidgets import QMessageBox
+from ui_settingswidget import Ui_SettingsWidget
 
 import style
 from Lib.bili_api import user, utils
 from dialoglogin import DialogLogin
-from ui_settingswidget import Ui_SettingsWidget
 from utils import configUtils
 from utils.open_folder import open_folder
 from utils.video_codec import video_codec_id

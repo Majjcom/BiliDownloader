@@ -50,7 +50,8 @@
       "qn": "清晰度 num",
       "fnval": "视频获取方式",
       "fnver": 0,
-      "fourk": "有4K=1, 无=0"
+      "fourk": "有4K=1, 无=0",
+      "cur_language": "AI原声翻译语言"
     },
     "return": {
       "code": {
@@ -95,7 +96,8 @@
       "qn": "清晰度 num",
       "fnval": "视频获取方式",
       "fnver": 0,
-      "fourk": "有4K=1, 无=0"
+      "fourk": "有4K=1, 无=0",
+      "cur_language": "AI原声翻译语言"
     },
     "return": {
       "code": {
