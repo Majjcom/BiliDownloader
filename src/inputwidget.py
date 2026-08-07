@@ -1,6 +1,6 @@
 from typing import List
 
-from PySide2.QtCore import SIGNAL
+from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QWidget, QMainWindow
 from ui_inputwidget import Ui_InputWidget
 
@@ -39,52 +39,29 @@ class InputWidget(QWidget):
         widget = InputSetupWidget(self)
         self.input_pages.append(widget)
         self.ui.gridLayout.addWidget(self.input_pages[0], 0, 0, 1, 1)
-        self.connect(
-            widget.ui.button_next,
-            SIGNAL("clicked()"),
-            self.on_next_button_clicked,
-        )
+        widget.ui.button_next.clicked.connect(self.on_next_button_clicked)
 
         # page 2
         widget = ConfirmWidget(self)
         widget.setHidden(True)
         self.input_pages.append(widget)
-        self.connect(
-            widget.ui.button_next,
-            SIGNAL("clicked()"),
-            self.on_next_button_clicked,
-        )
-        self.connect(
-            widget.ui.button_back,
-            SIGNAL("clicked()"),
-            self.on_back_button_clicked,
-        )
+        widget.ui.button_next.clicked.connect(self.on_next_button_clicked)
+        widget.ui.button_back.clicked.connect(self.on_back_button_clicked)
 
         # page 3
         widget = SelectionWidget(self)
         widget.setHidden(True)
         self.input_pages.append(widget)
-        self.connect(
-            widget.ui.button_next,
-            SIGNAL("clicked()"),
-            self.on_next_button_clicked,
-        )
-        self.connect(
-            widget.ui.button_back,
-            SIGNAL("clicked()"),
-            self.on_back_button_clicked,
-        )
+        widget.ui.button_next.clicked.connect(self.on_next_button_clicked)
+        widget.ui.button_back.clicked.connect(self.on_back_button_clicked)
 
         # page 4
         widget = ConfigWidget(self)
         widget.setHidden(True)
         self.input_pages.append(widget)
-        self.connect(
-            widget.ui.button_back,
-            SIGNAL("clicked()"),
-            self.on_back_button_clicked,
-        )
+        widget.ui.button_back.clicked.connect(self.on_back_button_clicked)
 
+    @Slot()
     def on_next_button_clicked(self) -> None:
         """
         Go to the next input page.
@@ -99,6 +76,7 @@ class InputWidget(QWidget):
             self.ui.gridLayout.addWidget(widget, 0, 0, 1, 1)
             self.current_input_page += 1
 
+    @Slot()
     def on_back_button_clicked(self) -> None:
         """
         Go to the previous input page.

@@ -26,6 +26,8 @@ def download_danmaku(path, cid):
 
 
 class TimerThread(QtCore.QThread):
+    ttimeout = QtCore.Signal()
+
     def __init__(self, parent: QtCore.QObject = ...) -> None:
         super().__init__(parent)
         self.tstop = False
@@ -36,13 +38,16 @@ class TimerThread(QtCore.QThread):
     def run(self):
         while not self.tstop:
             time.sleep(0.1)
-            self.emit(
-                QtCore.SIGNAL("ttimeout()")
-            )
+            self.ttimeout.emit()
         self.deleteLater()
 
 
 class DownloadTask(QtCore.QThread):
+    update_progress = QtCore.Signal(int, int)
+    update_status = QtCore.Signal(str)
+    enable_restart = QtCore.Signal()
+    update_finished = QtCore.Signal()
+
     def __init__(self, parent: QtCore.QObject = ...) -> None:
         super().__init__(parent)
         self.fource_stop = False
@@ -59,9 +64,9 @@ class DownloadTask(QtCore.QThread):
     def t_stop(self):
         self.fource_stop = True
 
+    @QtCore.Slot()
     def timer_timeout(self):
-        self.emit(
-            QtCore.SIGNAL("update_progress(quint64, quint64)"),
+        self.update_progress.emit(
             self.video_finished_size + self.audio_finished_size,
             self.total_size,
         )
@@ -115,7 +120,7 @@ class DownloadTask(QtCore.QThread):
         video_size = 0
         while try_times < 3:
             try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取视频流信息")
+                self.update_status.emit("正在获取视频流信息")
                 if self.task["onlyAudio"]:
                     video_size = 0
                 else:
@@ -123,7 +128,7 @@ class DownloadTask(QtCore.QThread):
                     with urlopen(req) as resp:
                         video_size = int(resp.headers["content-length"])
                 if audio_url is not None:
-                    self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取音频流信息")
+                    self.update_status.emit("正在获取音频流信息")
                     req = Request(url=audio_url, method="GET", headers=_DEFAULT_HEADERS)
                     with urlopen(req) as resp:
                         audio_size = int(resp.headers["content-length"])
@@ -132,20 +137,19 @@ class DownloadTask(QtCore.QThread):
                 break
             except Exception as _e:
                 try_times += 1
-                self.emit(
-                    QtCore.SIGNAL("update_status(QString)"),
+                self.update_status.emit(
                     "获取视频信息失败，即将重试，次数{}".format(try_times),
                 )
                 time.sleep(2)
         else:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.update_status.emit("下载失败，请重新输入")
             self.task["finished"] = True
             return
         self.total_size = video_size + audio_size
         self.video_finished_size = 0
         self.audio_finished_size = 0
 
-        self.emit(QtCore.SIGNAL("enable_restart()"))
+        self.enable_restart.emit()
 
         # Download video
         video_temp_file_base = "{}_temp.mp4"
@@ -183,7 +187,7 @@ class DownloadTask(QtCore.QThread):
             self.dash_ffmpeg_merge_video(root_dir, video_temp_file_path, audio_temp_file_path)
 
         # Cleanup
-        self.emit(QtCore.SIGNAL("update_status(QString)"), "正在清理")
+        self.update_status.emit("正在清理")
         if audio_url is None:
             root_dir.rename(video_temp_file_name, "{}.mp4".format(self.task["name"]))
         else:
@@ -204,7 +208,7 @@ class DownloadTask(QtCore.QThread):
         try_times = 0
         while try_times < 3:
             try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载视频")
+                self.update_status.emit("正在下载视频")
                 with open(video_temp_file_path, "wb") as f:
                     with urlopen(req) as resp:
                         while True:
@@ -218,13 +222,12 @@ class DownloadTask(QtCore.QThread):
                 break
             except Exception as _e:
                 try_times += 1
-                self.emit(
-                    QtCore.SIGNAL("update_status(QString)"),
+                self.update_status.emit(
                     "下载视频失败，即将重试，次数{}".format(try_times),
                 )
                 time.sleep(2)
         else:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.update_status.emit("下载失败，请重新输入")
             self.task["finished"] = True
             return
 
@@ -233,7 +236,7 @@ class DownloadTask(QtCore.QThread):
         try_times = 0
         while try_times < 3:
             try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载音频")
+                self.update_status.emit("正在下载音频")
                 with open(audio_temp_file_path, "wb") as f:
                     with urlopen(req) as resp:
                         while True:
@@ -247,18 +250,17 @@ class DownloadTask(QtCore.QThread):
                 break
             except Exception as _e:
                 try_times += 1
-                self.emit(
-                    QtCore.SIGNAL("update_status(QString)"),
+                self.update_status.emit(
                     "下载音频失败，即将重试，次数{}".format(try_times),
                 )
                 time.sleep(2)
         else:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.update_status.emit("下载失败，请重新输入")
             self.task["finished"] = True
             return
 
     def dash_ffmpeg_merge_video(self, root_dir: QtCore.QDir, video_temp_file_path, audio_temp_file_path):
-        self.emit(QtCore.SIGNAL("update_status(QString)"), "正在使用ffmpeg合并")
+        self.update_status.emit("正在使用ffmpeg合并")
         out_name = "{}.mp4".format(self.task["name"])
         if root_dir.exists(out_name):
             root_dir.remove(out_name)
@@ -317,27 +319,26 @@ class DownloadTask(QtCore.QThread):
         try_times = 0
         while try_times < 3:
             try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取视频流信息")
+                self.update_status.emit("正在获取视频流信息")
                 req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
                 with urlopen(req) as resp:
                     video_size = int(resp.headers["content-length"])
                 break
             except Exception as _e:
                 try_times += 1
-                self.emit(
-                    QtCore.SIGNAL("update_status(QString)"),
+                self.update_status.emit(
                     "获取视频信息失败，即将重试，次数{}".format(try_times),
                 )
                 time.sleep(2)
         else:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.update_status.emit("下载失败，请重新输入")
             self.task["finished"] = True
             return
         self.total_size = video_size
         self.video_finished_size = 0
         self.audio_finished_size = 0
 
-        self.emit(QtCore.SIGNAL("enable_restart()"))
+        self.enable_restart.emit()
 
         # Download video
         req = Request(url=video_url, method="GET", headers=_DEFAULT_HEADERS)
@@ -346,7 +347,7 @@ class DownloadTask(QtCore.QThread):
         try_times = 0
         while try_times < 3:
             try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载视频")
+                self.update_status.emit("正在下载视频")
                 with open(video_temp_file_path, "wb") as f:
                     with urlopen(req) as resp:
                         while True:
@@ -360,13 +361,12 @@ class DownloadTask(QtCore.QThread):
                 break
             except Exception as _e:
                 try_times += 1
-                self.emit(
-                    QtCore.SIGNAL("update_status(QString)"),
+                self.update_status.emit(
                     "下载视频失败，即将重试，次数{}".format(try_times),
                 )
                 time.sleep(2)
         else:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.update_status.emit("下载失败，请重新输入")
             self.task["finished"] = True
             return
         root_dir.rename(video_temp_file_name, "{}.mp4".format(self.task["name"]))
@@ -374,18 +374,18 @@ class DownloadTask(QtCore.QThread):
     def download_danmaku(self, root_dir: QtCore.QDir):
         danmaku_file_name = "{}.ass".format(self.task["name"])
         try:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "正在下载弹幕")
+            self.update_status.emit("正在下载弹幕")
             download_danmaku(
                 root_dir.absoluteFilePath(danmaku_file_name), self.task["cid"]
             )
         except Exception as _:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "弹幕下载失败，已跳过")
+            self.update_status.emit("弹幕下载失败，已跳过")
             if root_dir.exists(danmaku_file_name):
                 root_dir.remove(danmaku_file_name)
             time.sleep(1)
 
     def run(self):
-        self.emit(QtCore.SIGNAL("update_status(QString)"), "开始下载")
+        self.update_status.emit("开始下载")
 
         # Creat directory
         root_dir = QtCore.QDir(self.task["path"])
@@ -409,7 +409,7 @@ class DownloadTask(QtCore.QThread):
         try_times = 0
         while try_times < 3:
             try:
-                self.emit(QtCore.SIGNAL("update_status(QString)"), "正在获取链接")
+                self.update_status.emit("正在获取链接")
                 get_url = None
                 if self.task["type"] == "video":
                     ai_language = self.task["aiLanguage"]
@@ -447,13 +447,11 @@ class DownloadTask(QtCore.QThread):
                 break
             except Exception as _e:
                 try_times += 1
-                self.emit(
-                    QtCore.SIGNAL("update_status(QString)"),
+                self.update_status.emit(
                     "获取链接失败，即将重试，次数{}".format(try_times),
                 )
                 if try_times >= 3 and self.task["type"] == "video":
-                    self.emit(
-                        QtCore.SIGNAL("update_status(QString)"),
+                    self.update_status.emit(
                         "失败次数过多，尝试更换获取链接方式"
                     )
                     time.sleep(1.0)
@@ -461,16 +459,12 @@ class DownloadTask(QtCore.QThread):
                     try_times = 0
                 time.sleep(2)
         else:
-            self.emit(QtCore.SIGNAL("update_status(QString)"), "下载失败，请重新输入")
+            self.update_status.emit("下载失败，请重新输入")
             self.task["finished"] = True
             return
 
         self.timer = TimerThread(None)
-        self.connect(
-            self.timer,
-            QtCore.SIGNAL("ttimeout()"),
-            self.timer_timeout
-        )
+        self.timer.ttimeout.connect(self.timer_timeout)
         self.timer_stopped = False
         self.timer.start()
 
@@ -492,6 +486,6 @@ class DownloadTask(QtCore.QThread):
 
         time.sleep(0.2)
 
-        self.emit(QtCore.SIGNAL("update_status(QString)"), "下载完成")
-        self.emit(QtCore.SIGNAL("update_finished()"))
+        self.update_status.emit("下载完成")
+        self.update_finished.emit()
         self.task["finished"] = True

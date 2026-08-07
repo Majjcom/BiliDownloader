@@ -1,6 +1,6 @@
 from enum import Enum
 
-from PySide2.QtCore import QThread, QObject, SIGNAL
+from PySide2.QtCore import QThread, QObject, Signal
 
 from Lib.bili_api.utils import checkAccount
 from Lib.bili_api.utils.passport import BiliPassport, decode_cookie
@@ -35,6 +35,8 @@ def check_account() -> ACCOUNT_STATUS:
 
 
 class CheckAccountThread(QThread):
+    check_account_finished = Signal(bool)
+
     def __init__(self, parent: QObject = ...):
         super().__init__(parent)
 
@@ -45,7 +47,4 @@ class CheckAccountThread(QThread):
         if res == ACCOUNT_STATUS.FAIL:
             ret = False
 
-        self.emit(
-            SIGNAL("check_account_finished(bool)"),
-            ret
-        )
+        self.check_account_finished.emit(ret)

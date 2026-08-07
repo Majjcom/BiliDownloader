@@ -22,18 +22,10 @@ class DownloadWidget(QtWidgets.QWidget):
 
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(1000)
-        self.connect(
-            self.timer,
-            QtCore.SIGNAL("timeout()"),
-            self.timer_timeout,
-        )
+        self.timer.timeout.connect(self.timer_timeout)
         self.timer.start()
 
-        self.connect(
-            self.ui.button_clean,
-            QtCore.SIGNAL("clicked()"),
-            self.on_clean_button_clicked,
-        )
+        self.ui.button_clean.clicked.connect(self.on_clean_button_clicked)
 
     def push_task(self, task: dict):
         task["widget"] = DownloadItem(self)
@@ -46,6 +38,7 @@ class DownloadWidget(QtWidgets.QWidget):
         task["widget"].setup_info(task)
         task["finished"] = False
 
+    @QtCore.Slot()
     def on_clean_button_clicked(self):
         for i in self.finished:
             self.ui.listWidget.takeItem(self.ui.listWidget.row(i["item"]))
@@ -57,6 +50,7 @@ class DownloadWidget(QtWidgets.QWidget):
     def update_tab_changes(self, old, now):
         pass
 
+    @QtCore.Slot()
     def timer_timeout(self):
         if len(self.running_tasks) < self.max_thread_count and len(self.tasks) != 0:
             task = self.tasks.pop()
@@ -66,30 +60,10 @@ class DownloadWidget(QtWidgets.QWidget):
             thread.setTerminationEnabled(True)
             thread.setup(task)
             self.running_tasks.append(task)
-            thread.connect(
-                thread,
-                QtCore.SIGNAL("update_progress(quint64, quint64)"),
-                task["widget"],
-                QtCore.SLOT("update_progress(quint64, quint64)"),
-            )
-            thread.connect(
-                thread,
-                QtCore.SIGNAL("update_status(QString)"),
-                task["widget"],
-                QtCore.SLOT("update_status(QString)"),
-            )
-            thread.connect(
-                thread,
-                QtCore.SIGNAL("update_finished()"),
-                task["widget"],
-                QtCore.SLOT("update_finished()"),
-            )
-            thread.connect(
-                thread,
-                QtCore.SIGNAL("enable_restart()"),
-                task["widget"],
-                QtCore.SLOT("enable_button()"),
-            )
+            thread.update_progress.connect(task["widget"].update_progress)
+            thread.update_status.connect(task["widget"].update_status)
+            thread.update_finished.connect(task["widget"].update_finished)
+            thread.enable_restart.connect(task["widget"].enable_button)
             thread.start()
         if len(self.running_tasks) > 0:
             for i in range(len(self.running_tasks)):

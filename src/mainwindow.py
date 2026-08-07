@@ -41,36 +41,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.widget_input.setup_mainwindow(self)
         self.ui.widget_input.setup_download(self.ui.widget_download)
 
-        self.connect(
-            self.ui.tabWidget,
-            QtCore.SIGNAL("currentChanged(int)"),
-            self.on_tab_changes,
-        )
+        self.ui.tabWidget.currentChanged.connect(self.on_tab_changes)
 
         # Check Update
         self.update_thread = UpdateChecker(self)
-        self.connect(
-            self.update_thread,
-            QtCore.SIGNAL("finished()"),
-            self.update_finish,
-        )
-        self.connect(
-            self.update_thread,
-            QtCore.SIGNAL("find_update(QString, QString)"),
-            self.find_update,
-        )
+        self.update_thread.finished.connect(self.update_finish)
+        self.update_thread.find_update.connect(self.find_update)
         self.update_thread.start()
 
         # Check Account
         self.check_account_thread = CheckAccountThread(self)
-        self.connect(
-            self.check_account_thread,
-            QtCore.SIGNAL("check_account_finished(bool)"),
-            self.check_account_finished
-        )
+        self.check_account_thread.check_account_finished.connect(self.check_account_finished)
         self.check_account_thread.start()
 
-    # Slot
+    @QtCore.Slot(str, str)
     def find_update(self, new: str, info: str):
         self.ui.centralwidget.setEnabled(False)
         dialog = DialogUpdateInfo(new, info, self)
@@ -84,33 +68,18 @@ class MainWindow(QtWidgets.QMainWindow):
             "downloadPath", QtCore.QDir("Download").absolutePath()
         )
         self.download_thread.setup(self.download_path)
-        self.download_thread.connect(
-            self.download_thread,
-            QtCore.SIGNAL("update_process(int, int)"),
-            dialog,
-            QtCore.SLOT("update_process(int, int)"),
-        )
-        self.download_thread.connect(
-            self.download_thread,
-            QtCore.SIGNAL("download_err(QString)"),
-            self,
-            QtCore.SLOT("download_err(QString)"),
-        )
-        self.download_thread.connect(
-            self.download_thread,
-            QtCore.SIGNAL("downlaod_install(QString)"),
-            self,
-            QtCore.SLOT("downlaod_install(QString)"),
-        )
+        self.download_thread.update_process.connect(dialog.update_process)
+        self.download_thread.download_err.connect(self.download_err)
+        self.download_thread.download_install.connect(self.download_install)
         self.download_thread.start()
         dialog.exec()
 
-    # Slot
+    @QtCore.Slot()
     def update_finish(self):
         self.disconnect(self.update_thread)
         del self.update_thread
 
-    # Slot
+    @QtCore.Slot(bool)
     def check_account_finished(self, res):
         if not res:
             QtWidgets.QMessageBox.information(
@@ -119,23 +88,24 @@ class MainWindow(QtWidgets.QMainWindow):
                 "您的登录信息已失效，请及时重新登录\n视频下载可能会出现问题"
             )
 
-    # Slot
+    @QtCore.Slot(str)
     def download_err(self, msg: str):
         QtWidgets.QMessageBox.critical(self, "错误", "获取更新失败\n" + msg)
 
-    # Slot
+    @QtCore.Slot()
     def download_finished(self):
         self.disconnect(self.download_thread)
         del self.download_thread
 
-    # Slot
-    def downlaod_install(self, file: str):
+    @QtCore.Slot(str)
+    def download_install(self, file: str):
         self.close()
         subprocess.call(
             f"cmd /c start \"\" \"{file}\"",
             creationflags=subprocess.CREATE_NO_WINDOW
         )
 
+    @QtCore.Slot(int)
     def on_tab_changes(self, index):
         for tab in self.tabs:
             tab.update_tab_changes(self.tab_now, index)

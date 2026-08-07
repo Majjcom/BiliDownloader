@@ -7,15 +7,12 @@ class ColoredLabel(QtWidgets.QLabel):
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(33)
         self.change_speed = 15
-        self.connect(
-            self.timer,
-            QtCore.SIGNAL("timeout()"),
-            self.timer_timeout
-        )
+        self.timer.timeout.connect(self.timer_timeout)
         self.timer.start()
         self.color = [255, 0, 0]
         self.change_pos = 0
 
+    @QtCore.Slot()
     def timer_timeout(self):
         p1 = self.change_pos
         p2 = (p1 + 1) % 3

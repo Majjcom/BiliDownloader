@@ -4,6 +4,7 @@ import http.client
 import json
 import urllib.parse
 import zlib
+from http.client import HTTPMessage as _HTTPMessage
 from typing import Union
 
 import brotli
@@ -87,6 +88,7 @@ class DataGetter:
         self._query = query
         self._header = header
         self._c: Union[http.client.HTTPConnection, http.client.HTTPSConnection] = None
+        self._response_headers: _HTTPMessage = None
         if method == "GET":
             self._qu = (
                 ""
@@ -119,6 +121,7 @@ class DataGetter:
             self._head["Content-Type"] = "application/x-www-form-urlencoded"
             self._c.request(self._method, self._path, body=data, headers=self._head)
         r = self._c.getresponse()
+        self._response_headers = r.headers
         data = r.read()
         encoding = r.headers.get("Content-Encoding")
         if encoding is not None:
@@ -134,6 +137,9 @@ class DataGetter:
         get = json.loads(data)
         r.close()
         return get
+
+    def get_headers(self) -> _HTTPMessage:
+        return self._response_headers
 
     def close(self):
         self._c.close()

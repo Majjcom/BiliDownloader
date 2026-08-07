@@ -18,31 +18,20 @@ class AboutWidget(QtWidgets.QWidget):
         else:
             self.ui.label_version.setText(version.__version__)
 
-        self.connect(
-            self.ui.button_changelog,
-            QtCore.SIGNAL("clicked()"),
-            self.on_button_changelog_clicked
-        )
+        self.ui.button_changelog.clicked.connect(self.on_changelog_button_clicked)
+        self.ui.button_license.clicked.connect(self.on_license_button_clicked)
+        self.ui.button_about_qt.clicked.connect(self.on_about_qt_button_clicked)
 
-        self.connect(
-            self.ui.button_license,
-            QtCore.SIGNAL("clicked()"),
-            self.on_button_license_clicked
-        )
-
-        self.connect(
-            self.ui.button_about_qt,
-            QtCore.SIGNAL("clicked()"),
-            self.on_button_about_qt_clicked
-        )
-
-    def on_button_changelog_clicked(self):
+    @QtCore.Slot()
+    def on_changelog_button_clicked(self):
         show_changelog(self)
 
-    def on_button_license_clicked(self):
+    @QtCore.Slot()
+    def on_license_button_clicked(self):
         show_license(self)
 
-    def on_button_about_qt_clicked(self):
+    @QtCore.Slot()
+    def on_about_qt_button_clicked(self):
         QtWidgets.QMessageBox.aboutQt(self)
 
     def update_tab_changes(self, old, now):

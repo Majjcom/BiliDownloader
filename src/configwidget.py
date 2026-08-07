@@ -42,23 +42,11 @@ class ConfigWidget(QtWidgets.QWidget):
         for i in video_codec_match:
             codecs.append(i)
         self.ui.combo_codec.addItems(codecs)
-        self.connect(
-            self.ui.button_path,
-            QtCore.SIGNAL("clicked()"),
-            self.on_path_change_button_clicked,
-        )
-        self.connect(
-            self.ui.button_submit,
-            QtCore.SIGNAL("clicked()"),
-            self.on_submit_button_clicked,
-        )
-        self.connect(
-            self.ui.line_path,
-            QtCore.SIGNAL("textChanged(QString)"),
-            self.on_path_changed,
-        )
+        self.ui.button_path.clicked.connect(self.on_path_change_button_clicked)
+        self.ui.button_submit.clicked.connect(self.on_submit_button_clicked)
+        self.ui.line_path.textChanged.connect(self.on_path_changed)
 
-    # Slot
+    @QtCore.Slot()
     def on_path_change_button_clicked(self):
         path = QFileDialog.getExistingDirectory(
             self,
@@ -70,7 +58,7 @@ class ConfigWidget(QtWidgets.QWidget):
             return
         self.ui.line_path.setText(path)
 
-    # Slot
+    @QtCore.Slot()
     def on_submit_button_clicked(self):
         self.ui.button_submit.setDisabled(True)
         quality = self.quality_match[self.ui.combo_quality.currentText()]
@@ -119,7 +107,7 @@ class ConfigWidget(QtWidgets.QWidget):
             self.parent().download.push_task(push)
         self.parent().input_finished()
 
-    # Slot
+    @QtCore.Slot(str)
     def on_path_changed(self, path: str):
         ex = isdir(path)
         self.ui.button_submit.setEnabled(ex)
@@ -128,7 +116,7 @@ class ConfigWidget(QtWidgets.QWidget):
         else:
             self.ui.line_path.setStyleSheet(style.BASIC_FONT_STYLE)
 
-    # Slot
+    @QtCore.Slot(QtCore.QByteArray, bool)
     def update_info(self, data: QtCore.QByteArray, err: bool):
         data = pickle.loads(data.data())
         if err:
@@ -162,7 +150,7 @@ class ConfigWidget(QtWidgets.QWidget):
         else:
             self.ui.combo_ai_language.setToolTip("当前视频无AI原声翻译")
 
-    # Slot
+    @QtCore.Slot()
     def load_finish(self):
         self.disconnect(self.load_thread)
         del self.load_thread
@@ -221,20 +209,14 @@ class ConfigWidget(QtWidgets.QWidget):
             self.data["download_data"].append(i)
         page = self.data["page_data"][0]
         self.load_thread = GetVideoInfo(page["id"], page["isbvid"], page["cid"], self.fnval, page["type"], self)
-        self.connect(
-            self.load_thread,
-            QtCore.SIGNAL("update_info(QByteArray, bool)"),
-            self.update_info,
-        )
-        self.connect(
-            self.load_thread,
-            QtCore.SIGNAL("finished()"),
-            self.load_finish,
-        )
+        self.load_thread.update_info.connect(self.update_info)
+        self.load_thread.finished.connect(self.load_finish)
         self.load_thread.start()
 
 
 class GetVideoInfo(QtCore.QThread):
+    update_info = QtCore.Signal(QtCore.QByteArray, bool)
+
     def __init__(
             self, vid, isbvid: bool, cid, fnval: int, type_: str, parent: QtCore.QObject = ...
     ) -> None:
@@ -244,7 +226,6 @@ class GetVideoInfo(QtCore.QThread):
         self.cid = cid
         self.fnval = fnval
         self.type = type_
-        self.update_info = QtCore.Signal(QtCore.QByteArray, bool)
 
     def run(self):
         data = None
@@ -331,4 +312,4 @@ class GetVideoInfo(QtCore.QThread):
             err = True
         data = pickle.dumps(data)
         data = QtCore.QByteArray(data)
-        self.emit(QtCore.SIGNAL("update_info(QByteArray,bool)"), data, err)
+        self.update_info.emit(data, err)

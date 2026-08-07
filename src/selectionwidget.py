@@ -24,16 +24,8 @@ class SelectionWidget(QtWidgets.QWidget):
         self.ui.setupUi(self)
         self.meta = None
         self.data = None
-        self.connect(
-            self.ui.button_setSelection,
-            QtCore.SIGNAL("clicked()"),
-            self.on_set_button_clicked,
-        )
-        self.connect(
-            self.ui.button_help,
-            QtCore.SIGNAL("clicked()"),
-            self.on_help_button_clicked,
-        )
+        self.ui.button_setSelection.clicked.connect(self.on_set_button_clicked)
+        self.ui.button_help.clicked.connect(self.on_help_button_clicked)
 
     def data_update(self, back):
         if back:
@@ -46,11 +38,7 @@ class SelectionWidget(QtWidgets.QWidget):
             box = CentralCheckBox()
             box.get_box().setChecked(True)
             i["box"] = box
-            self.connect(
-                box.get_box(),
-                QtCore.SIGNAL("toggled(bool)"),
-                self.on_check_button_changed
-            )
+            box.get_box().toggled.connect(self.on_check_button_changed)
             item_text = QtWidgets.QTableWidgetItem(i["name"])
             self.ui.table_selection.setRowCount(self.ui.table_selection.rowCount() + 1)
             self.ui.table_selection.setCellWidget(
@@ -60,7 +48,7 @@ class SelectionWidget(QtWidgets.QWidget):
                 self.ui.table_selection.rowCount() - 1, 1, item_text
             )
 
-    # Slot
+    @QtCore.Slot(bool)
     def on_check_button_changed(self, _checked: bool):
         count = 0
         for i in self.data["page_data"]:
@@ -70,11 +58,11 @@ class SelectionWidget(QtWidgets.QWidget):
                 count += 1
         self.ui.button_next.setEnabled(count > 0)
 
-    # Slot
+    @QtCore.Slot()
     def on_help_button_clicked(self):
         QtWidgets.QMessageBox.information(self, "选集帮助", SELECTTON_HELP)
 
-    # Slot
+    @QtCore.Slot()
     def on_set_button_clicked(self):
         selection_str = self.ui.line_selection.text()
 

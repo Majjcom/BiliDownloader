@@ -15,6 +15,8 @@ NO_UPDATE = True
 
 
 class UpdateChecker(QtCore.QThread):
+    find_update = QtCore.Signal(str, str)
+
     def __init__(self, parent: QtCore.QObject = ...) -> None:
         super().__init__(parent)
         self.timer_finished = False
@@ -39,10 +41,14 @@ class UpdateChecker(QtCore.QThread):
         })
         c.close()
         info = get["data"]
-        self.emit(QtCore.SIGNAL("find_update(QString, QString)"), new_ver, info)
+        self.find_update.emit(new_ver, info)
 
 
 class UpdateDownloader(QtCore.QThread):
+    update_process = QtCore.Signal(int, int)
+    download_install = QtCore.Signal(str)
+    download_err = QtCore.Signal(str)
+
     def __init__(self, parent: QtCore.QObject = ...) -> None:
         super().__init__(parent)
         self.timer_finished = False
@@ -62,9 +68,9 @@ class UpdateDownloader(QtCore.QThread):
         self.dir_path = path
         # self.save_path = QtCore.QDir(path).absoluteFilePath(self.file_name)
 
-    # Slot
+    @QtCore.Slot()
     def timer_timeout(self):
-        self.emit(QtCore.SIGNAL("update_process(int, int)"), self.size, self.total)
+        self.update_process.emit(self.size, self.total)
         if self.size == self.total:
             self.timer.stop()
             self.timer_finished = True
@@ -99,8 +105,8 @@ class UpdateDownloader(QtCore.QThread):
                             break
                         md5_re.update(data)
                 if md5_re.hexdigest().lower() == self.file_hash.lower():
-                    self.emit(QtCore.SIGNAL("update_process(int, int)"), 100, 100)
-                    self.emit(QtCore.SIGNAL("downlaod_install(QString)"), self.save_path)
+                    self.update_process.emit(100, 100)
+                    self.download_install.emit(self.save_path)
                     return
 
             self.size = 0
@@ -132,10 +138,9 @@ class UpdateDownloader(QtCore.QThread):
 
             if md5.lower() != self.file_hash.lower():
                 raise Exception("下载哈希无法对应，下载错误")
-            self.emit(QtCore.SIGNAL("downlaod_install(QString)"), self.save_path)
+            self.download_install.emit(self.save_path)
         except Exception as e:
-            self.emit(
-                QtCore.SIGNAL("download_err(QString)"),
+            self.download_err.emit(
                 str(e) + "\n" + traceback.format_exc(),
             )
 

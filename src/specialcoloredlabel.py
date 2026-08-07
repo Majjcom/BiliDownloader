@@ -27,7 +27,6 @@ class SpecialColoredLabel(ColoredLabel):
         self.click_times = 0
         self.re_index = 0
 
-    # Slot
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         super().mousePressEvent(event)
         self.click_times += 1

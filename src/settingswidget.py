@@ -32,47 +32,13 @@ class SettingsWidget(QtWidgets.QWidget):
             codecs.append(i)
         self.ui.combo_codec.addItems(codecs)
         self.ui.combo_style.addItems(qt_styles)
-        self.connect(
-            self.ui.button_path,
-            QtCore.SIGNAL("clicked()"),
-            self.on_path_button_clicked,
-        )
-
-        self.connect(
-            self.ui.button_login,
-            QtCore.SIGNAL("clicked()"),
-            self.on_login_button_clicked,
-        )
-
-        self.connect(
-            self.ui.button_reset,
-            QtCore.SIGNAL("clicked()"),
-            self.on_reset_button_clicked,
-        )
-
-        self.connect(
-            self.ui.line_path,
-            QtCore.SIGNAL("textChanged(QString)"),
-            self.on_line_path_changed,
-        )
-
-        self.connect(
-            self.ui.button_config_dir,
-            QtCore.SIGNAL("clicked()"),
-            self.on_open_config_dir_clicked,
-        )
-
-        self.connect(
-            self.ui.button_open_download_dir,
-            QtCore.SIGNAL("clicked()"),
-            self.on_open_download_dir_clicked,
-        )
-
-        self.connect(
-            self.ui.button_logout,
-            QtCore.SIGNAL("clicked()"),
-            self.on_logout_button_clicked,
-        )
+        self.ui.button_path.clicked.connect(self.on_path_button_clicked)
+        self.ui.button_login.clicked.connect(self.on_login_button_clicked)
+        self.ui.button_reset.clicked.connect(self.on_reset_button_clicked)
+        self.ui.line_path.textChanged.connect(self.on_line_path_changed)
+        self.ui.button_config_dir.clicked.connect(self.on_open_config_dir_clicked)
+        self.ui.button_open_download_dir.clicked.connect(self.on_open_download_dir_clicked)
+        self.ui.button_logout.clicked.connect(self.on_logout_button_clicked)
 
     def load_settings(self):
         self.userdata.reload()
@@ -139,7 +105,7 @@ class SettingsWidget(QtWidgets.QWidget):
         elif now == self.mw_tab_index:
             self.load_settings()
 
-    # Slot
+    @QtCore.Slot()
     def on_path_button_clicked(self):
         path = QtWidgets.QFileDialog.getExistingDirectory(
             self, "选择下载目录", self.ui.line_path.text()
@@ -148,14 +114,14 @@ class SettingsWidget(QtWidgets.QWidget):
             return
         self.ui.line_path.setText(path)
 
-    # Slot
+    @QtCore.Slot(str)
     def on_line_path_changed(self, text):
         if not os.path.isdir(text):
             self.ui.line_path.setStyleSheet(style.BASIC_FONT_STYLE + style.RED_TEXT)
         else:
             self.ui.line_path.setStyleSheet(style.BASIC_FONT_STYLE)
 
-    # Slot
+    @QtCore.Slot()
     def on_reset_button_clicked(self):
         dialog = QMessageBox.question(self, "提示", "确定要重置所有设置吗？",
                                       buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -167,24 +133,24 @@ class SettingsWidget(QtWidgets.QWidget):
             self.load_settings()
             QMessageBox.information(self, "信息", "设置已重置")
 
-    # Slot
+    @QtCore.Slot()
     def on_login_button_clicked(self):
         dialog = DialogLogin(self, self.userdata)
         dialog.exec()
         self.load_settings()
 
-    # Slot
+    @QtCore.Slot()
     def on_open_config_dir_clicked(self):
         open_folder(QtCore.QDir("data").absolutePath(), self)
 
-    # Slot
+    @QtCore.Slot()
     def on_open_download_dir_clicked(self):
         open_folder(self.userdata.get(
             self.userdata.CFGS.DOWNLOAD_PATH,
             QtCore.QDir("Download").absolutePath()
         ))
 
-    # Slot
+    @QtCore.Slot()
     def on_logout_button_clicked(self):
         ret = QMessageBox.question(
             self, "确认", "确认退出登录？",

@@ -1,5 +1,5 @@
 import pyperclip
-from PySide2.QtCore import SIGNAL, SLOT, QEvent
+from PySide2.QtCore import QEvent, Slot
 from PySide2.QtWidgets import QWidget
 from ui_inputsetupwidget import Ui_InputSetupWidget
 
@@ -16,12 +16,7 @@ class InputSetupWidget(QWidget):
         self.matched = ""
         self.content = ""
 
-        self.connect(
-            self.ui.line_input,
-            SIGNAL("textChanged(QString)"),
-            self,
-            SLOT("match_format(QString)"),
-        )
+        self.ui.line_input.textChanged.connect(self.match_format)
 
         self.installEventFilter(self)
 
@@ -48,6 +43,7 @@ class InputSetupWidget(QWidget):
         if matchFomat.matchAll(data):
             self.ui.line_input.setText(data)
 
+    @Slot(str)
     def match_format(self, format_string: str):
         if len(format_string.replace(" ", "")) == 0:
             self.ui.label_hint.setText("")

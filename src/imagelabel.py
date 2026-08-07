@@ -14,11 +14,7 @@ class ImageLabel(QtWidgets.QLabel):
         self.menu = QtWidgets.QMenu(self)
         action = QtWidgets.QAction(text="保存封面", parent=self)
         self.menu.addAction(action)
-        self.connect(
-            action,
-            QtCore.SIGNAL("triggered()"),
-            self.on_action_save_clicked
-        )
+        action.triggered.connect(self.on_action_save_clicked)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.parent().on_size_change()
@@ -29,5 +25,6 @@ class ImageLabel(QtWidgets.QLabel):
             self.menu.exec_(self.cursor().pos())
         return super().mousePressEvent(ev)
 
+    @QtCore.Slot()
     def on_action_save_clicked(self):
         self.parent().save_cover()

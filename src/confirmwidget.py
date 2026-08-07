@@ -2,7 +2,7 @@ import pickle
 import traceback
 
 from PySide2 import QtWidgets, QtGui, QtCore
-from PySide2.QtCore import SIGNAL, Signal, QByteArray
+from PySide2.QtCore import Signal, QByteArray
 from ui_confirmwidget import Ui_ConfirmWidget
 
 from Lib.bili_api import video, bangumi
@@ -26,17 +26,21 @@ class ConfirmWidget(QtWidgets.QWidget):
         )
         self.ui.cover_label.setPixmap(QtGui.QPixmap.fromImage(img))
 
+    @QtCore.Slot(str, bool)
     def update_info(self, data: str, err: bool):
         self.ui.text_info.setText(data)
         self.err = err
 
+    @QtCore.Slot(QtGui.QImage)
     def update_image(self, img: QtGui.QImage):
         self.img = img
         self.on_size_change()
 
+    @QtCore.Slot(QByteArray)
     def update_meta(self, data: QByteArray):
         self.meta = data
 
+    @QtCore.Slot()
     def load_end(self):
         self.disconnect(self.load_thread)
         del self.load_thread
@@ -64,44 +68,33 @@ class ConfirmWidget(QtWidgets.QWidget):
         self.ui.button_next.setDisabled(True)
         fmt, content = self.parent().input_pages[0].get_content()
         self.load_thread = load_map[fmt](self, content)
-        self.connect(
-            self.load_thread,
-            SIGNAL("update_info(QString, bool)"),
-            self.update_info,
-        )
-        self.connect(
-            self.load_thread,
-            SIGNAL("update_image(QImage)"),
-            self.update_image,
-        )
-        self.connect(
-            self.load_thread,
-            SIGNAL("update_meta(QByteArray)"),
-            self.update_meta,
-        )
-        self.connect(self.load_thread, SIGNAL("finished()"), self.load_end)
+        self.load_thread.update_info.connect(self.update_info)
+        self.load_thread.update_image.connect(self.update_image)
+        self.load_thread.update_meta.connect(self.update_meta)
+        self.load_thread.finished.connect(self.load_end)
         self.load_thread.start()
 
 
 class LoadInfoBase(QtCore.QThread):
+    update_image = Signal(QtGui.QImage)
+    update_info = Signal(str, bool)
+    update_meta = Signal(QByteArray)
+
     def __init__(self, parent: ConfirmWidget, fmt: str, content: str) -> None:
         super(LoadInfoBase, self).__init__(parent)
         self.format = fmt
         self.content = content
-        self.update_imgae = Signal(QtGui.QImage, name="update_imgae")
-        self.update_info = Signal(str, bool, name="update_info")
-        self.update_meta = Signal(QByteArray, name="update_meta")
 
     def run(self):
         try:
             self.load_data()
         except NetWorkException as ex:
             show = str(ex)
-            self.emit(SIGNAL("update_info(QString, bool)"), show, True)
+            self.update_info.emit(show, True)
         except Exception as ex:
             show = "未知错误\n" + str(ex) + "\n\n"
             show += traceback.format_exc()
-            self.emit(SIGNAL("update_info(QString, bool)"), show, True)
+            self.update_info.emit(show, True)
 
     def load_data(self):
         pass
@@ -121,7 +114,7 @@ class LaodInfoAV(LoadInfoBase):
         show += "\nUP主: " + data["owner"]["name"]
         show += "\n在线人数: " + online["total"]
         show += "\n\n简介:\n" + data["desc"]
-        self.emit(SIGNAL("update_info(QString, bool)"), show, False)
+        self.update_info.emit(show, False)
         page_data = []
         for i in data["pages"]:
             part = {
@@ -140,11 +133,11 @@ class LaodInfoAV(LoadInfoBase):
         }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
-        self.emit(SIGNAL("update_meta(QByteArray)"), pack)
+        self.update_meta.emit(pack)
         try:
             pic_data = loadImage.load_bili_image(pic_url)
             img = QtGui.QImage.fromData(pic_data)
-            self.emit(SIGNAL("update_image(QImage)"), img)
+            self.update_image.emit(img)
         except:
             pass
 
@@ -163,7 +156,7 @@ class LoadInfoBV(LoadInfoBase):
         show += "\nUP主: " + data["owner"]["name"]
         show += "\n在线人数: " + online["total"]
         show += "\n\n简介:\n" + data["desc"]
-        self.emit(SIGNAL("update_info(QString, bool)"), show, False)
+        self.update_info.emit(show, False)
         page_data = []
         for i in data["pages"]:
             part = {
@@ -182,11 +175,11 @@ class LoadInfoBV(LoadInfoBase):
         }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
-        self.emit(SIGNAL("update_meta(QByteArray)"), pack)
+        self.update_meta.emit(pack)
         try:
             pic_data = loadImage.load_bili_image(pic_url)
             img = QtGui.QImage.fromData(pic_data)
-            self.emit(SIGNAL("update_image(QImage)"), img)
+            self.update_image.emit(img)
         except:
             pass
 
@@ -208,7 +201,7 @@ class LoadInfoMD(LoadInfoBase):
         show += "\n\n简介:\n" + ss_data["data"]["evaluate"]
         show += "\n\n制作:\n" + ss_data["data"]["staff"]
         cover_url = data["media"]["cover"]
-        self.emit(SIGNAL("update_info(QString, bool)"), show, False)
+        self.update_info.emit(show, False)
         page_data = []
         i = 0
         for v in ss_data["data"]["episodes"]:
@@ -229,11 +222,11 @@ class LoadInfoMD(LoadInfoBase):
         }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
-        self.emit(SIGNAL("update_meta(QByteArray)"), pack)
+        self.update_meta.emit(pack)
         try:
             pic_data = loadImage.load_bili_image(cover_url)
             img = QtGui.QImage.fromData(pic_data)
-            self.emit(SIGNAL("update_image(QImage)"), img)
+            self.update_image.emit(img)
         except:
             pass
 
@@ -253,7 +246,7 @@ class LoadInfoEP(LoadInfoBase):
         show += "\n\n简介:\n" + data["data"]["evaluate"]
         show += "\n\n制作:\n" + data["data"]["staff"]
         cover_url = data["info"]["media"]["cover"]
-        self.emit(SIGNAL("update_info(QString, bool)"), show, False)
+        self.update_info.emit(show, False)
         page_data = []
         i = 0
         for v in data["data"]["episodes"]:
@@ -274,11 +267,11 @@ class LoadInfoEP(LoadInfoBase):
         }
         pack = pickle.dumps(meta_data)
         pack = QByteArray(pack)
-        self.emit(SIGNAL("update_meta(QByteArray)"), pack)
+        self.update_meta.emit(pack)
         try:
             pic_data = loadImage.load_bili_image(cover_url)
             img = QtGui.QImage.fromData(pic_data)
-            self.emit(SIGNAL("update_image(QImage)"), img)
+            self.update_image.emit(img)
         except:
             pass
 
