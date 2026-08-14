@@ -45,7 +45,7 @@ class UpdateChecker(QtCore.QThread):
 
 
 class UpdateDownloader(QtCore.QThread):
-    update_process = QtCore.Signal(int, int)
+    update_process = QtCore.Signal("quint64", "quint64")
     download_install = QtCore.Signal(str)
     download_err = QtCore.Signal(str)
 

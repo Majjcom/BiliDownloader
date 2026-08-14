@@ -4,10 +4,10 @@ from io import BytesIO
 
 import qrcode
 from PySide6 import QtWidgets, QtGui, QtCore
-from ui_dialoglogin import Ui_DialogLogin
 
 from Lib.bili_api import user
 from Lib.bili_api.utils import cookieTools, passport
+from ui_dialoglogin import Ui_DialogLogin
 from utils import configUtils
 
 
@@ -48,7 +48,7 @@ class DialogLogin(QtWidgets.QDialog):
         self.close()
 
     @QtCore.Slot(int)
-    def dialog_finished(self, _resault: int):
+    def dialog_finished(self, _result: int):
         self.dialog_end = True
         while not self.load_thread.thread_finished:
             pass

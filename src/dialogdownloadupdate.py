@@ -9,7 +9,7 @@ class DialogDownloadUpdate(QtWidgets.QDialog):
         self.ui = Ui_DialogDownloadUpdate()
         self.ui.setupUi(self)
 
-    @QtCore.Slot(int, int)
+    @QtCore.Slot("quint64", "quint64")
     def update_process(self, finished: int, total: int):
         percent = round(finished / total * 100)
         self.ui.progressBar.setValue(percent)
