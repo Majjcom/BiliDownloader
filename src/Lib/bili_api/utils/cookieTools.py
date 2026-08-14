@@ -1,9 +1,9 @@
 import datetime
 import re
 
-_cookieMakers = [re.compile(r'DedeUserID=([^;]+)'), re.compile(r'DedeUserID__ckMd5=([^;]+)'),
-                 re.compile(r'Expires=([^;]+)'), re.compile(r'SESSDATA=([^;]+)'),
-                 re.compile(r'bili_jct=([^;]+)')]
+_cookieMakers = [re.compile(r'^DedeUserID=([^;]+)'), re.compile(r'^DedeUserID__ckMd5=([^;]+)'),
+                 re.compile(r'^SESSDATA=([^;]+)'), re.compile(r'^bili_jct=([^;]+)'), re.compile(r'^sid=([^;]+)')]
+_expiresRegix = re.compile(r'Expires=([^;]+)')
 
 
 def make_cookie(cookies: dict):
@@ -35,5 +35,8 @@ def get_cookie_v2(cookies: list):
             if tmp is None:
                 continue
             tmp = tmp.group().split('=', 1)
+            if tmp[0] == "SESSDATA":
+                ttmp = _expiresRegix.search(i).group().split('=', 1)[1]
+                ret["Expires"] = ttmp
             ret[tmp[0]] = tmp[1]
     return ret

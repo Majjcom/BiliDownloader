@@ -1,8 +1,8 @@
 from PySide2 import QtWidgets, QtCore
-from ui_downloadwidget import Ui_DownloadWidget
 
 from downloaditem import DownloadItem
 from downloadthread import DownloadTask
+from ui_downloadwidget import Ui_DownloadWidget
 from utils import configUtils
 
 

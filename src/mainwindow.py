@@ -1,12 +1,12 @@
 import subprocess
 
 from PySide2 import QtWidgets, QtCore
-from ui_mainwindow import Ui_MainWindow
 
 from checkaccount import CheckAccountThread
 from dialogchangelog import show_changelog
 from dialogdownloadupdate import DialogDownloadUpdate
 from dialogupdateinfo import DialogUpdateInfo
+from ui_mainwindow import Ui_MainWindow
 from update import UpdateChecker, UpdateDownloader
 from utils import init, configUtils
 

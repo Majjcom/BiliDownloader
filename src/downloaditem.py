@@ -1,7 +1,7 @@
 from PySide2 import QtWidgets, QtCore
-from ui_downloaditem import Ui_DownloadItem
 
 from downloadthread import DownloadTask
+from ui_downloaditem import Ui_DownloadItem
 from utils.open_folder import open_folder
 from utils.sizefstr import sizefStr
 
@@ -24,7 +24,7 @@ class DownloadItem(QtWidgets.QWidget):
     def update_status(self, data: str):
         self.ui.label_status.setText(data)
 
-    @QtCore.Slot(int, int)
+    @QtCore.Slot("quint64", "quint64")
     def update_progress(self, finished: int, total: int):
         self.ui.label_progress.setText(
             "{} / {}".format(sizefStr(finished), sizefStr(total))

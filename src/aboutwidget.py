@@ -1,8 +1,8 @@
 from PySide2 import QtWidgets, QtCore
-from ui_aboutwidget import Ui_AboutWidget
 
 from dialogchangelog import show_changelog
 from dialoglicense import show_license
+from ui_aboutwidget import Ui_AboutWidget
 from update import NO_UPDATE
 from utils import version
 

@@ -1,6 +1,7 @@
 import os
 
 from PySide2 import QtWidgets
+
 from ui_dialogchangelog import Ui_DialogChangeLog
 
 

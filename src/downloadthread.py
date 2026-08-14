@@ -43,7 +43,7 @@ class TimerThread(QtCore.QThread):
 
 
 class DownloadTask(QtCore.QThread):
-    update_progress = QtCore.Signal(int, int)
+    update_progress = QtCore.Signal("quint64", "quint64")
     update_status = QtCore.Signal(str)
     enable_restart = QtCore.Signal()
     update_finished = QtCore.Signal()

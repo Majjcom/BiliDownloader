@@ -3,11 +3,11 @@ import traceback
 
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Signal, QByteArray
-from ui_confirmwidget import Ui_ConfirmWidget
 
 from Lib.bili_api import video, bangumi
 from Lib.bili_api.exceptions import NetWorkException
 from Lib.bili_api.utils import loadImage
+from ui_confirmwidget import Ui_ConfirmWidget
 from utils import configUtils
 
 
