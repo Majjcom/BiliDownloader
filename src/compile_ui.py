@@ -1,5 +1,7 @@
 import os
+import pathlib
 import subprocess
+import sys
 
 from Crypto.Hash import SHA256
 
@@ -13,8 +15,22 @@ def check_cache(cache, tgt, hashhex):
     return False
 
 
+def check_env_path(d: pathlib.Path) -> None:
+    for p in sys.path:
+        if pathlib.Path(d) == pathlib.Path(p):
+            return
+    sys.path.append(str(d))
+    path = os.getenv("PATH")
+    path = str(d) + ';' + path
+    os.putenv("PATH", path)
+
+
 def main():
     dirs = os.listdir(".")
+    if sys.platform == "win32":
+        env_dir = pathlib.Path(sys.executable).parent
+        check_env_path(env_dir)
+        check_env_path(env_dir / "Scripts")
     cache: dict = None
 
     if os.path.exists(".ui_compiled.cache"):
@@ -44,7 +60,7 @@ def main():
                 if tgt in cache:
                     cache.pop(tgt)
             print(i + " => " + tgt)
-            subprocess.call(["pyside6-uic", i, "-o", tgt])
+            subprocess.call(["pyside6-uic", "-a", i, "-o", tgt])
         if i.endswith(".qrc"):
             with open(i, "rb") as fc:
                 hashhex = SHA256.new(fc.read()).hexdigest()

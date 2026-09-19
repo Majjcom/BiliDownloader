@@ -1,5 +1,5 @@
 PySide6==6.7.3
-qrcode==7.4.2
+qrcode==8.2
 Pillow==9.5.0
 pycryptodome==3.23.0
 brotli==1.2.0

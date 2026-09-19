@@ -42,7 +42,7 @@ class ConfirmWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def load_end(self):
-        self.disconnect(self.load_thread)
+        QtCore.QObject.disconnect(self.load_thread, None, self, None)
         del self.load_thread
         if not self.err:
             self.ui.button_next.setEnabled(True)
