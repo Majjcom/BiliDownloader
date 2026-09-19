@@ -44,7 +44,8 @@ class DialogLogin(QtWidgets.QDialog):
 
     @QtCore.Slot()
     def load_finished(self):
-        self.disconnect(self.load_thread)
+        QtCore.QObject.disconnect(self.load_thread, None, self, None)
+        del self.load_thread
         self.close()
 
     @QtCore.Slot(int)

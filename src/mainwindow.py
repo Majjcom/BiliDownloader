@@ -76,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def update_finish(self):
-        self.disconnect(self.update_thread)
+        QtCore.QObject.disconnect(self.update_thread, None, self, None)
         del self.update_thread
 
     @QtCore.Slot(bool)
@@ -94,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def download_finished(self):
-        self.disconnect(self.download_thread)
+        QtCore.QObject.disconnect(self.download_thread, None, self, None)
         del self.download_thread
 
     @QtCore.Slot(str)
@@ -116,4 +116,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         self.tabs[2].save_settings()
-        event.accept()
+        if self.ui.widget_download.shutdown():
+            event.accept()
+        else:
+            event.ignore()
+            QtCore.QTimer.singleShot(100, self.close)

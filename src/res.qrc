@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="/">
+    <file>res/download-item/folder.svg</file>
+    <file>res/download-item/pause.svg</file>
+    <file>res/download-item/play.svg</file>
+    <file>res/download-item/restart.svg</file>
     <file>res/Placeholde.png</file>
     <file>res/icon/icon.png</file>
   </qresource>

@@ -152,7 +152,7 @@ class ConfigWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def load_finish(self):
-        self.disconnect(self.load_thread)
+        QtCore.QObject.disconnect(self.load_thread, None, self, None)
         del self.load_thread
 
     def data_update(self, _back):
@@ -257,7 +257,7 @@ class GetVideoInfo(QtCore.QThread):
                         )["video_info"]
                     else:
                         data = bangumi.get_bangumi_url(
-                            bvid=self.vid,
+                            avid=self.vid,
                             cid=self.cid,
                             fnval=self.fnval,
                             passport=passport

@@ -13,6 +13,8 @@ import zstandard
 from .defaultHeaders import DEFAULT_HEADERS
 from ..exceptions.NetWorkException import NetWorkException
 
+DEFAULT_TIMEOUT = 15
+
 
 def get_data(
         scheme: str,
@@ -22,12 +24,13 @@ def get_data(
         query: dict = None,
         header: dict = None,
         data=None,
-        data_type: str = "application/json"
+        data_type: str = "application/json",
+        timeout: float = DEFAULT_TIMEOUT,
 ):
     c = (
-        http.client.HTTPSConnection(host)
+        http.client.HTTPSConnection(host, timeout=timeout)
         if scheme == "https"
-        else http.client.HTTPConnection(host)
+        else http.client.HTTPConnection(host, timeout=timeout)
     )
     if query is not None:
         if len(query) == 0:
@@ -37,38 +40,41 @@ def get_data(
     if header is not None:
         for i in header:
             head[i] = header[i]
-    if method == "GET":
-        c.request(method, path + qu, headers=head)
-    else:
-        if isinstance(data, dict):
-            if data_type == "application/x-www-form-urlencoded":
-                qdata = urllib.parse.urlencode(data).encode("utf-8")
-            else:
-                qdata = json.dumps(data, separators=(',', ':')).encode("utf-8")
+    r = None
+    try:
+        if method == "GET":
+            c.request(method, path + qu, headers=head)
         else:
-            qdata = data
-        head["Content-Type"] = data_type
-        c.request(method, path + qu, body=qdata, headers=head)
-    r = c.getresponse()
-    encoding = r.headers.get("Content-Encoding")
-    read_data = r.read()
-    if encoding is not None:
-        if encoding == "gzip":
-            dec = gzip.decompress(read_data)
-        elif encoding == "deflate":
-            dec = zlib.decompress(read_data, -zlib.MAX_WBITS)
-        elif encoding == "br":
-            dec = brotli.decompress(read_data)
-        elif encoding == "zstd":
-            dec = zstandard.decompress(read_data)
+            if isinstance(data, dict):
+                if data_type == "application/x-www-form-urlencoded":
+                    qdata = urllib.parse.urlencode(data).encode("utf-8")
+                else:
+                    qdata = json.dumps(data, separators=(',', ':')).encode("utf-8")
+            else:
+                qdata = data
+            head["Content-Type"] = data_type
+            c.request(method, path + qu, body=qdata, headers=head)
+        r = c.getresponse()
+        encoding = r.headers.get("Content-Encoding")
+        read_data = r.read()
+        if encoding is not None:
+            if encoding == "gzip":
+                dec = gzip.decompress(read_data)
+            elif encoding == "deflate":
+                dec = zlib.decompress(read_data, -zlib.MAX_WBITS)
+            elif encoding == "br":
+                dec = brotli.decompress(read_data)
+            elif encoding == "zstd":
+                dec = zstandard.decompress(read_data)
+            else:
+                dec = read_data
         else:
             dec = read_data
-    else:
-        dec = read_data
-    ret = json.loads(dec)
-    r.close()
-    c.close()
-    return ret
+        return json.loads(dec)
+    finally:
+        if r is not None:
+            r.close()
+        c.close()
 
 
 class DataGetter:
@@ -80,6 +86,7 @@ class DataGetter:
             path: str,
             query: dict = None,
             header: dict = None,
+            timeout: float = DEFAULT_TIMEOUT,
     ):
         self._scheme = scheme
         self._host = host
@@ -87,6 +94,7 @@ class DataGetter:
         self._path = path
         self._query = query
         self._header = header
+        self._timeout = timeout
         self._c: Union[http.client.HTTPConnection, http.client.HTTPSConnection] = None
         self._response_headers: _HTTPMessage = None
         if method == "GET":
@@ -105,9 +113,9 @@ class DataGetter:
 
     def link(self):
         self._c = (
-            http.client.HTTPSConnection(self._host)
+            http.client.HTTPSConnection(self._host, timeout=self._timeout)
             if self._scheme == "https"
-            else http.client.HTTPConnection(self._host)
+            else http.client.HTTPConnection(self._host, timeout=self._timeout)
         )
         self._linked = True
 
@@ -121,28 +129,30 @@ class DataGetter:
             self._head["Content-Type"] = "application/x-www-form-urlencoded"
             self._c.request(self._method, self._path, body=data, headers=self._head)
         r = self._c.getresponse()
-        self._response_headers = r.headers
-        data = r.read()
-        encoding = r.headers.get("Content-Encoding")
-        if encoding is not None:
-            if encoding == "gzip":
-                data = gzip.decompress(data)
-            elif encoding == "deflate":
-                data = zlib.decompress(data, -zlib.MAX_WBITS)
-            elif encoding == "br":
-                data = brotli.decompress(data)
-            elif encoding == "zstd":
-                data = zstandard.decompress(data)
-        data = data.decode("utf-8")
-        get = json.loads(data)
-        r.close()
-        return get
+        try:
+            self._response_headers = r.headers
+            data = r.read()
+            encoding = r.headers.get("Content-Encoding")
+            if encoding is not None:
+                if encoding == "gzip":
+                    data = gzip.decompress(data)
+                elif encoding == "deflate":
+                    data = zlib.decompress(data, -zlib.MAX_WBITS)
+                elif encoding == "br":
+                    data = brotli.decompress(data)
+                elif encoding == "zstd":
+                    data = zstandard.decompress(data)
+            data = data.decode("utf-8")
+            return json.loads(data)
+        finally:
+            r.close()
 
     def get_headers(self) -> _HTTPMessage:
         return self._response_headers
 
     def close(self):
-        self._c.close()
+        if self._c is not None:
+            self._c.close()
 
     def __del__(self):
         if self._linked:
