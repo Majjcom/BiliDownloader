@@ -2,6 +2,7 @@ import copy
 import http.client
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -70,6 +71,7 @@ class DownloadTask(QtCore.QThread):
         self.total_size = 0
         self.task = None
         self.result = RESULT_FAILED
+        self.error = None
         self._pause_requested = threading.Event()
         self._cancel_requested = threading.Event()
         self._protected_stage = threading.Event()
@@ -545,9 +547,13 @@ class DownloadTask(QtCore.QThread):
         merge_name = "{}_merge.mp4".format(self.task["tempName"])
         if root_dir.exists(merge_name) and not root_dir.remove(merge_name):
             raise RuntimeError("无法清理合并临时文件")
-        ffmpeg_path = QtCore.QDir("ffmpeg").absoluteFilePath(
-            "ffmpeg" + ("" if sys.platform == "linux" else ".upx.exe")
-        )
+        ffmpeg_path = self.task.get("_ffmpeg_path") or os.environ.get("BILI_FFMPEG")
+        if ffmpeg_path is None:
+            bundled_name = "ffmpeg" + ("" if sys.platform == "linux" else ".upx.exe")
+            bundled_path = os.path.join("ffmpeg", bundled_name)
+            ffmpeg_path = bundled_path if os.path.exists(bundled_path) else shutil.which("ffmpeg")
+        if ffmpeg_path is None:
+            raise RuntimeError("找不到 ffmpeg，请使用 --ffmpeg 或设置 BILI_FFMPEG")
         command = [
             ffmpeg_path,
             "-i",
@@ -695,18 +701,19 @@ class DownloadTask(QtCore.QThread):
         if not root_dir.cd(self.task["title"]):
             raise RuntimeError("无法进入下载目录")
 
-        passportRaw = configUtils.getUserData(configUtils.Configs.PASSPORT)
-        passport = None
-        if passportRaw is not None:
-            if "data" not in passportRaw:
-                key = configUtils.getUserData(
-                    configUtils.Configs.PASSPORT_CRYPT_KEY
-                )
-                passportRaw["data"] = decode_cookie(passportRaw["secure_data"], key)
-            if passportRaw["data"] is not None:
-                passport_data = dict(passportRaw["data"])
-                passport_data.pop("Expires", None)
-                passport = BiliPassport(passport_data)
+        passport = self.task.get("_passport")
+        if not self.task.get("_passport_provided", False):
+            passportRaw = configUtils.getUserData(configUtils.Configs.PASSPORT)
+            if passportRaw is not None:
+                if "data" not in passportRaw:
+                    key = configUtils.getUserData(
+                        configUtils.Configs.PASSPORT_CRYPT_KEY
+                    )
+                    passportRaw["data"] = decode_cookie(passportRaw["secure_data"], key)
+                if passportRaw["data"] is not None:
+                    passport_data = dict(passportRaw["data"])
+                    passport_data.pop("Expires", None)
+                    passport = BiliPassport(passport_data)
 
         get_url, used_cache = self._resolve_media(passport)
         self._using_cached_media = used_cache
@@ -745,6 +752,7 @@ class DownloadTask(QtCore.QThread):
             self.result = RESULT_CANCELLED
         except Exception as error:
             self.result = RESULT_FAILED
+            self.error = error
             self.update_status.emit("下载失败：{}".format(error))
         else:
             self.result = RESULT_COMPLETED
