@@ -98,3 +98,21 @@ chmod +x ./build_nuitka_linux.sh
 ```
 
 构建将输出在`dist.nuitka.linux`目录下
+
+## 3. CLI
+
+命令行工具复用 GUI 的下载线程，不需要启动窗口：
+
+```shell
+python -m pip install -e .
+bili info BVxxxxxxxxxx
+bili formats BVxxxxxxxxxx --page 1
+bili download BVxxxxxxxxxx --output ./downloads --page all
+
+# 不安装项目时，也可以直接运行脚本
+python src/bili_cli.py info BVxxxxxxxxxx
+```
+
+CLI 默认复用 GUI 的 `data/userdata.json` 下载目录、编码、音频、弹幕和登录设置；也可以设置 `BILI_COOKIE` 或传入 `--cookie-file` 临时覆盖。FFmpeg 可通过 `--ffmpeg` 或 `BILI_FFMPEG` 指定。
+
+从其他目录调用时，可以用 `--config-dir` 指向 GUI 的工作目录；命令行布尔选项支持对应的 `--no-*` 形式覆盖 GUI 设置。
