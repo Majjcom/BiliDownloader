@@ -38,6 +38,24 @@
 
 Windows可执行文件通过Nuitka构建
 
+## 命令行使用
+
+命令行入口复用现有下载逻辑，不启动图形界面。安装 Python 3.10+ 后，在项目目录执行：
+
+```shell
+python -m pip install -e .
+bili info BVxxxxxxxxxx
+bili formats BVxxxxxxxxxx --page 1
+bili download BVxxxxxxxxxx --output ./downloads --quality 80
+
+# 不安装项目时，也可以直接运行脚本
+python src/bili_cli.py info BVxxxxxxxxxx
+```
+
+CLI 默认复用 GUI 的 `data/userdata.json` 下载目录、编码、音频、弹幕和登录设置，并向标准输出写入 JSONL 事件，便于脚本或 AI 逐行解析。也可以用 `--cookie-file` 或 `BILI_COOKIE` 临时覆盖登录设置。合并音视频时可通过 `--ffmpeg` 或 `BILI_FFMPEG` 指定 FFmpeg。
+
+从其他目录调用时，可以用 `--config-dir` 指向 GUI 的工作目录；命令行布尔选项支持对应的 `--no-*` 形式覆盖 GUI 设置。
+
 ## 演示图片
 
 ![](imgs/2026-09-20_17-58-32.png)
