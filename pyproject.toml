@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bili-downloader"
+version = "1.4.0"
+description = "BiliBili video downloader and CLI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = [
+    "PySide6>=6.7",
+    "pycryptodome>=3.23",
+    "brotli>=1.2",
+    "zstandard>=0.25",
+]
+
+[project.scripts]
+bili = "bili_cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["bili_cli", "downloadthread"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["Lib*", "utils*"]
+
+[tool.setuptools.package-data]
+"Lib.bili_api.utils" = ["data/*.json"]
