@@ -83,6 +83,9 @@ class DownloadTask(QtCore.QThread):
     def setup(self, task: dict):
         self.task = task
         self.task.setdefault("streamStates", {})
+        self.task["outputFiles"] = []
+        self.task["error"] = None
+        self.task["warnings"] = []
 
     def request_pause(self):
         with self._control_lock:
@@ -527,8 +530,7 @@ class DownloadTask(QtCore.QThread):
             ):
                 raise RuntimeError("无法清理音频临时文件")
 
-    @staticmethod
-    def _replace_file(root_dir, source_name, target_name):
+    def _replace_file(self, root_dir, source_name, target_name):
         try:
             os.replace(
                 root_dir.absoluteFilePath(source_name),
@@ -536,6 +538,7 @@ class DownloadTask(QtCore.QThread):
             )
         except OSError:
             raise RuntimeError("无法保存文件 {}".format(target_name))
+        self.task["outputFiles"].append(root_dir.absoluteFilePath(target_name))
 
     def dash_ffmpeg_merge_video(
             self, root_dir: QtCore.QDir, video_temp_file_path, audio_temp_file_path
@@ -627,7 +630,8 @@ class DownloadTask(QtCore.QThread):
                 root_dir.absoluteFilePath(danmaku_temp_file_name), self.task["cid"]
             )
             self._replace_file(root_dir, danmaku_temp_file_name, danmaku_file_name)
-        except Exception:
+        except Exception as error:
+            self.task["warnings"].append("弹幕下载失败：{}".format(error))
             self.update_status.emit("弹幕下载失败，已跳过")
             if root_dir.exists(danmaku_temp_file_name):
                 root_dir.remove(danmaku_temp_file_name)
@@ -743,8 +747,10 @@ class DownloadTask(QtCore.QThread):
             self.update_status.emit("已暂停")
         except DownloadCancelled:
             self.result = RESULT_CANCELLED
+            self.task["error"] = "任务已取消"
         except Exception as error:
             self.result = RESULT_FAILED
+            self.task["error"] = str(error)
             self.update_status.emit("下载失败：{}".format(error))
         else:
             self.result = RESULT_COMPLETED

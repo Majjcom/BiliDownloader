@@ -2,8 +2,7 @@
 python -m nuitka ^
 --enable-plugins=pyside6 ^
 --standalone ^
---windows-console-mode=disable ^
---windows-uac-admin ^
+--windows-console-mode=hide ^
 --user-package-configuration-file=nuitka_config/bili_api.nuitka-package.config.yaml ^
 --output-dir=dist.portable.nuitka ^
 --output-filename=BiliDownloader.exe ^

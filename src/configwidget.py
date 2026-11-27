@@ -45,6 +45,7 @@ class ConfigWidget(QtWidgets.QWidget):
         self.ui.button_path.clicked.connect(self.on_path_change_button_clicked)
         self.ui.button_submit.clicked.connect(self.on_submit_button_clicked)
         self.ui.line_path.textChanged.connect(self.on_path_changed)
+        self.ui.table_downloads.horizontalHeader().sectionDoubleClicked.connect(self.on_table_header_double_clicked)
 
     @QtCore.Slot()
     def on_path_change_button_clicked(self):
@@ -115,6 +116,31 @@ class ConfigWidget(QtWidgets.QWidget):
             self.ui.line_path.setStyleSheet(style.BASIC_FONT_STYLE + style.RED_TEXT)
         else:
             self.ui.line_path.setStyleSheet(style.BASIC_FONT_STYLE)
+
+    @QtCore.Slot(int)
+    def on_table_header_double_clicked(self, idx: int):
+        idx_mapping = [
+            "box_danmaku",
+            "box_audio",
+        ]
+        if idx < 0 or idx >= len(idx_mapping):
+            return
+        checked_count = 0
+        total_count = 0
+        for page in self.data["page_data"]:
+            if not page["box"].get_box().isChecked():
+                continue
+            total_count += 1
+            box: CentralCheckBox = page[idx_mapping[idx]]
+            if box.get_box().isChecked():
+                checked_count += 1
+        # 当没有处于全选状态时触发全选操作
+        check_value = checked_count != total_count
+        for page in self.data["page_data"]:
+            if not page["box"].get_box().isChecked():
+                continue
+            box: CentralCheckBox = page[idx_mapping[idx]]
+            box.get_box().setChecked(check_value)
 
     @QtCore.Slot(QtCore.QByteArray, bool)
     def update_info(self, data: QtCore.QByteArray, err: bool):

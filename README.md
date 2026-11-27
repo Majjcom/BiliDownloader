@@ -34,6 +34,10 @@
 
 部分清晰度需要 **大会员** 才能下载，请在设置中登录
 
+## CLI
+
+现在已添加CLI模式支持，具体的使用方式和文档可到 [skills/bilidownloader/SKILL.md](skills/bilidownloader/SKILL.md) 中查看。
+
 ## 其他
 
 Windows可执行文件通过Nuitka构建

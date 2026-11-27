@@ -32,33 +32,37 @@ class DownloadItem(QtWidgets.QWidget):
         )
         self.ui.button_pause.setToolTip("继续" if paused else "暂停")
 
+    def _set_pause_enabled(self, enabled):
+        headless = bool(QtWidgets.QApplication.instance().property("headless"))
+        self.ui.button_pause.setEnabled(enabled and not headless)
+
     def set_task_state(self, state):
         self.info["state"] = state
         self._set_pause_icon(state == "paused")
 
         if state == "queued":
             self.ui.label_status.setText("等待下载")
-            self.ui.button_pause.setEnabled(True)
+            self._set_pause_enabled(True)
             self.ui.button_restart.setEnabled(False)
         elif state == "running":
-            self.ui.button_pause.setEnabled(True)
+            self._set_pause_enabled(True)
         elif state == "pausing":
             self.ui.label_status.setText("正在暂停")
-            self.ui.button_pause.setEnabled(False)
+            self._set_pause_enabled(False)
             self.ui.button_restart.setEnabled(False)
         elif state == "paused":
             self.ui.label_status.setText("已暂停")
-            self.ui.button_pause.setEnabled(True)
+            self._set_pause_enabled(True)
             self.ui.button_restart.setEnabled(True)
         elif state == "restarting":
             self.ui.label_status.setText("正在重新开始")
-            self.ui.button_pause.setEnabled(False)
+            self._set_pause_enabled(False)
             self.ui.button_restart.setEnabled(False)
         elif state == "completed":
-            self.ui.button_pause.setEnabled(False)
+            self._set_pause_enabled(False)
             self.ui.button_restart.setEnabled(False)
         elif state == "failed":
-            self.ui.button_pause.setEnabled(False)
+            self._set_pause_enabled(False)
             self.ui.button_restart.setEnabled(True)
 
     @QtCore.Slot(str)
@@ -76,23 +80,23 @@ class DownloadItem(QtWidgets.QWidget):
     @QtCore.Slot()
     def update_finished(self):
         self.ui.button_restart.setEnabled(False)
-        self.ui.button_pause.setEnabled(False)
+        self._set_pause_enabled(False)
 
     @QtCore.Slot()
     def enable_button(self):
         self.ui.button_restart.setEnabled(True)
         if self.info["state"] == "running":
-            self.ui.button_pause.setEnabled(True)
+            self._set_pause_enabled(True)
 
     @QtCore.Slot(bool)
     def set_pause_available(self, available):
         if self.info["state"] == "running":
-            self.ui.button_pause.setEnabled(available)
+            self._set_pause_enabled(available)
 
     @QtCore.Slot(bool)
     def set_actions_available(self, available):
         if self.info["state"] == "running":
-            self.ui.button_pause.setEnabled(available)
+            self._set_pause_enabled(available)
             self.ui.button_restart.setEnabled(available)
 
     @QtCore.Slot()
@@ -107,6 +111,8 @@ class DownloadItem(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def on_pause_button_clicked(self):
+        if QtWidgets.QApplication.instance().property("headless"):
+            return
         if self.info["state"] == "paused":
             self.resume_requested.emit()
         else:

@@ -1,7 +1,54 @@
 import json
 import os
+import copy
+import threading
 
 from . import version
+
+
+_memory_data = None
+_memory_lock = threading.RLock()
+
+
+def enable_memory_mode():
+    """Load the existing configuration once; subsequent changes stay in memory."""
+    global _memory_data
+    with _memory_lock:
+        if os.path.isfile("data/userdata.json"):
+            with open("data/userdata.json", "r", encoding="utf_8") as f:
+                _memory_data = json.load(f)
+        else:
+            _memory_data = {
+                "version": version.__version__,
+                "isnew": False,
+                "userinfo": {},
+            }
+
+
+def _read_data():
+    with _memory_lock:
+        if _memory_data is not None:
+            return copy.deepcopy(_memory_data)
+    setupUserData()
+    with open("data/userdata.json", "r", encoding="utf_8") as f:
+        return json.load(f)
+
+
+def _write_data(data):
+    global _memory_data
+    with _memory_lock:
+        if _memory_data is not None:
+            # Login state is immutable for the entire headless session.
+            data = copy.deepcopy(data)
+            for key in (Configs.PASSPORT, Configs.PASSPORT_CRYPT_KEY):
+                if key in _memory_data["userinfo"]:
+                    data["userinfo"][key] = copy.deepcopy(_memory_data["userinfo"][key])
+                else:
+                    data["userinfo"].pop(key, None)
+            _memory_data = data
+            return
+    with open("data/userdata.json", "w", encoding="utf_8") as f:
+        json.dump(data, f, sort_keys=True, indent=2)
 
 
 class Configs:
@@ -23,6 +70,8 @@ class Configs:
 
 
 def setupUserData(reset: bool = False) -> None:
+    if _memory_data is not None:
+        return
     if not os.path.exists("data"):
         os.mkdir("data")
     if not os.path.exists("data/userdata.json"):
@@ -37,16 +86,15 @@ def setupUserData(reset: bool = False) -> None:
 
 class UserDataHelper:
     def __init__(self, autosave=False):
-        setupUserData()
-        fp = open("data/userdata.json", "r", encoding="utf_8")
         self.CFGS: Configs = Configs()
-        self.raw = json.load(fp)
+        self.raw = _read_data()
         self.KEYWD = ("version", "isnew")
         self.autosave = autosave
         self.changed = False
-        fp.close()
 
     def set(self, key: str, value: {dict, list, int, float, str, None}):
+        if _memory_data is not None and key in (Configs.PASSPORT, Configs.PASSPORT_CRYPT_KEY):
+            raise ValueError("headless 模式不允许修改登录信息")
         if key in self.KEYWD:
             self.raw[key] = value
             self.changed = True
@@ -54,7 +102,7 @@ class UserDataHelper:
 
         # Erase value
         if value is None:
-            self.raw["userinfo"].pop(key)
+            self.raw["userinfo"].pop(key, None)
             self.changed = True
             return
 
@@ -71,29 +119,23 @@ class UserDataHelper:
 
     def get(self, key, default=None):
         if key in self.KEYWD:
-            return self.raw["key"]
+            return self.raw.get(key, default)
         return self.raw["userinfo"].get(key, default)
 
     def save(self):
         if not self.changed:
             return
-        fp = open("data/userdata.json", "w", encoding="utf_8")
-        json.dump(self.raw, fp, sort_keys=True, indent=2)
-        fp.close()
+        _write_data(self.raw)
         self.changed = False
 
     def reload(self):
-        fp = open("data/userdata.json", "r", encoding="utf_8")
-        self.raw = json.load(fp)
-        fp.close()
+        self.raw = _read_data()
         self.changed = False
 
 
 def getUserData(key: str, default=None):
     keywd = ("version", "isnew")
-    setupUserData()
-    with open("data/userdata.json", "r", encoding="utf_8") as f:
-        userdata = json.load(f)
+    userdata = _read_data()
     if key in keywd:
         return userdata[key]
     if key in userdata["userinfo"]:
@@ -102,23 +144,29 @@ def getUserData(key: str, default=None):
 
 
 def setUserData(key: str, value: {dict, list, int, float, str, None}) -> bool:
+    if _memory_data is not None and key in (Configs.PASSPORT, Configs.PASSPORT_CRYPT_KEY):
+        raise ValueError("headless 模式不允许修改登录信息")
     keywd = ("version", "isnew")
-    setupUserData()
-    with open("data/userdata.json", "r", encoding="utf_8") as f:
-        userdata: dict = json.load(f)
+    userdata = _read_data()
     if key in keywd:
         userdata[key] = value
     else:
         if value is None:
-            userdata["userinfo"].pop(key)
+            userdata["userinfo"].pop(key, None)
         else:
             userdata["userinfo"][key] = value
-    with open("data/userdata.json", "w", encoding="utf_8") as f:
-        json.dump(userdata, f, sort_keys=True, indent=2)
+    _write_data(userdata)
     return True
 
 
 def reSetUserData():
+    if _memory_data is not None:
+        _write_data({
+            "version": version.__version__,
+            "isnew": False,
+            "userinfo": {},
+        })
+        return
     setupUserData()
     os.remove("data/userdata.json")
     setupUserData(reset=True)
