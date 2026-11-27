@@ -53,9 +53,12 @@ class ConfirmWidget(QtWidgets.QWidget):
         save_path = QtWidgets.QFileDialog.getSaveFileName(self, "设置保存位置", default_save_path, "PNG图片(*.png)")
         if len(save_path[0]) == 0:
             return
-        self.img.save(
+        saved = self.img.save(
             save_path[0] + (".png" if not save_path[0].endswith(".png") else '')
         )
+        if not saved:
+            QtWidgets.QMessageBox.critical(self, "错误", "封面保存失败")
+            return
         QtWidgets.QMessageBox.information(self, "信息", "保存成功")
 
     def data_update(self, _back):

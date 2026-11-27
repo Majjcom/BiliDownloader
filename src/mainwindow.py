@@ -16,7 +16,8 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(parent)
 
         # Init
-        if init.init():
+        headless = bool(QtWidgets.QApplication.instance().property("headless"))
+        if not headless and init.init():
             show_changelog(self)
 
         self.ui = Ui_MainWindow()
@@ -42,6 +43,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.widget_input.setup_download(self.ui.widget_download)
 
         self.ui.tabWidget.currentChanged.connect(self.on_tab_changes)
+
+        if headless:
+            return
 
         # Check Update
         self.update_thread = UpdateChecker(self)

@@ -16,6 +16,8 @@ from utils import configUtils
 
 
 class DownloadWidget(QtWidgets.QWidget):
+    task_added = QtCore.Signal(object)
+
     def __init__(self, parent: QtWidgets.QWidget = ...) -> None:
         super().__init__(parent)
         self.ui = Ui_DownloadWidget()
@@ -64,12 +66,14 @@ class DownloadWidget(QtWidgets.QWidget):
         task["widget"].restart_requested.connect(
             lambda task=task: self.restart_task(task)
         )
+        self.task_added.emit(task)
 
     def _start_task(self, task):
         thread = DownloadTask(self)
         task["thread"] = thread
         task["pending_action"] = None
         thread.setup(task)
+        task["result"] = None
         self.running_tasks.append(task)
         task["widget"].set_task_state("running")
         thread.update_progress.connect(task["widget"].update_progress)
@@ -95,6 +99,7 @@ class DownloadWidget(QtWidgets.QWidget):
 
         pending_action = task.get("pending_action")
         result = thread.result
+        task["result"] = result
         thread.deleteLater()
 
         if pending_action == "restart":

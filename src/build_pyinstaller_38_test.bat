@@ -6,6 +6,5 @@ pyinstaller ^
 --workpath dist.pyinstaller.test/build ^
 -c ^
 -i res\icon\icon.ico ^
---uac-admin ^
 --additional-hooks-dir pyinstaller_config ^
 main.py

@@ -1,6 +1,6 @@
 import pyperclip
 from PySide2.QtCore import QEvent, Slot
-from PySide2.QtWidgets import QWidget
+from PySide2.QtWidgets import QWidget, QApplication
 
 import style
 from Lib.bili_api.utils import matchFomat
@@ -34,6 +34,8 @@ class InputSetupWidget(QWidget):
             self.ui.line_input.clear()
 
     def onWindowActivate(self):
+        if QApplication.instance().property("headless"):
+            return
         if not self.autoReadClipboard:
             return
         data = pyperclip.paste()
